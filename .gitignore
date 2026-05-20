@@ -23,3 +23,5 @@
 hs_err_pid*
 replay_pid*
 /adventure/target/
+/toy-story-beat-the-beetles/toy-story-server/target/
+/toy-story-beat-the-beetles/toy-story-client/target/

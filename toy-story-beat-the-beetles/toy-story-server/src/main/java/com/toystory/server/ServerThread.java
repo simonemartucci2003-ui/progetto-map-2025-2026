@@ -4,10 +4,129 @@
  */
 package com.toystory.server;
 
+import com.toystory.server.type.CommandType;
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
+
 /**
- *
- * @author simon
+ * Thread dedicato alla gestione del flusso di comunicazione con un singolo client connesso.
+ * Implementa il protocollo ad eventi via stringhe separate dal carattere pipe ('|'),
+ * riceve gli input inviati dai bottoni della GUI del Client e rimanda le risposte
+ * a tutti i giocatori attivi sfruttando la logica di Broadcast.
+ * * @author Il Tuo Nome / Gruppo
  */
-public class ServerThread {
+public class ServerThread extends Thread {
+
+    /** Il canale socket per parlare con il client specifico */
+    private final Socket socket;
     
+    /** Riferimento all'Engine di gioco condiviso (stato unico del Server) */
+    private final Engine engine;
+    
+    /** Canale di output per inviare stringhe di testo verso il rispettivo Client */
+    private PrintWriter out;
+
+    /**
+     * Costruttore del thread di gestione client.
+     * * @param socket Il socket generato dal metodo accept() del ServerMain.
+     * @param engine L'istanza dell'Engine di gioco centralizzata.
+     */
+    public ServerThread(Socket socket, Engine engine) {
+        this.socket = socket;
+        this.engine = engine;
+    }
+
+    /**
+     * Ciclo di esecuzione del Thread. Gestisce l'apertura dei flussi I/O, 
+     * la lettura dei comandi in arrivo dai bottoni e l'invio in broadcast.
+     */
+    @Override
+    public void run() {
+        // Apriamo il flusso di input per leggere cosa invia il Client (click dei bottoni)
+        try (
+            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()))
+        ) {
+            // Inizializziamo il canale di output con l'autoflush attivo (invia subito i dati senza bufferizzare)
+            this.out = new PrintWriter(socket.getOutputStream(), true);
+            
+            // Inviamo un token di benvenuto al client per confermare che la connessione è riuscita
+            out.println("CONNESSIONE_STABILITA|Benvenuto nell'avventura di Toy Story!");
+
+            String inputLine;
+            
+            // Restiamo in ascolto continuo dei messaggi stringa inviati dal Client attraverso la rete
+            while ((inputLine = in.readLine()) != null) {
+                System.out.println("[Multiplayer - Log] Ricevuto dal client: " + inputLine);
+
+                // Protocollo strutturato: spacchiamo la stringa usando il carattere '|' come separatore
+                // Esempio: "GUARDA|Baule" -> parts[0] = "GUARDA", parts[1] = "Baule"
+                String[] parts = inputLine.split("\\|");
+                if (parts.length < 1) {
+                    continue; // Stringa non valida, passiamo al prossimo ciclo
+                }
+
+                try {
+                    // 1. Mappiamo la stringa inviata dal bottone direttamente nella costante dell'enum CommandType
+                    CommandType tipoComando = CommandType.valueOf(parts[0].toUpperCase());
+                    
+                    // 2. Estraiamo il target (l'oggetto o stanza cliccata), se non c'è passiamo una stringa vuota
+                    String target = (parts.length > 1) ? parts[1] : "";
+
+                    // 3. Interroghiamo l'Engine per processare l'azione e ricevere la descrizione/risultato
+                    String rispostaServer = engine.executeAction(tipoComando, target);
+
+                    // 4. STRATAGEMMA MULTIPLAYER: Invece di rispondere solo a questo client, 
+                    // inviamo il testo a tutti i giocatori connessi per sincronizzare l'interfaccia!
+                    sendToAllPlayers(rispostaServer);
+
+                } catch (IllegalArgumentException e) {
+                    // Errore generato se il CommandType.valueOf() non trova corrispondenza nell'enum
+                    out.println("Comando sconosciuto o non riconosciuto dal sistema.");
+                }
+            }
+            
+        } catch (IOException e) {
+            System.out.println("[Server] Connessione chiusa bruscamente o persa con un giocatore.");
+        } finally {
+            // Creiamo un riferimento esplicito all'istanza corrente del ServerThread
+            ServerThread currentThread = ServerThread.this;
+            
+            // Rimuoviamo il thread dal registro multiplayer usando il riferimento sicuro
+            ServerMain.clientThreads.remove(currentThread);
+            try {
+                socket.close();
+                System.out.println("[Server] Risorse della socket rilasciate correttamente.");
+            } catch (IOException e) {
+                System.err.println("Errore durante la chiusura forzata della socket: " + e.getMessage());
+            }
+        }
+    }
+
+    /**
+     * Metodo di servizio per spedire un messaggio testuale privato a questo specifico client.
+     * * @param msg Il messaggio stringa da trasmettere sulla rete.
+     */
+    public void sendMessage(String msg) {
+        if (out != null) {
+            out.println(msg);
+        }
+    }
+
+    /**
+     * Invia un messaggio in Broadcast a TUTTI i client attualmente connessi al server.
+     * Utilizza un blocco di sincronizzazione sulla lista condivisa per evitare 
+     * problemi di concorrenza (es. se un client si disconnette mentre stiamo inviando dati).
+     * * @param msg Il messaggio risultante dall'azione di gioco da notificare a tutti.
+     */
+    private void sendToAllPlayers(String msg) {
+        synchronized (ServerMain.clientThreads) {
+            // Cicliamo su tutti i thread dei giocatori registrati nel ServerMain
+            for (ServerThread thread : ServerMain.clientThreads) {
+                thread.sendMessage(msg); // Spediamo l'aggiornamento
+            }
+        }
+    }
 }
