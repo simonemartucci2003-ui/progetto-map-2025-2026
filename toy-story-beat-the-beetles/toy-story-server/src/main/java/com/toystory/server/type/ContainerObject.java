@@ -15,9 +15,28 @@ public class ContainerObject extends AdvObject {
 
     /** Lista di oggetti nascosti o custoditi all'interno di questo contenitore. */
     private final List<PickupableObject> containedObjects = new ArrayList<>();
+    // NUOVI ATTRIBUTI: Stato di apertura e di blocco del contenitore
+    private boolean open = false;
+    private boolean locked = false;
 
     public ContainerObject(int id, String name, String description) {
         super(id, name, description);
+    }
+    
+    public boolean isOpen() {
+        return open;
+    }
+
+    public void setOpen(boolean open) {
+        this.open = open;
+    }
+
+    public boolean isLocked() {
+        return locked;
+    }
+
+    public void setLocked(boolean locked) {
+        this.locked = locked;
     }
 
     /** @return La lista degli oggetti contenuti. */

@@ -4,10 +4,21 @@
  */
 package com.toystory.server;
 
+import com.toystory.server.type.Command;
+
 /**
- *
- * @author simon
+ * Interfaccia base per tutti i listener delle azioni di gioco (Pattern Observer).
+ * Ogni classe che implementa questa interfaccia rappresenta un "controller" 
+ * specializzato nel gestire un tipo specifico di azione (es. PRENDI, USA, GUARDA).
  */
-public class GameObserver {
-    
+public interface GameObserver {
+
+    /**
+     * Metodo standard invocato dall'Engine quando viene ricevuto un comando dalla rete.
+     * * @param command Il comando inviato dal client, già parsato dal server.
+     * @param state Lo stato attuale del mondo di gioco (stanze, player, inventario).
+     * @return La stringa di risposta del Server da inviare al Client (es. "TESTO|Hai preso la chiave"), 
+     * oppure null se l'observer ignora il comando perché non di sua competenza.
+     */
+    String update(Command command, GameDescription state);
 }

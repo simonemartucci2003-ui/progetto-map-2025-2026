@@ -62,9 +62,9 @@ public class ServerThread extends Thread {
                 System.out.println("[Multiplayer - Log] Ricevuto dal client: " + inputLine);
 
                 // Protocollo strutturato: spacchiamo la stringa usando il carattere '|' come separatore
-                // Esempio: "GUARDA|Baule" -> parts[0] = "GUARDA", parts[1] = "Baule"
-                String[] parts = inputLine.split("\\|");
-                if (parts.length < 1) {
+                // Usiamo il limite -1 per non perdere i campi vuoti alla fine (es. "CHIAMA|")
+                String[] parts = inputLine.split("\\|", -1);
+                if (parts.length < 1 || parts[0].isEmpty()) {
                     continue; // Stringa non valida, passiamo al prossimo ciclo
                 }
 
@@ -78,13 +78,15 @@ public class ServerThread extends Thread {
                     // 3. Interroghiamo l'Engine per processare l'azione e ricevere la descrizione/risultato
                     String rispostaServer = engine.executeAction(tipoComando, target);
 
-                    // 4. STRATAGEMMA MULTIPLAYER: Invece di rispondere solo a questo client, 
-                    // inviamo il testo a tutti i giocatori connessi per sincronizzare l'interfaccia!
-                    sendToAllPlayers(rispostaServer);
+                    // 4. STRATAGEMMA MULTIPLAYER: Inviamo il risultato a tutti i giocatori
+                    // se l'observer ha restituito qualcosa di valido
+                    if (rispostaServer != null) {
+                        sendToAllPlayers(rispostaServer);
+                    }
 
                 } catch (IllegalArgumentException e) {
-                    // Errore generato se il CommandType.valueOf() non trova corrispondenza nell'enum
-                    out.println("Comando sconosciuto o non riconosciuto dal sistema.");
+                    // Allineiamo l'errore al protocollo del client aggiungendo "TESTO|"
+                    out.println("TESTO|Comando sconosciuto o non riconosciuto dal sistema.");
                 }
             }
             

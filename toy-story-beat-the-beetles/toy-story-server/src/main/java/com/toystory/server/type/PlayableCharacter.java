@@ -15,9 +15,27 @@ public class PlayableCharacter extends GameCharacter {
     
     private final List<PickupableObject> pocket = new ArrayList<>();
     private static final int MAX_POCKET_SIZE = 2;
+    
+    //L'abilità speciale associata al personaggio
+    private Ability ability;
 
     public PlayableCharacter(String name) {
         super(name); // Passa il nome al costruttore della classe madre
+    }
+    
+    // NUOVO GETTER: Per scoprire che abilità ha il personaggio
+    public Ability getAbility() {
+        return ability;
+    }
+
+    // NUOVO SETTER: Per assegnare o cambiare l'abilità (es. quando Woody sblocca il Lazo)
+    public void setAbility(Ability specialAbility) {
+        this.ability = specialAbility;
+    }
+
+    // NUOVO METODO UTILITY: Per verificare al volo se il personaggio ha un'abilità attiva
+    public boolean hasSpecialAbility() {
+        return ability != null;
     }
 
     public List<PickupableObject> getPocket() { 

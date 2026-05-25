@@ -4,6 +4,7 @@
  */
 package com.toystory.client.view;
 
+import com.toystory.client.GameClient;
 /**
  *
  * @author simon
@@ -11,12 +12,30 @@ package com.toystory.client.view;
 public class GameWindow extends javax.swing.JFrame {
     
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(GameWindow.class.getName());
+    
+    private GameClient clientRete;
+    private GUIHandler handlerGrafico;
+    private String azioneSelezionata = "GUARDA";
+    
 
     /**
      * Creates new form GameWindow
      */
     public GameWindow() {
         initComponents();
+        
+        // 1. Inizializziamo l'handler passandogli la finestra corrente (this)
+        this.handlerGrafico = new GUIHandler(this);
+        
+        // 2. Creiamo il client di rete e colleghiamo la Lambda al GUIHandler
+        this.clientRete = new GameClient(messaggioServer -> {
+            javax.swing.SwingUtilities.invokeLater(() -> {
+                handlerGrafico.processaComando(messaggioServer); 
+            });
+        });
+        
+        // 3. Avviamo la connessione reale con il Server
+        this.clientRete.connect();
     }
 
     /**
@@ -80,11 +99,11 @@ public class GameWindow extends javax.swing.JFrame {
         pnlRappresentazioneStanza.setLayout(pnlRappresentazioneStanzaLayout);
         pnlRappresentazioneStanzaLayout.setHorizontalGroup(
             pnlRappresentazioneStanzaLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 696, Short.MAX_VALUE)
+            .addGap(0, 714, Short.MAX_VALUE)
         );
         pnlRappresentazioneStanzaLayout.setVerticalGroup(
             pnlRappresentazioneStanzaLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 301, Short.MAX_VALUE)
+            .addGap(0, 277, Short.MAX_VALUE)
         );
 
         getContentPane().add(pnlRappresentazioneStanza, java.awt.BorderLayout.CENTER);
@@ -120,9 +139,11 @@ public class GameWindow extends javax.swing.JFrame {
         pnlVerbi.add(btnUsa);
 
         btnApri.setText("Apri");
+        btnApri.addActionListener(this::btnApriActionPerformed);
         pnlVerbi.add(btnApri);
 
         btnGuarda.setText("Guarda");
+        btnGuarda.addActionListener(this::btnGuardaActionPerformed);
         pnlVerbi.add(btnGuarda);
 
         btnSpingi.setText("Spingi");
@@ -192,24 +213,36 @@ public class GameWindow extends javax.swing.JFrame {
     }//GEN-LAST:event_listPersonaggiActionPerformed
 
     private void pnlRappresentazioneStanzaMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_pnlRappresentazioneStanzaMouseClicked
-        // 1. Recupera le coordinate X e Y di dove ha cliccato il mouse rispetto al pannello
+                                                   
         int mouseX = evt.getX();
         int mouseY = evt.getY();
-    
-        // Stampiamo in console per fare i test e "mappare" le coordinate degli oggetti sullo sfondo
-        System.out.println("Hai cliccato nella stanza a coordinate: X = " + mouseX + ", Y = " + mouseY);
-    
-        /* * 2. Esempio logico di controllo (immagina che il Baule si trovi 
-        * in un'area compresa tra X(100-200) e Y(150-250))
-        */
-        if (mouseX >= 100 && mouseX <= 200 && mouseY >= 150 && mouseY <= 250) {
-            txtAreaStoria.setText("Hai cliccato sul Baule di Andy!");
+
+        System.out.println("Cliccato a coordinate: X = " + mouseX + ", Y = " + mouseY);
         
-         // Qui intercetteremo il verbo memorizzato prima, es:
-         // String comando = azioneSelezionata + "|baule";
-         // gameClient.inviaComando(comando);
+        // Se tocchi l'area del Baule
+        if (mouseX >= 100 && mouseX <= 200 && mouseY >= 150 && mouseY <= 250) {
+            this.clientRete.sendCommand(this.azioneSelezionata, "baule");
         }
+    
+        // Se tocchi l'area della Porta
+        if (mouseX >= 500 && mouseX <= 600 && mouseY >= 100 && mouseY <= 250) {
+            this.clientRete.sendCommand(this.azioneSelezionata, "porta");
+        }
+    
+        
     }//GEN-LAST:event_pnlRappresentazioneStanzaMouseClicked
+
+    private void btnGuardaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGuardaActionPerformed
+        // TODO add your handling code here:                                   
+        this.azioneSelezionata = "GUARDA";
+        txtAreaStoria.append("[Sistema]: Hai selezionato l'azione GUARDA. Ora clicca su un oggetto nello scenario.\n");
+    }//GEN-LAST:event_btnGuardaActionPerformed
+
+    private void btnApriActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnApriActionPerformed
+        // TODO add your handling code here:
+        this.azioneSelezionata = "APRI";
+        txtAreaStoria.append("[Sistema]: Hai selezionato l'azione APRI. Ora clicca su un oggetto nello scenario.\n");
+    }//GEN-LAST:event_btnApriActionPerformed
 
     /**
      * @param args the command line arguments
@@ -235,7 +268,51 @@ public class GameWindow extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(() -> new GameWindow().setVisible(true));
     }
+    
+    // =============================================================================
+    // 🔌 METODI PONTE COSTRUITI SUI TUOI COMPONENTI REALI (Richiesti dal GUIHandler)
+    // =============================================================================
 
+    /**
+     * Scrive un testo nell'area principale dei dialoghi.
+     */
+    public void scriviNelLog(String testo) {
+        txtAreaStoria.append(testo + "\n");
+        txtAreaStoria.setCaretPosition(txtAreaStoria.getDocument().getLength());
+    }
+
+    /**
+     * Aggiorna il titolo della stanza in alto.
+     */
+    public void aggiornaNomeStanza(String nomeStanza) {
+        lblNomeStanza.setText(nomeStanza.toUpperCase());
+    }
+
+    /**
+     * Cambia la foto dell'avatar a destra.
+     */
+    public void cambiaIconaAvatar(String percorsoImmagine) {
+        try {
+            lblAvatarPersonaggio.setIcon(new javax.swing.ImageIcon(getClass().getResource(percorsoImmagine)));
+            lblAvatarPersonaggio.setText(""); 
+        } catch (Exception e) {
+            logger.warning("Impossibile caricare l'avatar: " + percorsoImmagine);
+        }
+    }
+
+    /**
+     * Notifica lo spostamento in una nuova stanza.
+     */
+    public void aggiornaSfondoScenario(String idStanza) {
+        scriviNelLog("[Cambio Scenario]: Ti sposti nella stanza ID " + idStanza);
+    }
+
+    /**
+     * Gestisce l'aggiornamento di slot o abilità.
+     */
+    public void aggiornaSlotAbilita(String nomeAbilita, String icona) {
+        scriviNelLog("[Notifica Gioco]: " + nomeAbilita);
+    }
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnApri;
     private javax.swing.JButton btnChiudi;

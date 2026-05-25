@@ -4,162 +4,111 @@
  */
 package com.toystory.server.impl;
 
-import com.toystory.server.Engine;
-import com.toystory.server.type.PickupableObject; 
-import com.toystory.server.type.ContainerObject; 
-import com.toystory.server.type.PlayableCharacter;
-import com.toystory.server.type.HammInventory;
+import com.toystory.server.GameDescription;
 import com.toystory.server.type.Room;
-import com.toystory.server.type.CommandType;
-import java.util.HashMap;
-import java.util.Map;
+import com.toystory.server.type.AdvObject;
+import com.toystory.server.type.ContainerObject;
+import com.toystory.server.type.PickupableObject;
+import com.toystory.server.type.PlayableCharacter;
+import com.toystory.server.type.Ability;
 
 /**
- * Questa classe rappresenta l'implementazione effettiva del gioco di Toy Story.
- * Si occupa di inizializzare la mappa (le stanze), gli oggetti, i personaggi giocabili 
- * e l'inventario globale gestito da Hamm, mantenendo lo stato corrente della partita.
+ * Istanzia concretamente l'universo di gioco: modella la planimetria della casa di Andy 
+ * e delle fogne, colloca i passaggi segreti, definisce gli scarafaggi nemici 
+ * e setta le condizioni di vittoria della storia.
  */
-public class ToyStoryGame {
-
-    // --- ATTRIBUTI DI STATO DEL GIOCO ---
-    
-    /** La stanza in cui si trovano attualmente i personaggi. */
-    private Room currentRoom;
-    
-    /** Il personaggio che il giocatore sta controllando in questo preciso momento (es. "WOODY"). */
-    private PlayableCharacter activeCharacter;
-    
-    /** L'inventario globale condiviso, ovvero la pancia del salvadanaio Hamm. */
-    private HammInventory hamm;
-    
-    /** Mappa per rintracciare rapidamente i personaggi giocabili tramite il loro nome. */
-    private final Map<String, PlayableCharacter> playableCharacters = new HashMap<>();
-    
-    /** Mappa di tutte le stanze del gioco, indicizzate per ID (utile per i passaggi e il database). */
-    private final Map<Integer, Room> rooms = new HashMap<>();
+public class ToyStoryGame extends GameDescription {
 
     /**
-     * Metodo di inizializzazione dell'avventura.
-     * Deve essere chiamato all'avvio del Server per caricare l'Atto 1 (La camera di Andy).
+     * Costruttore di ToyStoryGame. Richiama il costruttore della classe madre.
      */
-    public void init() {
-        // 1. CREAZIONE DEI PERSONAGGI GIOCABILI
-        PlayableCharacter woody = new PlayableCharacter("WOODY");
-        PlayableCharacter buzz = new PlayableCharacter("BUZZ");
-        PlayableCharacter jessie = new PlayableCharacter("JESSIE");
-        hamm = new HammInventory("HAMM");
-        
-        
-        playableCharacters.put("WOODY", woody);
-        playableCharacters.put("BUZZ", buzz);
-        playableCharacters.put("JESSIE", jessie);
-        
-        // Impostiamo lo Sceriffo Woody come personaggio iniziale predefinito
-        activeCharacter = woody;
-
-        // 2. CREAZIONE DELLA PRIMA STANZA (CAMERA DI ANDY)
-        String descrizioneCamera = "Ti trovi nella Camera di Andy. Le pareti sono decorate con le iconiche nuvolette azzurre. "
-                + "Vedi il letto disfatto, la scrivania scolastica e un grande baule dei giocattoli in legno. "
-                + "La porta verso il corridoio è accostata, ma la maniglia è troppo in alto per un giocattolo da solo!";
-        
-        Room cameraAndy = new Room(1, "La Camera di Andy", descrizioneCamera);
-        rooms.put(cameraAndy.getId(), cameraAndy);
-        
-        // Impostiamo la Camera di Andy come punto di partenza del gioco
-        currentRoom = cameraAndy;
-
-        // 3. CREAZIONE E POSIZIONAMENTO DEGLI OGGETTI (Con Ereditarietà)
-        // Creiamo il Lazo (Oggetto raccoglibile)
-        PickupableObject lazo = new PickupableObject(101, "Lazo", "Un lazo di corda robusto, perfetto per agganciare oggetti.");
-        cameraAndy.addObject(lazo); // Lo buttiamo sul pavimento della stanza
-        
-        // Creiamo la Scrivania (Oggetto contenitore fisso)
-        ContainerObject scrivania = new ContainerObject(201, "Scrivania", "La scrivania in legno di Andy. Sopra ci sono dei libri scolastici.");
-        cameraAndy.addObject(scrivania); // Anche la scrivania è un oggetto presente nella stanza
-        
-        // 4. PREPARAZIONE DELLE STANZE SUCCESSIVE (BOZZA PER IL PUNTA E CLICCA)
-        // Creiamo una stanza finta ("Corridoio") solo per configurare il varco della porta
-        Room corridoio = new Room(2, "Il Corridoio", "Il corridoio del piano di sopra. Senti Buster russare in lontananza.");
-        rooms.put(corridoio.getId(), corridoio);
-        
-        // Colleghiamo la camera al corridoio tramite il varco grafico denominato "Porta"
-        cameraAndy.addExit("Porta", corridoio);
+    public ToyStoryGame() {
+        super();
     }
 
-    // --- METODI GETTER E SETTER PER LA LOGICA DI GIOCO ---
+    /**
+     * Implementazione del metodo astratto init(). Viene invocato dall'Engine 
+     * all'avvio del server per generare il mondo di gioco.
+     */
+    @Override
+    public void init() throws Exception {
+        // ---------------------------------------------------------------------
+        // INIZIALIZZAZIONE DEI FLAG DI PROGRESSIONE (TRAMA)
+        // ---------------------------------------------------------------------
+        // Questi flag ereditati dalla classe madre verranno letti e modificati 
+        // dagli Observer (es. UseObserver, OpenObserver) per far avanzare la storia.
+        this.getFlags().put("TUTORIAL_START", true); // Il gioco è appena iniziato
+        this.getFlags().put("CHEST_OPENED", false);   // Il baule parte chiuso
+        this.getFlags().put("LASER_USED", false);     // Buzz non ha ancora illuminato il letto
+        this.getFlags().put("LAZO_UNLOCKED", false);  // Woody non ha ancora ottenuto il lazo
 
-    public Room getCurrentRoom() {
-        return currentRoom;
+        // ---------------------------------------------------------------------
+        // AVVIO CONFIGURAZIONE DELLE STANZE
+        // ---------------------------------------------------------------------
+        // Configura il primo livello (Tutorial nella Camera di Andy)
+        configureCameraAndy();
+        
+        // [Nota futura]: Qui verranno inseriti i metodi per le stanze successive
+        // configureCorridoio();
+        // configureFogne();
     }
-    public void setCurrentRoom(Room currentRoom) {
-        this.currentRoom = currentRoom;
-    }
+
     /**
-     * @return Il personaggio giocabile attualmente sotto il controllo dell'utente.
+     * Genera la mappa, gli oggetti interattivi, le hitbox logiche e i personaggi 
+     * per la prima stanza di gioco (Camera di Andy).
      */
-    public PlayableCharacter getActiveCharacter() { 
-        return activeCharacter; 
-    }
-    /**
-     * Permette il cambio del personaggio attivo (Meccanica del "CHIAMA").
-     * @param characterName Il nome del personaggio da attivare (es. "BUZZ").
-     */
-    public void switchCharacter(String characterName) {
-        PlayableCharacter target = playableCharacters.get(characterName.toUpperCase());
-        if (target != null) { 
-            this.activeCharacter = target; 
-        }
-    }
-    /**
-     * @return Il personaggio NPC speciale Hamm, che funge da inventario di squadra.
-     */
-    public HammInventory getHamm() { 
-        return hamm; 
-    }
-    /**
-     * @return La mappa contenente tutti i personaggi giocabili registrati nel gioco.
-     */
-    public Map<String, PlayableCharacter> getPlayableCharacters() { 
-        return playableCharacters; 
-    }
-    /**
-     * @return La mappa completa di tutte le stanze del gioco, indicizzate per ID.
-     */
-    public Map<Integer, Room> getRooms() {
-        return rooms;
-    }
-    // --- TEST LOCALE (TAPPA 1 DEL NOSTRO PIANO) ---
-    
-    /**
-     * Piccolo metodo main temporaneo. Serve per fare click destro su questo file 
-     * in NetBeans e selezionare "Run File" per verificare che tutto si carichi correttamente.
-     */
-    public static void main(String[] args) {
-        // 1. Inizializziamo il gioco
-        ToyStoryGame game = new ToyStoryGame();
-        game.init();
+    private void configureCameraAndy() {
+        // 1. CREAZIONE DELLA STANZA (Contenitore macroscopico di scenario)
+        // ID: 1, Nome: Camera di Andy
+        Room cameraAndy = new Room(1, "Camera di Andy", 
+            "La stanza di Andy. È la mattina del suo compleanno, la stanza è vuota e silenziosa.");
         
-        // 2. Inizializziamo l'Engine passandogli il gioco
-        Engine engine = new Engine(game);
+        // 2. CREAZIONE DEGLI OGGETTI (Strutture dati del pacchetto com.toystory.server.type)
+        // Definiamo i nomi rigorosamente in minuscolo per facilitare il parsing dei comandi di rete
         
-        System.out.println("=== INIZIO SIMULAZIONE DIRETTA ENGINE (PUNTA E CLICCA) ===");
+        // Oggetto raccoglibile (PickupableObject): finirà nell'inventario tascabile
+        PickupableObject chiave = new PickupableObject(101, "chiave", "Una piccola chiave dorata, ideale per un lucchetto.");
         
-        // Simulazione Click su: GUARDA STANZA
-        System.out.println("\n[Utente clicca GUARDA]");
-        System.out.println("Risposta Server: " + engine.executeAction(CommandType.GUARDA, ""));
+        // Oggetto di scenario fisso (AdvObject): l'utente può GUARDARE o PRENDERE oggetti da qui
+        AdvObject libreria = new AdvObject(201, "libreria", "Una libreria in legno piena di fumetti e libri di avventure.") {};
         
-        // Simulazione Click su: PRENDI -> Lazo
-        System.out.println("\n[Utente clicca PRENDI su 'Lazo']");
-        System.out.println("Risposta Server: " + engine.executeAction(CommandType.PRENDI, "Lazo"));
+        // Oggetto Contenitore (ContainerObject): può essere APERTO e bloccato/sbloccato con chiavi
+        ContainerObject baule = new ContainerObject(202, "baule", "Il grande baule in legno dei giocattoli.") {};
+        baule.setLocked(true); // Impone il blocco iniziale (richiede l'azione USA chiave CON baule)
+        baule.setOpen(false);   // Il coperchio è abbassato
+
+        // Elementi ambientali statici utili alla seconda parte del tutorial
+        AdvObject letto = new AdvObject(203, "letto", "Il letto di Andy. Sotto è decisamente troppo buio per vedere a occhio nudo.") {};
+        AdvObject porta = new AdvObject(204, "porta", "La porta della camera. Il pomello dorato è troppo in alto per un giocattolo di pezza.") {};
+
+        // 3. COLLOCAMENTO DEGLI OGGETTI NELLO SCENARIO
+        // Agganciamo gli oggetti appena creati alla lista degli elementi presenti in questa stanza
+        cameraAndy.getObjects().add(chiave);
+        cameraAndy.getObjects().add(libreria);
+        cameraAndy.getObjects().add(baule);
+        cameraAndy.getObjects().add(letto);
+        cameraAndy.getObjects().add(porta);
+
+        // 4. CONFIGURAZIONE DEI PERSONAGGI GIOCABILI (PlayableCharacter)
+        PlayableCharacter woody = new PlayableCharacter("Woody");
+        PlayableCharacter buzz = new PlayableCharacter("Buzz Lightyear");
+
+        // Buzz Lightyear: Viene inizializzato equipaggiando la sua mossa peculiare (Il Laser)
+        Ability laser = new Ability("Laser", "/images/skills/laser.png");
+        buzz.setAbility(laser);
+
+        // Woody: Nella prima parte della storia non ha il lazo (valore impostato a null)
+        // Verrà sbloccato dinamicamente via codice durante gli eventi di gioco
+        woody.setAbility(null); 
+
+        // 5. REGISTRAZIONE DELLO STATO INIZIALE NELLA CLASSE MADRE (GameDescription)
+        // Salva la stanza nell'elenco globale del gioco
+        this.getRooms().add(cameraAndy);
         
-        // Simulazione Click su: CHIAMA -> Buzz
-        System.out.println("\n[Utente clicca CHIAMA su 'Buzz']");
-        System.out.println("Risposta Server: " + engine.executeAction(CommandType.CHIAMA, "Buzz"));
+        // Comunica al Server che la partita comincia fisicamente all'interno della Camera di Andy
+        this.setCurrentRoom(cameraAndy);      
         
-        // Simulazione Click su: VAI_A -> Porta (Senza aver risolto l'enigma)
-        System.out.println("\n[Utente clicca sul varco 'Porta']");
-        System.out.println("Risposta Server: " + engine.executeAction(CommandType.VAI_A, "Porta"));
-        
-        System.out.println("\n========================================================");
+        // Imposta Woody come personaggio attivo selezionato di default al primo avvio
+        this.setCurrentPlayer(woody);        
     }
 }
