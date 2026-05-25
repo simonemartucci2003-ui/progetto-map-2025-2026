@@ -13,4 +13,11 @@
     <artifactId>toy-story-client</artifactId>
     <packaging>jar</packaging>
     <name>toy-story-client</name>
+    <dependencies>
+        <dependency>
+            <groupId>org.netbeans.external</groupId>
+            <artifactId>AbsoluteLayout</artifactId>
+            <version>RELEASE290</version>
+        </dependency>
+    </dependencies>
 </project>
