@@ -12,13 +12,52 @@ public class GameWindow extends javax.swing.JFrame {
     
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(GameWindow.class.getName());
 
-    /**
+   /**
      * Creates new form GameWindow
      */
     public GameWindow() {
+        // crei i componenti originali nella loro posizione perfetta
         initComponents();
-    }
+        
+        // Trasformiamo i bottoni standard in bottoni Pixel Art azzurri con le nuvole
+        applicaStileToyStory(btnGuarda, "GUARDA");
+        applicaStileToyStory(btnPrendi, "PRENDI");
+        applicaStileToyStory(btnUsa, "USA");
+        applicaStileToyStory(btnApri, "APRI");
+        applicaStileToyStory(btnChiudi, "CHIUDI");
+        applicaStileToyStory(btnParla, "PARLA");
+        applicaStileToyStory(btnDai, "DAI");
+        applicaStileToyStory(btnSpingi, "SPINGI");
+        applicaStileToyStory(btnTira, "TIRA");
+        
+        // ====================================================================
+        // INIZIALIZZAZIONE E TRACCIAMENTO DELLE COORDINATE DELLA STANZA
+        // ====================================================================
 
+        // 1. Puliamo il pannello da eventuali vecchi residui grafici
+        pnlRappresentazioneStanza.removeAll();
+
+        // 2. Creiamo il visualizzatore adattivo
+        com.toystory.client.view.PannelloImmagineAdattiva visualizzatoreStanza = 
+                new com.toystory.client.view.PannelloImmagineAdattiva();
+
+        // 3. Lo impostiamo al centro del pannello principale
+        pnlRappresentazioneStanza.setLayout(new java.awt.BorderLayout());
+        pnlRappresentazioneStanza.add(visualizzatoreStanza, java.awt.BorderLayout.CENTER);
+
+        // 4. Diciamo al visualizzatore di inoltrare i clic a "pnlRappresentazioneStanzaMouseClicked"
+        visualizzatoreStanza.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                pnlRappresentazioneStanzaMouseClicked(evt);
+            }
+        });
+
+        // 5. Aggiorniamo la grafica del pannello per renderlo visibile subito
+        pnlRappresentazioneStanza.revalidate();
+        pnlRappresentazioneStanza.repaint();
+    }
+    
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -31,7 +70,7 @@ public class GameWindow extends javax.swing.JFrame {
         pnlSuperiore = new javax.swing.JPanel();
         btnMenu = new javax.swing.JButton();
         lblNomeStanza = new javax.swing.JLabel();
-        pnlRappresentazioneStanza = new javax.swing.JPanel();
+        pnlRappresentazioneStanza = new com.toystory.client.view.PannelloImmagineAdattiva();
         pnlInferiore = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         txtAreaStoria = new javax.swing.JTextArea();
@@ -80,7 +119,7 @@ public class GameWindow extends javax.swing.JFrame {
         pnlRappresentazioneStanza.setLayout(pnlRappresentazioneStanzaLayout);
         pnlRappresentazioneStanzaLayout.setHorizontalGroup(
             pnlRappresentazioneStanzaLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 696, Short.MAX_VALUE)
+            .addGap(0, 732, Short.MAX_VALUE)
         );
         pnlRappresentazioneStanzaLayout.setVerticalGroup(
             pnlRappresentazioneStanzaLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -92,6 +131,7 @@ public class GameWindow extends javax.swing.JFrame {
         pnlInferiore.setPreferredSize(new java.awt.Dimension(800, 150));
         pnlInferiore.setLayout(new java.awt.BorderLayout());
 
+        jScrollPane1.setBackground(java.awt.Color.lightGray);
         jScrollPane1.setPreferredSize(new java.awt.Dimension(234, 40));
 
         txtAreaStoria.setEditable(false);
@@ -104,6 +144,8 @@ public class GameWindow extends javax.swing.JFrame {
 
         pnlInferiore.add(jScrollPane1, java.awt.BorderLayout.PAGE_START);
 
+        pnlPulsantiera.setBackground(new java.awt.Color(0, 204, 255));
+        pnlPulsantiera.setForeground(new java.awt.Color(0, 0, 102));
         pnlPulsantiera.setLayout(new java.awt.GridLayout(1, 3));
 
         pnlVerbi.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 3, 1, 3));
@@ -235,7 +277,20 @@ public class GameWindow extends javax.swing.JFrame {
         /* Create and display the form */
         java.awt.EventQueue.invokeLater(() -> new GameWindow().setVisible(true));
     }
+private void applicaStileToyStory(javax.swing.JButton bottone, String verbo) {
+    // Genera l'immagine standard e quella per quando il mouse ci passa sopra (Rollover/Hover)
+    bottone.setIcon(PixelButtonGenerator.createToyStoryButton(verbo, false));
+    bottone.setRolloverIcon(PixelButtonGenerator.createToyStoryButton(verbo, true));
+    bottone.setPressedIcon(PixelButtonGenerator.createToyStoryButton(verbo, true));
 
+    // Rimuove la vecchia grafica grigia standard delle finestre
+    bottone.setBorderPainted(false);
+    bottone.setContentAreaFilled(false);
+    bottone.setFocusPainted(false);
+    
+    // Rimuove il vecchio testo testuale, visto che ora la parola è disegnata dentro l'immagine!
+    bottone.setText(""); 
+}
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnApri;
     private javax.swing.JButton btnChiudi;
