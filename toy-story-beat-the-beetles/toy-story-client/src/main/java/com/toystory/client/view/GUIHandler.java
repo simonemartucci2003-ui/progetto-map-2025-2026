@@ -19,6 +19,7 @@ public class GUIHandler {
 
     /**
      * Prende la stringa (es: "TESTO|Ciao!|CAMBIA_SFONDO|2") e muove la grafica
+     * @param messaggioServer
      */
     public void processaComando(String messaggioServer) {
         if (messaggioServer == null || messaggioServer.isEmpty()) return;
@@ -40,6 +41,7 @@ public class GUIHandler {
                 case "CAMBIA_SFONDO":
                     // Cambia lo sfondo della stanza nella finestra
                     finestra.aggiornaSfondoScenario(valore);
+                    finestra.getMappaScenario().setStanzaCorrenteId(valore);
                     break;
                     
                 case "SWITCH_AVATAR":

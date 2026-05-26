@@ -126,9 +126,58 @@ Il modulo Client funge da puro Frontend (si limita a fare da tramite tra gli occ
 
 
 #### 🗁 `com.toystory.client.view`
-
-* **`GameWindow.java`:** Estende `JFrame`. Definisce il layout visivo desktop del gioco: l'area di scorrimento della storia, i pannelli laterali per gli inventari personali dei giocattoli e i pulsanti contestuali per interagire con l'ambiente circostante.
+* **GameWindow.java**: Estende `JFrame`. Definisce il layout visivo desktop del gioco, strutturato rigorosamente per emulare lo stile delle avventure grafiche classiche "punta e clicca" tramite l'uso combinato di molteplici `LayoutManager` nidificati:
+    * **Pannello Superiore (`pnlSuperiore`)**: Configurato in `BorderLayout`, ospita sul lato occidentale (`WEST`) il pulsante di interazione con il `MENU` di gioco e al centro (`CENTER`) una `JLabel` dinamica preposta alla visualizzazione del nome della stanza corrente.
+    * **Pannello Centrale (`pnlRappresentazioneStanza`)**: Un `JPanel` adibito all'ancoraggio della componente grafica principale (`CENTER` del frame), all'interno della quale viene proiettata e renderizzata la rappresentazione visiva dell'ambiente di gioco (ROOM).
+    * **Pannello Inferiore (`pnlInferiore`)**: Posizionato a Sud (`SOUTH`), funge da macro-contenitore diviso a sua volta in:
+        * Una `JTextArea` non modificabile e con wrapping attivo (`txtAreaStoria`), adibita alla visualizzazione sequenziale delle descrizioni testuali e dei dialoghi narrati dal server.
+        * Una griglia di comando (`pnlPulsantiera`) organizzata tramite un `GridLayout` a tre sezioni distinte e separate da margini interni (`EmptyBorder`) per garantire pulizia ed ergonomia visiva.
+    * **La Pulsantiera di Interazione**: È suddivisa in tre blocchi operativi:
+        1.  *Matrice dei Verbi (`pnlVerbi`)*: Una griglia 3x3 contenente i 9 pulsanti d'azione standard (`DAI`, `PRENDI`, `USA`, `APRI`, `GUARDA`, `SPINGI`, `CHIUDI`, `PARLA`, `TIRA`) deputati a registrare l'input d'azione primario dell'utente.
+        2.  *Inventario Locale (`pnlTasche`)*: Una colonna verticale a due slot (`JButton`) che riflette in tempo reale il contenuto delle tasche del personaggio attualmente controllato dal giocatore.
+        3.  *Stato del Giocatore (`pnlPersonaggio`)*: Gestito in `BorderLayout`, contiene un menu di selezione (`JComboBox`/`JList`) nella sezione superiore per effettuare lo switch tra i personaggi giocabili disponibili, una `JLabel` centrale (`lblAvatarPersonaggio`) configurata per mostrare l'icona grafica (avatar) del giocattolo attivo e una seconda label in posizione inferiore per stamparne il nome.
+    * *Logica di Interazione Interna*: Implementa una macchina a stati elementare per catturare sequenzialmente le combinazioni di click (es. *Verbo + Oggetto Inventario* o *Verbo + Elemento della Stanza*), aggregando i dati in stringhe conformi al protocollo applicativo prima di effettuarne l'inoltro sulla rete.
 * **`GUIHandler.java`:** Agisce da mediatore per la View. Riceve le stringhe inoltrate dal `GameClient` (tramite la Lambda di callback) ed esegue in sicurezza gli aggiornamenti grafici sul thread grafico di Java (Event Dispatch Thread via `SwingUtilities.invokeLater`).
+##### 🔄 Logica di Flusso: Protocollo Asincrono Rete-GUI
+
+Al fine di garantire il completo disaccoppiamento tra l'infrastruttura di rete e l'interfaccia utente, è stata implementata una gerarchia di comunicazione basata su una macchina a stati sequenziale guidata dal `GUIHandler`. Questa struttura risolve le problematiche legate alla gestione concorrente degli eventi grafici e della ricezione asincrona dei pacchetti.
+
+Il flusso di esecuzione e interazione segue un ciclo rigidamente codificato:
+
+1. **Selezione dell'Azione (Input Primario):** Quando il giocatore preme uno dei pulsanti della matrice dei verbi (es. `btnGuarda` o `btnApri`), la finestra non invia dati sulla rete, ma altera unicamente lo stato interno della View aggiornando la variabile stringa `azioneSelezionata` (es. `this.azioneSelezionata = "GUARDA";`).
+>
+Cosa significa in pratica: Quando clicchi sul pulsante "GUARDA" o "APRI" nell'interfaccia grafica, non parte nessuna richiesta su internet. Il programma non contatta il server.
+Perché si fa: La finestra si limita a prendere un "appunto" mentale. Salva la parola "GUARDA" dentro una variabile del codice (azioneSelezionata). Il gioco ora sa cosa vuoi fare, ma sta ancora aspettando di sapere su cosa vuoi farlo.
+>
+2. **Cattura delle Coordinate Ambientali (Input Secondario):** Il click sul pannello `pnlRappresentazioneStanza` viene intercettato da un `MouseListener`. Il metodo `pnlRappresentazioneStanzaMouseClicked` mappa le coordinate logiche $X$ e $Y$ del cursore. Attraverso un controllo condizionale geometrico (Bounding Box), l'interfaccia determina l'identificativo testuale dell'oggetto mirato (es. `mouseX >= 100 && mouseX <= 200` identifica il `baule`).
+>
+Cosa significa in pratica: Subito dopo aver cliccato "GUARDA", sposti il mouse sullo scenario (il pannello centrale) e clicchi, ad esempio, su un baule disegnato sullo sfondo.
+Il computer intercetta il click e rileva i pixel esatti (es. coordinata $X=150$, coordinata $Y=200$).
+Il Bounding Box: Siccome l'immagine di sfondo è un blocco unico, Java non sa dove si trova il baule. Quindi abbiamo creato un "rettangolo invisibile" (il Bounding Box). Il codice fa un controllo matematico: «Se il click è avvenuto tra X=100 e X=200, allora l'utente ha toccato il baule». Ora il gioco ha l'azione (GUARDA) e il bersaglio (baule).
+>
+
+3. **Inoltro della Richiesta:** Ottenuto il bersaglio, la View interroga l'istanza di `GameClient` invocando il metodo `sendCommand(azioneSelezionata, target)`. Il pacchetto viene formattato secondo il protocollo di rete predefinito mediante token separati da pipe (`|`) e trasmesso sul socket TCP verso il server.
+>
+Cosa significa in pratica: Solo adesso il Client impacchetta le informazioni e le spedisce a chilometri di distanza sul cavo di rete al Server.
+Il protocollo con il Pipe: Per farlo in modo leggero, unisce le due parole usando una barra verticale (|), creando la stringa "GUARDA|baule". Il GameClient prende questa parolina e la spara nel tunnel della rete (il Socket TCP).
+>
+4. **Smistamento e Parsing Asincrono:** Il thread di ascolto di `GameClient` riceve il responso dal server e, tramite la Lambda di callback di tipo `Consumer<String>`, lo delega istantaneamente al metodo `processaComando` di `GUIHandler`.
+>
+Cosa significa in pratica: Il Server riceve "GUARDA|baule", controlla se il baule è vicino al giocatore, e risponde al client con un messaggio del tipo: "TESTO|Hai aperto il baule!|SWITCH_AVATAR|woody_happy.png".
+La magia dell'Asincronia: Il Client ha un Thread (un binario di esecuzione separato) che sta costantemente con l'orecchio teso sulla rete. Quando arriva questa risposta dal server, questo thread la cattura.
+Grazie alla Lambda Expression (Consumer<String>), questo thread di rete non tocca la grafica (sarebbe pericoloso!), ma bussa alla porta del GUIHandler (il passacarte) e gli dice: «Ehi, è arrivato questo messaggio dal server, smontalo (parsing) e vedi cosa dobbiamo fare». Il GUIHandler rompe la stringa e capisce che deve scrivere un testo e cambiare una foto.
+>
+5. **Esecuzione in Sicurezza (EDT):** Per preservare l'integrità dei componenti Swing e prevenire condizioni di instabilità grafica o *race condition*, il `GUIHandler` non aggiorna direttamente i widget, ma incapsula le chiamate ai metodi ponte all'interno del thread di gestione degli eventi di Java tramite il costrutto `javax.swing.SwingUtilities.invokeLater()`. 
+>
+La spiegazione semplice del problema: In Java Swing, c'è una regola tassativa e sacra: la grafica può essere modificata da un solo thread alla volta, chiamato EDT (Event Dispatch Thread). Se il thread della rete provasse a cambiare direttamente il testo della finestra mentre l'utente sta ridimensionando la finestra o cliccando un altro tasto, il programma andrebbe in crash o vedresti la grafica "sffarfallare" o rompersi (questa è la race condition, ovvero due thread che litigano per toccare lo stesso oggetto).
+
+La Soluzione (SwingUtilities.invokeLater): Per evitare questo scontro, il GUIHandler non tocca i componenti. Prende le istruzioni del server e le mette dentro un "bigliettino". Poi, usando invokeLater(), lancia questo bigliettino nella coda di lavoro ufficiale del thread grafico. Non appena il thread grafico è libero (questione di microsecondi), prende il bigliettino ed esegue i metodi ponte (es. scriviNelLog()).
+>
+
+Attraverso questo ciclo, i metodi pubblici di interfaccia realizzati dentro `GameWindow` (come `scriviNelLog()`, `aggiornaNomeStanza()` o `cambiaIconaAvatar()`) agiscono da esecutori puri dei comandi impartiti dal server, blindando l'applicazione da vincoli di sincronizzazione rigidi.
+
+
+
 
 ---
 

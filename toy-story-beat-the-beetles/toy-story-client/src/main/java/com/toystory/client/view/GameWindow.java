@@ -12,8 +12,8 @@ import com.toystory.client.GameClient;
 public class GameWindow extends javax.swing.JFrame {
     
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(GameWindow.class.getName());
-    
-    private GameClient clientRete;
+    private final MappaScenario mappaScenario = new MappaScenario();
+    private final GameClient clientRete;
     private GUIHandler handlerGrafico;
     private String azioneSelezionata = "GUARDA";
     
@@ -36,6 +36,46 @@ public class GameWindow extends javax.swing.JFrame {
         
         // 3. Avviamo la connessione reale con il Server
         this.clientRete.connect();
+        
+          
+        // Trasformiamo i bottoni standard in bottoni Pixel Art azzurri con le nuvole
+        applicaStileToyStory(btnGuarda, "GUARDA");
+        applicaStileToyStory(btnPrendi, "PRENDI");
+        applicaStileToyStory(btnUsa, "USA");
+        applicaStileToyStory(btnApri, "APRI");
+        applicaStileToyStory(btnChiudi, "CHIUDI");
+        applicaStileToyStory(btnParla, "PARLA");
+        applicaStileToyStory(btnDai, "DAI");
+        applicaStileToyStory(btnSpingi, "SPINGI");
+        applicaStileToyStory(btnTira, "TIRA");
+        
+        // ====================================================================
+        // INIZIALIZZAZIONE E TRACCIAMENTO DELLE COORDINATE DELLA STANZA
+        // ====================================================================
+
+        // 1. Puliamo il pannello da eventuali vecchi residui grafici
+        pnlRappresentazioneStanza.removeAll();
+
+        // 2. Creiamo il visualizzatore adattivo
+        com.toystory.client.view.PannelloImmagineAdattiva visualizzatoreStanza = 
+                new com.toystory.client.view.PannelloImmagineAdattiva();
+
+        // 3. Lo impostiamo al centro del pannello principale
+        pnlRappresentazioneStanza.setLayout(new java.awt.BorderLayout());
+        pnlRappresentazioneStanza.add(visualizzatoreStanza, java.awt.BorderLayout.CENTER);
+
+        // 4. Diciamo al visualizzatore di inoltrare i clic a "pnlRappresentazioneStanzaMouseClicked"
+        visualizzatoreStanza.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent evt) {
+                pnlRappresentazioneStanzaMouseClicked(evt);
+            }
+        });
+
+        // 5. Aggiorniamo la grafica del pannello per renderlo visibile subito
+        pnlRappresentazioneStanza.revalidate();
+        pnlRappresentazioneStanza.repaint();
+    
     }
 
     /**
@@ -50,7 +90,7 @@ public class GameWindow extends javax.swing.JFrame {
         pnlSuperiore = new javax.swing.JPanel();
         btnMenu = new javax.swing.JButton();
         lblNomeStanza = new javax.swing.JLabel();
-        pnlRappresentazioneStanza = new javax.swing.JPanel();
+        pnlRappresentazioneStanza = new com.toystory.client.view.PannelloImmagineAdattiva();
         pnlInferiore = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         txtAreaStoria = new javax.swing.JTextArea();
@@ -214,21 +254,18 @@ public class GameWindow extends javax.swing.JFrame {
 
     private void pnlRappresentazioneStanzaMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_pnlRappresentazioneStanzaMouseClicked
                                                    
+         // 1. Recupera le coordinate X e Y di dove ha cliccato il mouse rispetto al pannello
         int mouseX = evt.getX();
         int mouseY = evt.getY();
 
-        System.out.println("Cliccato a coordinate: X = " + mouseX + ", Y = " + mouseY);
-        
-        // Se tocchi l'area del Baule
-        if (mouseX >= 100 && mouseX <= 200 && mouseY >= 150 && mouseY <= 250) {
-            this.clientRete.sendCommand(this.azioneSelezionata, "baule");
+        // Chiediamo al gestore delle mappe se c'è qualcosa sotto questi pixel
+        String targetEffettivo = mappaScenario.cercaTarget(mouseX, mouseY);
+         // Se ha trovato qualcosa, lo manda alla rete, altrimenti non fa nulla!
+        if (targetEffettivo != null) {
+            this.clientRete.sendCommand(this.azioneSelezionata, targetEffettivo);
+        } else {
+            txtAreaStoria.append("[Sistema]: Lì non c'è nulla di interessante.\n");
         }
-    
-        // Se tocchi l'area della Porta
-        if (mouseX >= 500 && mouseX <= 600 && mouseY >= 100 && mouseY <= 250) {
-            this.clientRete.sendCommand(this.azioneSelezionata, "porta");
-        }
-    
         
     }//GEN-LAST:event_pnlRappresentazioneStanzaMouseClicked
 
@@ -275,6 +312,7 @@ public class GameWindow extends javax.swing.JFrame {
 
     /**
      * Scrive un testo nell'area principale dei dialoghi.
+     * @param testo
      */
     public void scriviNelLog(String testo) {
         txtAreaStoria.append(testo + "\n");
@@ -283,6 +321,7 @@ public class GameWindow extends javax.swing.JFrame {
 
     /**
      * Aggiorna il titolo della stanza in alto.
+     * @param nomeStanza
      */
     public void aggiornaNomeStanza(String nomeStanza) {
         lblNomeStanza.setText(nomeStanza.toUpperCase());
@@ -290,6 +329,7 @@ public class GameWindow extends javax.swing.JFrame {
 
     /**
      * Cambia la foto dell'avatar a destra.
+     * @param percorsoImmagine
      */
     public void cambiaIconaAvatar(String percorsoImmagine) {
         try {
@@ -302,6 +342,7 @@ public class GameWindow extends javax.swing.JFrame {
 
     /**
      * Notifica lo spostamento in una nuova stanza.
+     * @param idStanza
      */
     public void aggiornaSfondoScenario(String idStanza) {
         scriviNelLog("[Cambio Scenario]: Ti sposti nella stanza ID " + idStanza);
@@ -309,10 +350,29 @@ public class GameWindow extends javax.swing.JFrame {
 
     /**
      * Gestisce l'aggiornamento di slot o abilità.
+     * @param nomeAbilita
+     * @param icona
      */
     public void aggiornaSlotAbilita(String nomeAbilita, String icona) {
         scriviNelLog("[Notifica Gioco]: " + nomeAbilita);
     }
+    
+    private void applicaStileToyStory(javax.swing.JButton bottone, String verbo) {
+        // Genera l'immagine standard e quella per quando il mouse ci passa sopra (Rollover/Hover)
+        bottone.setIcon(PixelButtonGenerator.createToyStoryButton(verbo, false));
+        bottone.setRolloverIcon(PixelButtonGenerator.createToyStoryButton(verbo, true));
+        bottone.setPressedIcon(PixelButtonGenerator.createToyStoryButton(verbo, true));
+
+           // Rimuove la vecchia grafica grigia standard delle finestre
+           bottone.setBorderPainted(false);
+           bottone.setContentAreaFilled(false);
+           bottone.setFocusPainted(false);
+           // Rimuove il vecchio testo testuale, visto che ora la parola è disegnata dentro l'immagine
+           bottone.setText(""); 
+    }
+
+    public MappaScenario getMappaScenario() { return mappaScenario; }
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnApri;
     private javax.swing.JButton btnChiudi;
