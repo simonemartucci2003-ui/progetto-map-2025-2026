@@ -11,13 +11,15 @@ package com.toystory.client.view;
 public class GameWindow extends javax.swing.JFrame {
     
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(GameWindow.class.getName());
-
+    private MappaScenario mappaScenario = new MappaScenario();
+    
    /**
      * Creates new form GameWindow
      */
     public GameWindow() {
         // crei i componenti originali nella loro posizione perfetta
         initComponents();
+        
         
         // Trasformiamo i bottoni standard in bottoni Pixel Art azzurri con le nuvole
         applicaStileToyStory(btnGuarda, "GUARDA");
@@ -237,19 +239,15 @@ public class GameWindow extends javax.swing.JFrame {
         // 1. Recupera le coordinate X e Y di dove ha cliccato il mouse rispetto al pannello
         int mouseX = evt.getX();
         int mouseY = evt.getY();
+
+        // Chiediamo al gestore delle mappe se c'è qualcosa sotto questi pixel
+        String targetEffettivo = mappaScenario.cercaTarget(mouseX, mouseY);
     
-        // Stampiamo in console per fare i test e "mappare" le coordinate degli oggetti sullo sfondo
-        System.out.println("Hai cliccato nella stanza a coordinate: X = " + mouseX + ", Y = " + mouseY);
-    
-        /* * 2. Esempio logico di controllo (immagina che il Baule si trovi 
-        * in un'area compresa tra X(100-200) e Y(150-250))
-        */
-        if (mouseX >= 100 && mouseX <= 200 && mouseY >= 150 && mouseY <= 250) {
-            txtAreaStoria.setText("Hai cliccato sul Baule di Andy!");
-        
-         // Qui intercetteremo il verbo memorizzato prima, es:
-         // String comando = azioneSelezionata + "|baule";
-         // gameClient.inviaComando(comando);
+        // Se ha trovato qualcosa, lo manda alla rete, altrimenti non fa nulla!
+        if (targetEffettivo != null) {
+            this.clientRete.sendCommand(this.azioneSelezionata, targetEffettivo);
+        } else {
+            txtAreaStoria.append("[Sistema]: Lì non c'è nulla di interessante.\n");
         }
     }//GEN-LAST:event_pnlRappresentazioneStanzaMouseClicked
 
@@ -291,6 +289,10 @@ private void applicaStileToyStory(javax.swing.JButton bottone, String verbo) {
     // Rimuove il vecchio testo testuale, visto che ora la parola è disegnata dentro l'immagine!
     bottone.setText(""); 
 }
+
+public MappaScenario getMappaScenario() { return mappaScenario; }
+
+
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JButton btnApri;
     private javax.swing.JButton btnChiudi;
