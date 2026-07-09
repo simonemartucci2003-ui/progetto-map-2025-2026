@@ -51,8 +51,16 @@ public class OpenObserver implements GameObserver {
                     // CASO 2: Il baule è stato sbloccato (con la chiave in UseObserver) ma non ancora aperto
                     if (!baule.isOpen()) {
                         baule.setOpen(true);
-                        state.getFlags().put("CHEST_OPENED", true); // Aggiorna il flag di progressione
+                        // Usa il nuovo metodo di GameDescription per salvare in RAM e su DB
+                        state.saveFlag("CHEST_OPENED", true);
                         
+                        try {
+                            // Aggiorna la riga del contenitore (is_open = true)
+                            DatabaseManager.getInstance().updateContainerState(baule.getId(), true, baule.isLocked());
+                        } catch (Exception e) {
+                            System.err.println("[OpenObserver] Errore salvataggio stato contenitore: " + e.getMessage());
+                        }
+
                         return "TESTO|Afferri il bordo e sollevi il pesante coperchio di legno. Il baule si spalanca!"
                                 + "\nREX: 'WOODY! Meno male, stavamo soffocando qui dentro!' "
                                 + "\nMR. POTATO: 'Qualcuno ha visto il mio orecchio sinistro? Scommetto che è finito sotto il letto di Andy!'";

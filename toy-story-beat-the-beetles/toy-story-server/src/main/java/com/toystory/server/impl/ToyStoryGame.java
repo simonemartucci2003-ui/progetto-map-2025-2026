@@ -51,6 +51,11 @@ public class ToyStoryGame extends GameDescription {
         // [Nota futura]: Qui verranno inseriti i metodi per le stanze successive
         // configureCorridoio();
         // configureFogne();
+
+        //DATABASE
+        // 2. Chiediamo alla classe base di occuparsi del database
+        // ToyStoryGame non sa NIENTE del DB, sa solo che il mondo deve essere sincronizzato.
+        this.syncWorldWithDatabase();
     }
 
     /**

@@ -75,13 +75,27 @@ public class ServerThread extends Thread {
                     // 2. Estraiamo il target (l'oggetto o stanza cliccata), se non c'è passiamo una stringa vuota
                     String target = (parts.length > 1) ? parts[1] : "";
 
-                    // 3. Interroghiamo l'Engine per processare l'azione e ricevere la descrizione/risultato
-                    String rispostaServer = engine.executeAction(tipoComando, target);
+                    // Creiamo un blocco sincronizzato sull'Engine (che è unico per tutti)
+                    // In questo modo, il server gestirà rigorosamente UN comando alla volta.
+                    synchronized (engine) {
+                        try {
+                            // --- MODIFICA DATABASE ---
+                            com.toystory.server.database.DatabaseManager.getInstance().startTransaction();
 
-                    // 4. STRATAGEMMA MULTIPLAYER: Inviamo il risultato a tutti i giocatori
-                    // se l'observer ha restituito qualcosa di valido
-                    if (rispostaServer != null) {
-                        sendToAllPlayers(rispostaServer);
+                            // 2. Interroghiamo l'Engine
+                            String rispostaServer = engine.executeAction(tipoComando, target);
+
+                            // 3. Inviamo il risultato o annulliamo
+                            if (rispostaServer != null) {
+                                com.toystory.server.database.DatabaseManager.getInstance().commitTransaction();
+                                sendToAllPlayers(rispostaServer);
+                            } else {
+                                com.toystory.server.database.DatabaseManager.getInstance().rollbackTransaction();
+                            }
+                        } catch (Exception e) {
+                            com.toystory.server.database.DatabaseManager.getInstance().rollbackTransaction();
+                            System.err.println("[Server] Errore critico durante la transazione: " + e.getMessage());
+                        }
                     }
 
                 } catch (IllegalArgumentException e) {

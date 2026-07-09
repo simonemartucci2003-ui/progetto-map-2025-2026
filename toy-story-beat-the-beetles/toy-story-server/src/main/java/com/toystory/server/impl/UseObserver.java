@@ -16,6 +16,7 @@ import com.toystory.server.type.PickupableObject;
 import com.toystory.server.type.ContainerObject;
 import com.toystory.server.type.AdvObject;
 import com.toystory.server.type.Ability;
+import com.toystory.server.database.DatabaseManager;
 
 /**
  * Risolutore degli enigmi combinati (Verbo USA).

@@ -29,7 +29,7 @@ public class MappaScenario {
     private void inizializzaMappe() {
         // --- CONFIGURAZIONE STANZA: STANZA DI ANDY ---
         List<BoundingBox> stanzaAndy = new ArrayList<>();
-        stanzaAndy.add(new BoundingBox(100, 200, 150, 250, "baule"));
+        stanzaAndy.add(new BoundingBox(823, 1033, 287, 393, "baule"));
         stanzaAndy.add(new BoundingBox(500, 600, 100, 250, "porta"));
         stanze.put("STANZA_ANDY", stanzaAndy);
 

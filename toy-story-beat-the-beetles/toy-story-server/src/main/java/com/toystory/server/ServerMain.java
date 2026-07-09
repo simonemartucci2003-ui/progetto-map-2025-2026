@@ -35,11 +35,26 @@ public class ServerMain {
      * * @param args Argomenti della riga di comando (non utilizzati).
      */
     public static void main(String[] args) {
+        // 1. AGGIUNTA: Shutdown Hook per chiudere il database in sicurezza
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+        try {
+            com.toystory.server.database.DatabaseManager.getInstance().closeConnection();
+            System.out.println("[Server] Connessione al database chiusa.");
+        } catch (Exception e) {
+            System.err.println("[Server] Errore chiusura DB: " + e.getMessage());
+        }
+        }));
+
+
         System.out.println("==========================================");
         System.out.println("   TOY STORY MULTIPLAYER SERVER STARTED   ");
         System.out.println("==========================================");
 
         try {
+            // 2. AGGIUNTA: Inizializzazione immediata del Database
+            com.toystory.server.database.DatabaseManager.getInstance();
+            System.out.println("[Server] Database inizializzato.");
+
             // 1. Inizializziamo l'istanza unica del gioco e carichiamo le stanze/personaggi
             ToyStoryGame game = new ToyStoryGame();
             game.init(); // Gestito dentro il try-catch generale così intercettiamo i problemi di inizializzazione

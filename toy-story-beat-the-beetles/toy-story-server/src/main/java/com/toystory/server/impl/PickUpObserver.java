@@ -54,6 +54,15 @@ public class PickUpObserver implements GameObserver {
             
             // Rimuoviamo l'oggetto dalla stanza fisica
             currentRoom.getObjects().remove(oggettoRaccoglibile);
+
+            // --- INIZIO AGGIUNTA DATABASE ---
+            try {
+                // Rimuove l'ID della stanza (NULL) e lo lega al personaggio
+                DatabaseManager.getInstance().addToInventory(state.getCurrentPlayer().getName(), oggettoRaccoglibile.getId());
+            } catch (Exception e) {
+                System.err.println("[PickUpObserver] Errore salvataggio DB: " + e.getMessage());
+            }
+            // --- FINE AGGIUNTA DATABASE ---
             
             // LOGICA SPECIALE DEL TUTORIAL PER NOTIFICARE LA GUI
             // Se prendiamo la chiave o il lazo, mandiamo un comando speciale alla GUI per aggiornare gli slot!
