@@ -38,7 +38,9 @@ public class GameClient {
     public GameClient(Consumer<String> onMessageReceived) {
         this.onMessageReceived = onMessageReceived;
     }
-
+    
+    
+    
     /**
      * Stabilisce la connessione con il Server e avvia il thread di ascolto in background.
      */
@@ -60,6 +62,49 @@ public class GameClient {
         } catch (IOException e) {
             // Se il server è spento, notifichiamo l'errore tramite la lambda
             onMessageReceived.accept("Impossibile connettersi al Server. Verifica che sia attivo!");
+        }
+    }
+    
+    /**
+     * Stabilisce la connessione con il Server e gestisce la creazione o l'unione a una partita.
+     * @param isHost true se l'utente clicca "Nuova Partita", false se clicca "Unisciti".
+     * @param gameId Se clicca "Unisciti", questo conterrà il codice digitato nella barra.
+     * @return Stringa con il codice della partita (se creata), "SUCCESS" (se unito), o "ERROR".
+     */
+    public String connectAndHandshake(boolean isHost, String gameId) {
+        try {
+            System.out.println("[Client-Rete] Tentativo di connessione a " + SERVER_IP + ":" + SERVER_PORT + "...");
+            // Apriamo la connessione base
+            this.socket = new Socket(SERVER_IP, SERVER_PORT);
+            this.out = new PrintWriter(socket.getOutputStream(), true);
+            this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+            // 1. Inviamo la nostra scelta al Server PRIMA di fare qualsiasi altra cosa
+            if (isHost) {
+                out.println("CREA_PARTITA");
+            } else {
+                out.println("UNISCITI_PARTITA|" + gameId);
+            }
+
+            // 2. Aspettiamo la risposta del Server
+            String response = in.readLine();
+            
+            if (response != null && response.startsWith("PARTITA_CREATA|")) {
+                this.running = true;
+                new NetworkListenerThread().start(); // Tutto ok, avviamo l'ascolto continuo
+                return response.split("\\|")[1]; // Restituiamo l'ID generato dal server
+
+            } else if (response != null && response.startsWith("CONNESSIONE_SUCCESSO")) {
+                this.running = true;
+                new NetworkListenerThread().start(); // Tutto ok, ci siamo uniti!
+                return "SUCCESS";
+
+            } else {
+                disconnect(); // Qualcosa è andato storto (es. codice errato)
+                return "ERROR";
+            }
+        } catch (IOException e) {
+            return "ERROR"; // Server spento o irraggiungibile
         }
     }
 

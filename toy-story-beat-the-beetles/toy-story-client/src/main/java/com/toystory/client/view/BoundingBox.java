@@ -4,26 +4,29 @@
  */
 package com.toystory.client.view;
 
-/**
- * Rappresenta un'area rettangolare cliccabile sullo scenario.
- */
 public class BoundingBox {
-    private final int minX, maxX, minY, maxY;
+    // Memorizziamo le percentuali (da 0.0 a 1.0) anziché i pixel fissi
+    private final double minXPct, maxXPct, menuYPct, maxYPct;
     private final String targetName;
 
-    public BoundingBox(int minX, int maxX, int minY, int maxY, String targetName) {
-        this.minX = minX;
-        this.maxX = maxX;
-        this.minY = minY;
-        this.maxY = maxY;
+    // Passiamo le coordinate dell'immagine originale e la risoluzione originale dell'immagine (es. 1920x1080)
+    public BoundingBox(int minX, int maxX, int minY, int maxY, String targetName, double imgWidth, double imgHeight) {
+        this.minXPct = minX / imgWidth;
+        this.maxXPct = maxX / imgWidth;
+        this.menuYPct = minY / imgHeight;
+        this.maxYPct = maxY / imgHeight;
         this.targetName = targetName;
     }
 
     /**
-     * Verifica se il click (X, Y) è caduto dentro questo rettangolo.
+     * Verifica se il click è proporzionalmente dentro l'area, 
+     * conoscendo la larghezza e l'altezza ATTUALI del pannello di gioco.
      */
-    public boolean contiene(int x, int y) {
-        return x >= minX && x <= maxX && y >= minY && y <= maxY;
+    public boolean contiene(int clickX, int clickY, int pannelloWidth, int pannelloHeight) {
+        double pctX = (double) clickX / pannelloWidth;
+        double pctY = (double) clickY / pannelloHeight;
+
+        return pctX >= minXPct && pctX <= maxXPct && pctY >= menuYPct && pctY <= maxYPct;
     }
 
     public String getTargetName() {
