@@ -19,8 +19,8 @@ public class PlayableCharacter extends GameCharacter {
     //L'abilità speciale associata al personaggio
     private Ability ability;
 
-    public PlayableCharacter(String name) {
-        super(name); // Passa il nome al costruttore della classe madre
+    public PlayableCharacter(int id, String name, String description) {
+        super(id, name, description); 
     }
     
     // NUOVO GETTER: Per scoprire che abilità ha il personaggio

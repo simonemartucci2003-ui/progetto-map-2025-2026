@@ -11,6 +11,7 @@ import com.toystory.server.type.CommandType;
 import com.toystory.server.type.Room;
 import com.toystory.server.type.AdvObject;
 import com.toystory.server.type.ContainerObject;
+import com.toystory.server.database.DatabaseManager;
 
 /**
  * Gestore dell'azione APRI (CommandType.APRI).
@@ -56,7 +57,7 @@ public class OpenObserver implements GameObserver {
                         
                         try {
                             // Aggiorna la riga del contenitore (is_open = true)
-                            DatabaseManager.getInstance().updateContainerState(baule.getId(), true, baule.isLocked());
+                           state.getDb().updateContainerState(baule.getId(), true, baule.isLocked());
                         } catch (Exception e) {
                             System.err.println("[OpenObserver] Errore salvataggio stato contenitore: " + e.getMessage());
                         }

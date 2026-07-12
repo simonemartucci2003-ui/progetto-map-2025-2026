@@ -39,51 +39,57 @@ public class CallObserver implements GameObserver {
             return "TESTO|" + targetName.toUpperCase() + " è già sul posto e pronto a ricevere ordini!";
         }
 
-        // 2. LOGICA DI SWITCH LOGICO (Cerchiamo il personaggio nel database/mappa del gioco)
-        // Nota: Nel Passo 1 abbiamo registrato le istanze. Qui facciamo lo switch simulato 
-        // andando a scambiare il puntatore currentPlayer in GameDescription.
-        if (targetName.equalsIgnoreCase("Buzz Lightyear") || targetName.equalsIgnoreCase("Buzz")) {
-            
-            // Creiamo o recuperiamo l'istanza corretta. Per sicurezza, reimpostiamo il player.
-            // In un'architettura definitiva, ToyStoryGame esporrà una lista di eroi.
-            // Per ora, facciamo lo switch diretto modificando lo stato.
-            PlayableCharacter buzz = new PlayableCharacter("Buzz Lightyear");
-            // Re-importiamo la sua abilità per non perderla nel passaggio di stato
-            buzz.setAbility(new com.toystory.server.type.Ability("Laser", "/images/skills/laser.png"));
-            
-            state.setCurrentPlayer(buzz);
-
-            // PROTOCOLLO DI RETE ESTESO: "TESTO|...|SWITCH_AVATAR|percorso_immagine|ABILITA|nome_abilita|percorso_icona"
-            return "TESTO|Woody fa un passo indietro. Ora controlli Buzz Lightyear! 'Verso l'infinito e oltre!'"
-                    + "|SWITCH_AVATAR|/images/avatars/buzz.png"
-                    + "|ABILITA|Laser|/images/skills/laser.png";
-            
-        } else if (targetName.equalsIgnoreCase("Woody")) {
-            
-            PlayableCharacter woody = new PlayableCharacter("Woody");
-            
-            // Verifichiamo se Woody ha già sbloccato il lazo tramite i flag di progressione
-            boolean lazoSbloccato = state.getFlags().getOrDefault("LAZO_UNLOCKED", false);
-            if (lazoSbloccato) {
-                woody.setAbility(new com.toystory.server.type.Ability("Lazo", "/images/skills/lazo.png"));
-            } else {
-                woody.setAbility(null);
+        // 2. LOGICA DI SWITCH LOGICO (Cerchiamo il personaggio nella memoria del gioco)
+        PlayableCharacter nuovoEroe = null;
+        
+        // Scorriamo tutti i personaggi registrati in ToyStoryGame.java all'avvio
+        for (PlayableCharacter p : state.getPlayers()) {
+            // Usiamo equalsIgnoreCase per match esatti
+            // Aggiungiamo un'eccezione morbida nel caso arrivi solo "Buzz" dal client
+            if (p.getName().equalsIgnoreCase(targetName) || 
+               (targetName.equalsIgnoreCase("Buzz") && p.getName().equalsIgnoreCase("Buzz Lightyear"))) {
+                nuovoEroe = p;
+                break; // Trovato! Usciamo dal ciclo
             }
+        }
+        
+        // Se il personaggio è stato trovato tra quelli disponibili
+        if (nuovoEroe != null){
             
-            state.setCurrentPlayer(woody);
+            // Facciamo lo switch "fisico" impostandolo come giocatore corrente
+            state.setCurrentPlayer(nuovoEroe);
 
-            String risposta = "TESTO|Buzz si mette in posizione di guardia. Ora controlli lo Sceriffo Woody! 'C'è un serpente nel mio stivale!'|SWITCH_AVATAR|/images/avatars/woody.png";
-            
-            // Se Woody ha il lazo, aggiorna anche la GUI con la sua abilità
-            if (lazoSbloccato) {
-                risposta += "|ABILITA|Lazo|/images/skills/lazo.png";
-            } else {
-                risposta += "|ABILITA|Nessuna|vuoto";
+            // Costruiamo la risposta per la grafica (TESTO + PROTOCOLLI GUI)
+            String risposta = "TESTO|" + currentHeroName + " fa un passo indietro. Ora controlli " + nuovoEroe.getName() + "!";
+
+            if (nuovoEroe.getName().equalsIgnoreCase("Buzz Lightyear")) {
+                risposta += " 'Verso l'infinito e oltre!'";
+                risposta += "|SWITCH_AVATAR|/images/avatars/buzz.png";
+                risposta += "|ABILITA|Laser|/images/skills/laser.png";
+                
+            } else if (nuovoEroe.getName().equalsIgnoreCase("Woody")) {
+                risposta += " 'C'è un serpente nel mio stivale!'";
+                risposta += "|SWITCH_AVATAR|/images/avatars/woody.png";
+                
+                // Verifichiamo se Woody ha già sbloccato il lazo tramite i flag
+                boolean lazoSbloccato = state.getFlags().getOrDefault("LAZO_UNLOCKED", false);
+                if (lazoSbloccato) {
+                    risposta += "|ABILITA|Lazo|/images/skills/lazo.png";
+                } else {
+                    risposta += "|ABILITA|Nessuna|vuoto";
+                }
+                
+            } else if (nuovoEroe.getName().equalsIgnoreCase("Jessie")) {
+                // Aggiunta la terza eroina: Jessie!
+                risposta += " 'Yee-haw!'";
+                risposta += "|SWITCH_AVATAR|/images/avatars/jessie.png";
+                risposta += "|ABILITA|Destrezza|/images/skills/destrezza.png";
             }
             
             return risposta;
         }
 
+        // Se il nome cercato non è nella lista dei giocatori validi
         return "TESTO|Quel personaggio non fa parte della squadra o non è raggiungibile al momento.";
     }
 }

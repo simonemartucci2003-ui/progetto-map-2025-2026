@@ -69,16 +69,26 @@ public class UseObserver implements GameObserver {
                     ContainerObject baule = (ContainerObject) bauleObj;
                     baule.setLocked(false);
                     baule.setOpen(true);
+                    try {
+                        // Salva l'apertura del baule sul DB della stanza
+                        state.getDb().updateContainerState(baule.getId(), true, false);
+                    } catch (Exception e) {}
                 }
 
-                // Aggiorniamo il flag di progressione nella GameDescription
-                state.getFlags().put("CHEST_OPENED", true);
+                // CORREZIONE: Usiamo il nuovo metodo che salva sia in RAM che nel DB
+                state.saveFlag("CHEST_OPENED", true);
 
                 // Rimuoviamo la chiave dalle tasche del giocatore (consumata)
                 PickupableObject chiaveInTasca = state.getCurrentPlayer().getPocket().stream()
                         .filter(obj -> obj.getName().equalsIgnoreCase("chiave"))
                         .findFirst().orElse(null);
-                state.getCurrentPlayer().removeObject(chiaveInTasca);
+                if (chiaveInTasca != null) {
+                    state.getCurrentPlayer().removeObject(chiaveInTasca);
+                    try {
+                        // Consuma la chiave fisicamente dal database
+                        state.getDb().consumeItem(state.getCurrentPlayer().getName(), chiaveInTasca.getId());
+                    } catch (Exception e) {}
+                }
 
                 // Dialogo narrativo di sblocco (Phase 2 e 3)
                 return "TESTO|*CLACK!* Il lucchetto salta! Spalanchi il baule e... "
@@ -96,7 +106,7 @@ public class UseObserver implements GameObserver {
                 // Controllo se il personaggio corrente ha l'abilità del laser
                 if (state.getCurrentPlayer().getAbility() == null || 
                     !state.getCurrentPlayer().getAbility().getName().equalsIgnoreCase("Laser")) {
-                    return "TESTO|Solo Buzz Lightyear può usare il puntatore laser! Cambia personaggio con il tasto CHIAMA.";
+                    return "TESTO|Solo Buzz Lightyear può usare il puntatore laser! Cambia personaggio.";
                 }
 
                 // Controlliamo se siamo vicini al letto o se l'utente punta al letto
@@ -106,6 +116,10 @@ public class UseObserver implements GameObserver {
                     // Creiamo il lazo come oggetto reale e lo piazziamo nella stanza
                     PickupableObject lazo = new PickupableObject(102, "lazo", "Una corda di canapa robusta intrecciata a cappio.");
                     currentRoom.getObjects().add(lazo);
+                    try {
+                        // Inseriamo il lazo appena generato nel database
+                        state.getDb().insertObject(lazo, currentRoom.getId());
+                    } catch (Exception e) {}
 
                     return "TESTO|Buzz attiva il suo laser da polso ed emette un potente fascio di luce rossa sotto il letto..."
                             + "\nBUZZ: 'La zona oscura è stata illuminata, Sceriffo! C'è qualcosa che brilla laggiù!'"
@@ -128,9 +142,9 @@ public class UseObserver implements GameObserver {
                     return "TESTO|Vorresti usare il lazo, ma non ce l'hai in tasca! Cerca meglio sotto il letto.";
                 }
 
-                // Attiviamo i flag di progressione: l'enigma della porta è risolto!
-                state.getFlags().put("LAZO_USED", true);
-                state.getFlags().put("LAZO_UNLOCKED", true);
+                // CORREZIONE: Salva i flag nel DB
+                state.saveFlag("LAZO_USED", true);
+                state.saveFlag("LAZO_UNLOCKED", true);
 
                 // IMPORTANTE: Il lazo diventa un'abilità permanente di Woody!
                 // Non lo rimuoviamo dalle tasche (non usiamo removeObject), ma lo registriamo come SpecialAbility

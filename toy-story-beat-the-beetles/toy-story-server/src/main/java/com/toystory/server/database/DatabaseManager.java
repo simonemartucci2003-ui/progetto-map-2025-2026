@@ -7,30 +7,36 @@ package com.toystory.server.database;
 import java.sql.*;
 import java.util.Properties;
 import com.toystory.server.type.*;
+import java.util.List;
+import java.util.ArrayList;
+import java.util.Map;
+import java.util.HashMap;
+import java.util.concurrent.ConcurrentHashMap; // Aggiunto per thread-safety
 
 public class DatabaseManager {
-    // 1. Istanza statica e privata (l'unica esistente)
-    private static DatabaseManager instance;
+    // Usiamo una ConcurrentHashMap per evitare problemi se due Host creano partite nello stesso millisecondo
+    private static final Map<String, DatabaseManager> instances = new ConcurrentHashMap<>();
     private Connection conn;
-    private static final String JDBC_URL = "jdbc:h2:./toystory_db";
 
-    // 2. Costruttore privato: nessuno può fare 'new DatabaseManager()'
-    private DatabaseManager() throws SQLException {
-        this.conn = DriverManager.getConnection(JDBC_URL, "sa", "");
+    // Costruttore privato (nessuno fa new DatabaseManager() fuori dalla classe)
+    private DatabaseManager(String gameId) throws SQLException {
+        String dbPath = "jdbc:h2:./saves/toystory_" + gameId;
+        this.conn = DriverManager.getConnection(dbPath, "sa", "");
         initDatabase();
     }
 
-    // 3. Metodo pubblico per accedere all'unica istanza (Thread-safe)
-    /*L'uso di synchronized nel metodo getInstance() garantisce che, 
-    anche se più ServerThread tentano di accedere al database contemporaneamente, 
-    verrà creata una sola connessione sicura.*/
-    public static synchronized DatabaseManager getInstance() throws SQLException {
-        if (instance == null) {
-            instance = new DatabaseManager();
-        }
-        return instance;
+    // Metodo Factory: restituisce il DB specifico per quella partita
+    public static DatabaseManager getInstance(String gameId) throws SQLException {
+        // double-checked locking, in una ConcurrentHashMap
+        instances.computeIfAbsent(gameId, id -> {
+            try {
+                return new DatabaseManager(id);
+            } catch (SQLException e) {
+                throw new RuntimeException("Errore critico creazione DB per " + id, e);
+            }
+        });
+        return instances.get(gameId);
     }
-
     private void initDatabase() throws SQLException {
     try (Statement stm = conn.createStatement()) {
         
@@ -153,7 +159,7 @@ public class DatabaseManager {
         String sql = "MERGE INTO game_flags (key, value) VALUES (?, ?)";
         try (PreparedStatement pstm = conn.prepareStatement(sql)) {
             pstm.setString(1, key);
-            pstm.setBoolean(2, value);
+            pstm.setString(2, value);
             pstm.executeUpdate(); //esegue agiornamento
         }
     }
@@ -166,7 +172,8 @@ public class DatabaseManager {
             pstm.setString(1, key);
             try (ResultSet rs = pstm.executeQuery()) { //Il risultato viene memorizzato in un ResultSet
                 if (rs.next()) {
-                    return rs.getString("value"); //Legge il valore booleano con rs.getBoolean("value") e lo restituisce al gioco
+                   // CORREZIONE: Convertiamo la stringa "true"/"false" del DB in un vero boolean Java
+                    return Boolean.parseBoolean(rs.getString("value"));
                 }
             }
         }
@@ -251,12 +258,23 @@ public class DatabaseManager {
         // Lasciando il room_id a NULL nella tabella game_objects, l'oggetto "sparisce" dal mondo di gioco.
     }
 
+    // Aggiorna lo stato di un contenitore (se è aperto o chiuso, bloccato o sbloccato)
+    public void updateContainerState(int objectId, boolean isOpen, boolean isLocked) throws SQLException {
+        String sql = "UPDATE game_objects SET is_open = ?, is_locked = ? WHERE id = ?";
+        try (PreparedStatement pstm = conn.prepareStatement(sql)) {
+            pstm.setBoolean(1, isOpen);
+            pstm.setBoolean(2, isLocked);
+            pstm.setInt(3, objectId);
+            pstm.executeUpdate();
+        }
+    }
 
 
-    // --- Transazioni ---
-    public void startTransaction() throws SQLException { conn.setAutoCommit(false); }
-    public void commitTransaction() throws SQLException { conn.commit(); conn.setAutoCommit(true); }
-    public void rollbackTransaction() throws SQLException { conn.rollback(); conn.setAutoCommit(true); }
+   // --- Transazioni ---
+    // Sincronizzate per garantire la thread-safety
+    public synchronized void startTransaction() throws SQLException { conn.setAutoCommit(false); }
+    public synchronized void commitTransaction() throws SQLException { conn.commit(); conn.setAutoCommit(true); }
+    public synchronized void rollbackTransaction() throws SQLException { conn.rollback(); conn.setAutoCommit(true); }
 
     // Chiude il collegamento col database
     public void closeConnection() throws SQLException {

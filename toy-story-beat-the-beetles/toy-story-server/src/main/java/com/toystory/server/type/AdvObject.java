@@ -7,7 +7,7 @@ package com.toystory.server.type;
 /**
  * Classe astratta che fa da madre a tutti gli oggetti del gioco.
  */
-public abstract class AdvObject {
+public class AdvObject {
     
     private final int id;
     private final String name;

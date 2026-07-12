@@ -4,8 +4,13 @@
  */
 package com.toystory.server;
 
-import com.toystory.server.type.Room;
+import com.toystory.server.type.AdvObject;
+import com.toystory.server.type.ContainerObject;
 import com.toystory.server.type.PlayableCharacter;
+import com.toystory.server.type.PickupableObject;
+import com.toystory.server.type.Room;
+import com.toystory.server.database.DatabaseManager;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -17,19 +22,28 @@ import java.util.Map;
  * il tracciamento del giocatore attivo e i flag di progressione della trama.
  */
 public abstract class GameDescription {
+    
+    // =========================================================================
+    // VARIABILI DI STATO DEL GIOCO
+    // =========================================================================
 
-    // Lista globale di tutte le stanze che compongono la mappa del gioco
+    // 1. La lista che conterrà tutti i personaggi sbloccati/disponibili
+    private List<PlayableCharacter> players = new ArrayList<>();
+    
+    // 2. Il personaggio attualmente controllato dal giocatore
+    private PlayableCharacter currentPlayer;
+
+    // 3. Lista globale di tutte le stanze che compongono la mappa del gioco
     private final List<Room> rooms = new ArrayList<>();
 
-    // Mappa dei flag di progressione: associa un ID/Stringa a un valore booleano
-    // Fondamentale per salvare gli stati degli enigmi (es. "CHEST_OPENED" -> true/false)
+    // 4. Mappa dei flag di progressione: associa un ID/Stringa a un valore booleano
     private final Map<String, Boolean> flags = new HashMap<>();
 
-    // Riferimento alla stanza in cui si trova attualmente il giocatore
+    // 5. Riferimento alla stanza in cui si trova attualmente il giocatore
     private Room currentRoom;
+    
+    private DatabaseManager db;
 
-    // Riferimento al personaggio (giocattolo) correntemente controllato dall'utente
-    private PlayableCharacter currentPlayer;
 
     /**
      * Costruttore base di GameDescription.
@@ -38,31 +52,38 @@ public abstract class GameDescription {
         // Inizializzazione di base della struttura astratta
     }
 
-    /** AGGIUNTA DATABASE
-    * Salva un flag di progressione sia nella memoria locale (Map)
-    * che nel database per garantire la persistenza.
-    */
-    public void saveFlag(String key, boolean value) {
-        // 1. Aggiorniamo la mappa in memoria (per l'uso immediato durante il gioco)
-        this.getFlags().put(key, value);
+    // =========================================================================
+    // GESTIONE DATABASE E SINCRONIZZAZIONE
+    // =========================================================================
+
+    public void setDb(DatabaseManager db) {
+        this.db = db;
+    }
+
+    public DatabaseManager getDb() {
+        return this.db;
+    }
     
-        // 2. Salviamo nel Database (per la persistenza permanente)
+    /** 
+     * Salva un flag di progressione sia nella memoria locale (Map)
+     * che nel database per garantire la persistenza.
+     */
+    public void saveFlag(String key, boolean value) {
+        this.getFlags().put(key, value);
         try {
-            // Convertiamo il booleano in stringa prima di mandarlo al DB
-            DatabaseManager.getInstance().saveFlag(key, String.valueOf(value));
+            // Sostituito il vecchio getInstance() con il DB di questa sessione
+                this.db.saveFlag(key, String.valueOf(value));
         } catch (Exception e) {
             System.err.println("[GameDescription] Errore nel salvataggio del flag '" + key + "': " + e.getMessage());
         }
     }
+
     /**
-     * Sincronizza il mondo con il database:
-     * - Se vuoto, lo popola con la configurazione attuale (RAM).
-     * - Se pieno, carica lo stato salvato nel database (RAM).
+     * Sincronizza il mondo con il database.
      */
     public void syncWorldWithDatabase() {
+        if (this.db == null) return; // Sicurezza: evitiamo crash se il DB non è ancora stato impostato
         try {
-            com.toystory.server.database.DatabaseManager db = com.toystory.server.database.DatabaseManager.getInstance();
-            
             if (db.isDatabaseEmpty()) {
                 System.out.println("[GameDescription] Database vuoto: popolamento iniziale...");
                 for (Room r : this.rooms) {
@@ -81,28 +102,22 @@ public abstract class GameDescription {
     }
 
     private void loadGameFromDatabase() {
+        if (this.db == null) return;
+        
         try {
-            com.toystory.server.database.DatabaseManager db = com.toystory.server.database.DatabaseManager.getInstance();
-
-            // 1. Ripristino dei Flag (i progressi narrativi)
-            // Recuperiamo tutti i flag dal DB e aggiorniamo la nostra mappa
-            this.flags.putAll(db.getAllFlags()); // Assicurati di avere questo metodo nel DBManager
+            // 1. Ripristino dei Flag 
+            this.flags.putAll(db.getAllFlags()); 
 
             // 2. Ripristino delle posizioni degli oggetti
-            // Iteriamo su tutte le stanze che abbiamo in memoria
             for (Room room : this.rooms) {
-                // Puliamo la lista corrente per evitare duplicati
                 room.getObjects().clear();
-            
-                // Chiediamo al DB quali ID sono in questa stanza
                 List<Integer> objectIds = db.getObjectIdsInRoom(room.getId());
             
                 for (Integer id : objectIds) {
-                    // Ricostruiamo l'oggetto (assumendo tu abbia un metodo di ricerca)
                     AdvObject obj = findObjectById(id); 
                     if (obj != null) {
                         room.addObject(obj);
-                        // 3. Ripristino stato contenitori (aperto/chiuso)
+                        // 3. Ripristino stato contenitori 
                         if (obj instanceof ContainerObject) {
                             ((ContainerObject) obj).setOpen(db.isObjectOpen(id));
                             ((ContainerObject) obj).setLocked(db.isObjectLocked(id));
@@ -112,12 +127,14 @@ public abstract class GameDescription {
             }
 
             // 4. Ripristino Inventario Personaggio
-            List<Integer> inventoryIds = db.getInventory(this.currentPlayer.getName());
-            this.currentPlayer.getPocket().clear();
-            for (Integer id : inventoryIds) {
-                AdvObject obj = findObjectById(id);
-                if (obj != null && obj instanceof com.toystory.server.type.PickupableObject) {
-                    this.currentPlayer.getPocket().add((com.toystory.server.type.PickupableObject) obj);
+            if (this.currentPlayer != null) {
+                List<Integer> inventoryIds = db.getInventory(this.currentPlayer.getName());
+                this.currentPlayer.getPocket().clear();
+                for (Integer id : inventoryIds) {
+                    AdvObject obj = findObjectById(id);
+                    if (obj != null && obj instanceof PickupableObject) {
+                        this.currentPlayer.getPocket().add((PickupableObject) obj);
+                    }
                 }
             }
         } catch (Exception e) {
@@ -129,13 +146,11 @@ public abstract class GameDescription {
      * Cerca un oggetto in memoria basandosi sul suo ID.
      */
     protected AdvObject findObjectById(int id) {
-        // Cerca nelle stanze
         for (Room room : this.rooms) {
             for (AdvObject obj : room.getObjects()) {
                 if (obj.getId() == id) return obj;
             }
         }
-        // Cerca nell'inventario del giocatore
         if (currentPlayer != null) {
             for (AdvObject obj : currentPlayer.getPocket()) {
                 if (obj.getId() == id) return obj;
@@ -144,31 +159,36 @@ public abstract class GameDescription {
         return null;
     }
 
-    /**
-     * Salva l'ID della stanza corrente nel database per permettere
-     * al giocatore di riprendere la partita esattamente da dove l'ha lasciata.
-     */
     private void saveCurrentRoomToDatabase(int roomId) {
-        try {
-            // Usa il DatabaseManager per salvare l'ID convertito in stringa nel Key-Value store
-            com.toystory.server.database.DatabaseManager.getInstance().saveFlag("CURRENT_ROOM_ID", String.valueOf(roomId));
-        } catch (Exception e) {
-            System.err.println("[GameDescription] Errore nel salvataggio della stanza corrente: " + e.getMessage());
+        if (this.db != null) {
+            try {
+                this.db.saveFlag("CURRENT_ROOM_ID", String.valueOf(roomId));
+            } catch (Exception e) {
+                System.err.println("[GameDescription] Errore nel salvataggio della stanza corrente: " + e.getMessage());
+            }
         }
     }
 
-
-
     /**
-     * Metodo astratto che deve essere implementato dalle sottoclassi (es. ToyStoryGame).
-     * Si occupa di istanziare concretamente stanze, oggetti, collegamenti e trama.
-     * * @throws Exception Se si verificano errori nel caricamento dei dati o dei file.
+     * Metodo astratto che deve essere implementato dalle sottoclassi.
      */
     public abstract void init() throws Exception;
 
     // =========================================================================
-    // GETTER AND SETTER (Metodi di accesso per il motore di gioco e gli Observer)
+    // GETTER AND SETTER 
     // =========================================================================
+
+    public List<PlayableCharacter> getPlayers() {
+        return players;
+    }
+
+    public PlayableCharacter getCurrentPlayer() {
+        return currentPlayer;
+    }
+
+    public void setCurrentPlayer(PlayableCharacter currentPlayer) {
+        this.currentPlayer = currentPlayer;
+    }
 
     public List<Room> getRooms() {
         return rooms;
@@ -182,29 +202,10 @@ public abstract class GameDescription {
         return currentRoom;
     }
 
-    /**
-     * Imposta la nuova stanza in memoria e aggiorna automaticamente il database.
-     */
     public void setCurrentRoom(Room currentRoom) {
-        this.currentRoom = currentRoom; //[cite: 13]
-        
-        // Sincronizzazione automatica della posizione
+        this.currentRoom = currentRoom;
         if (this.currentRoom != null) {
             saveCurrentRoomToDatabase(this.currentRoom.getId());
         }
-    }
-
-    /*quando in futuro aggiungerai un MoveObserver per permettere 
-    ai personaggi di camminare tra le stanze, 
-    ti basterà fargli chiamare state.setCurrentRoom(nuovaStanza). 
-    Il gioco aggiornerà la RAM e il database in un colpo solo 
-    in modo del tutto invisibile e automatico.*/
-
-    public PlayableCharacter getCurrentPlayer() {
-        return currentPlayer;
-    }
-
-    public void setCurrentPlayer(PlayableCharacter currentPlayer) {
-        this.currentPlayer = currentPlayer;
     }
 }

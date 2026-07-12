@@ -58,7 +58,7 @@ public class PickUpObserver implements GameObserver {
             // --- INIZIO AGGIUNTA DATABASE ---
             try {
                 // Rimuove l'ID della stanza (NULL) e lo lega al personaggio
-                DatabaseManager.getInstance().addToInventory(state.getCurrentPlayer().getName(), oggettoRaccoglibile.getId());
+                state.getDb().addToInventory(state.getCurrentPlayer().getName(), oggettoRaccoglibile.getId());
             } catch (Exception e) {
                 System.err.println("[PickUpObserver] Errore salvataggio DB: " + e.getMessage());
             }

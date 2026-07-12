@@ -24,8 +24,8 @@ public class HammInventory extends NonPlayableCharacter {
      * Costruttore che passa il nome predefinito alla classe madre degli NPC.
      * @param name Il nome del personaggio (es. "HAMM").
      */
-    public HammInventory(String name) {
-        super(name);
+    public HammInventory(int id, String name, String description) {
+        super(id, name, description);
     }
 
     /** @return La lista degli oggetti attualmente custoditi dentro Hamm. */

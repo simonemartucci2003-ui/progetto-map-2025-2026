@@ -4,20 +4,16 @@
  */
 package com.toystory.server.type;
 
-/**
- * Classe astratta che fa da madre a tutti i personaggi del gioco (Giocabili e NPC).
- * Dimostra l'uso dell'ereditarietà e del polimorfismo per il progetto.
- */
-public abstract class GameCharacter {
-    
-    private final String name;
+// Aggiungendo "extends AdvObject", diciamo a Java che un GameCharacter 
+// È un AdvObject, e può essere inserito nella lista getObjects() delle stanze!
+public class GameCharacter extends AdvObject {
 
-    public GameCharacter(String name) {
-        this.name = name;
+    public GameCharacter(int id, String name, String description) {
+        // Passiamo i dati direttamente al costruttore della classe madre (AdvObject)
+        super(id, name, description);
     }
 
-    /** @return Il nome del personaggio. */
-    public String getName() { 
-        return name; 
-    }
+    // NON c'è più bisogno di dichiarare id, name e description qui dentro,
+    // né di scrivere i metodi getId() o getName(). 
+    // Ora GameCharacter eredita tutto automaticamente da AdvObject in modo trasparente!
 }

@@ -49,8 +49,13 @@ public class GiveObserver implements GameObserver {
                 PickupableObject orecchio = state.getCurrentPlayer().getPocket().stream()
                         .filter(obj -> obj.getName().equalsIgnoreCase("orecchio"))
                         .findFirst().orElse(null);
-                
-                state.getCurrentPlayer().removeObject(orecchio); // Rimuove l'oggetto dalle tasche
+                if (orecchio != null) {
+                    state.getCurrentPlayer().removeObject(orecchio); 
+                    try {
+                        // Distrugge l'oggetto "orecchio" dal database perché è stato consumato
+                        state.getDb().consumeItem(state.getCurrentPlayer().getName(), orecchio.getId());
+                    } catch (Exception e) {}
+                }
                 state.getFlags().put("POTATO_EAR_RESTORED", true); // Imposta un flag di bonus
                 
                 return "TESTO|Consegni l'orecchio sinistro a Mr. Potato, che se lo riattacca felice!"

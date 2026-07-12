@@ -11,6 +11,8 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Classe Main del Server per l'applicazione Toy Story.
@@ -30,19 +32,31 @@ public class ServerMain {
      */
     public static final List<ServerThread> clientThreads = Collections.synchronizedList(new ArrayList<>());
 
+    /** 
+     * NUOVO: Il registro globale di tutte le stanze (GameSession) attive.
+     * Mappa l'ID della partita (es. "AB1234") alla rispettiva sessione in memoria.
+     */
+    public static final Map<String, GameSession> activeSessions = new ConcurrentHashMap<>();
+    
     /**
      * Punto di ingresso principale del Server.
      * * @param args Argomenti della riga di comando (non utilizzati).
+     * @param args
      */
     public static void main(String[] args) {
-        // 1. AGGIUNTA: Shutdown Hook per chiudere il database in sicurezza
+        // AGGIORNAMENTO:Shutdown Hook per chiudere TUTTI i database delle sessioni in sicurezza
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-        try {
-            com.toystory.server.database.DatabaseManager.getInstance().closeConnection();
-            System.out.println("[Server] Connessione al database chiusa.");
-        } catch (Exception e) {
-            System.err.println("[Server] Errore chiusura DB: " + e.getMessage());
-        }
+            System.out.println("[Server] Spegnimento in corso, salvataggio dei database...");
+            for (GameSession session : activeSessions.values()) {
+                try {
+                    if (session.getDb() != null) {
+                        session.getDb().closeConnection();
+                        System.out.println("[Server] Salvato DB per la partita: " + session.getGameId());
+                    }
+                } catch (Exception e) {
+                    System.err.println("[Server] Errore chiusura DB per la partita " + session.getGameId() + ": " + e.getMessage());
+                }
+            }
         }));
 
 
@@ -51,10 +65,6 @@ public class ServerMain {
         System.out.println("==========================================");
 
         try {
-            // 2. AGGIUNTA: Inizializzazione immediata del Database
-            com.toystory.server.database.DatabaseManager.getInstance();
-            System.out.println("[Server] Database inizializzato.");
-
             // 1. Inizializziamo l'istanza unica del gioco e carichiamo le stanze/personaggi
             ToyStoryGame game = new ToyStoryGame();
             game.init(); // Gestito dentro il try-catch generale così intercettiamo i problemi di inizializzazione

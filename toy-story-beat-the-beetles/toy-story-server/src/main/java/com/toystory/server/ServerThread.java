@@ -10,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import com.toystory.server.database.DatabaseManager;
 
 /**
  * Thread dedicato alla gestione del flusso di comunicazione con un singolo client connesso.
@@ -23,11 +24,14 @@ public class ServerThread extends Thread {
     /** Il canale socket per parlare con il client specifico */
     private final Socket socket;
     
-    /** Riferimento all'Engine di gioco condiviso (stato unico del Server) */
+    /** Riferimento all'Engine di gioco condiviso */
     private final Engine engine;
     
     /** Canale di output per inviare stringhe di testo verso il rispettivo Client */
     private PrintWriter out;
+
+    /** NUOVO: La sessione (stanza) a cui questo giocatore appartiene */
+    private GameSession session;
 
     /**
      * Costruttore del thread di gestione client.
@@ -39,6 +43,13 @@ public class ServerThread extends Thread {
         this.engine = engine;
     }
 
+    /**
+     * NUOVO METODO: Assegna questo thread a una specifica stanza di gioco.
+     */
+    public void setSession(GameSession session) {
+        this.session = session;
+    }
+    
     /**
      * Ciclo di esecuzione del Thread. Gestisce l'apertura dei flussi I/O, 
      * la lettura dei comandi in arrivo dai bottoni e l'invio in broadcast.
@@ -52,8 +63,59 @@ public class ServerThread extends Thread {
             // Inizializziamo il canale di output con l'autoflush attivo (invia subito i dati senza bufferizzare)
             this.out = new PrintWriter(socket.getOutputStream(), true);
             
-            // Inviamo un token di benvenuto al client per confermare che la connessione è riuscita
-            out.println("CONNESSIONE_STABILITA|Benvenuto nell'avventura di Toy Story!");
+            // ========================================================
+            // FASE 1: HANDSHAKE (Creazione o Unione alla Partita)
+            // ========================================================
+            String initialCommand = in.readLine();
+            
+            if (initialCommand != null) {
+                if (initialCommand.equals("CREA_PARTITA")) {
+                   try {
+                        // 1. Generiamo un ID casuale di 6 caratteri
+                        String newGameId = java.util.UUID.randomUUID().toString().substring(0, 6).toUpperCase();
+                        
+                        // 2. Creiamo la nuova sessione (Ora in un blocco protetto!)
+                        GameSession nuovaSessione = new GameSession(newGameId);
+                        ServerMain.activeSessions.put(newGameId, nuovaSessione);
+                        
+                        // 3. Inseriamo questo giocatore nella sessione
+                        this.setSession(nuovaSessione);
+                        nuovaSessione.addPlayer(this);
+                        
+                        // 4. Rispondiamo al Client con il codice generato
+                        out.println("PARTITA_CREATA|" + newGameId);
+                        System.out.println("[Server] Nuova partita creata con ID: " + newGameId);
+                        
+                    } catch (Exception e) {
+                        // Se la creazione del DB fallisce, avvisiamo il client invece di far crashare il server
+                        out.println("ERRORE|Impossibile creare la stanza sul server.");
+                        System.err.println("[Server] Errore creazione sessione: " + e.getMessage());
+                    }
+
+                } else if (initialCommand.startsWith("UNISCITI_PARTITA|")) {
+                    String gameId = initialCommand.split("\\|")[1];
+                    
+                    // Controlliamo se la partita esiste nel registro globale del ServerMain
+                    if (ServerMain.activeSessions.containsKey(gameId)) {
+                        GameSession sessioneEsistente = ServerMain.activeSessions.get(gameId);
+                        
+                        this.setSession(sessioneEsistente);
+                        sessioneEsistente.addPlayer(this);
+                        
+                        out.println("CONNESSIONE_SUCCESSO|");
+                        System.out.println("[Server] Un giocatore si è unito alla partita: " + gameId);
+                    } else {
+                        // Partita non trovata: avvisiamo il client e chiudiamo la connessione
+                        out.println("ERRORE|Partita non trovata");
+                        socket.close();
+                        return; // Terminiamo il thread
+                    }
+                }
+            }
+
+            // ========================================================
+            // FASE 2: GIOCO VERO E PROPRIO (Gameplay)
+            // ========================================================
 
             String inputLine;
             
@@ -75,31 +137,40 @@ public class ServerThread extends Thread {
                     // 2. Estraiamo il target (l'oggetto o stanza cliccata), se non c'è passiamo una stringa vuota
                     String target = (parts.length > 1) ? parts[1] : "";
 
-                    // Creiamo un blocco sincronizzato sull'Engine (che è unico per tutti)
-                    // In questo modo, il server gestirà rigorosamente UN comando alla volta.
+                    // Usiamo il database specifico della sessione di questo thread
+                    DatabaseManager db = this.session.getDb();
+
                     synchronized (engine) {
                         try {
-                            // --- MODIFICA DATABASE ---
-                            com.toystory.server.database.DatabaseManager.getInstance().startTransaction();
+                            // --- MODIFICA DATABASE: transazione sulla sessione corrente ---
+                            db.startTransaction();
 
                             // 2. Interroghiamo l'Engine
                             String rispostaServer = engine.executeAction(tipoComando, target);
 
                             // 3. Inviamo il risultato o annulliamo
                             if (rispostaServer != null) {
-                                com.toystory.server.database.DatabaseManager.getInstance().commitTransaction();
-                                sendToAllPlayers(rispostaServer);
+                                db.commitTransaction();
+                                // Inviamo l'aggiornamento a tutti i giocatori della STESSA sessione
+                                this.session.broadcast(rispostaServer);
                             } else {
-                                com.toystory.server.database.DatabaseManager.getInstance().rollbackTransaction();
+                                db.rollbackTransaction();
                             }
                         } catch (Exception e) {
-                            com.toystory.server.database.DatabaseManager.getInstance().rollbackTransaction();
-                            System.err.println("[Server] Errore critico durante la transazione: " + e.getMessage());
+                           System.err.println("[Server] Errore critico durante la transazione: " + e.getMessage());
+                            
+                            // Proteggiamo il rollback nel caso in cui il DB sia completamente irraggiungibile
+                            try {
+                                if (db != null) {
+                                    db.rollbackTransaction();
+                                }
+                            } catch (java.sql.SQLException ex) {
+                                System.err.println("[Server] Fallimento critico: Impossibile eseguire il rollback. " + ex.getMessage());
+                            }
                         }
                     }
 
                 } catch (IllegalArgumentException e) {
-                    // Allineiamo l'errore al protocollo del client aggiungendo "TESTO|"
                     out.println("TESTO|Comando sconosciuto o non riconosciuto dal sistema.");
                 }
             }
@@ -107,16 +178,12 @@ public class ServerThread extends Thread {
         } catch (IOException e) {
             System.out.println("[Server] Connessione chiusa bruscamente o persa con un giocatore.");
         } finally {
-            // Creiamo un riferimento esplicito all'istanza corrente del ServerThread
-            ServerThread currentThread = ServerThread.this;
-            
-            // Rimuoviamo il thread dal registro multiplayer usando il riferimento sicuro
-            ServerMain.clientThreads.remove(currentThread);
+            // Rimuoviamo il thread dal registro multiplayer
+            ServerMain.clientThreads.remove(this);
             try {
                 socket.close();
-                System.out.println("[Server] Risorse della socket rilasciate correttamente.");
             } catch (IOException e) {
-                System.err.println("Errore durante la chiusura forzata della socket: " + e.getMessage());
+                System.err.println("Errore durante la chiusura della socket: " + e.getMessage());
             }
         }
     }

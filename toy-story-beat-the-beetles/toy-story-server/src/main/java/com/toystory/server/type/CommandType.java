@@ -13,7 +13,7 @@ public enum CommandType {
     PRENDI,     // Raccoglie un oggetto e lo mette nelle tasche del personaggio
     USA,        // Usa un oggetto con un altro (es. usa lazo con maniglia, o usa oggetto con Hamm)
     CHIAMA,     // Cambia il personaggio attivo (es. passa da Woody a Buzz)
-                // Clicca su una porta/varco per cambiare stanza
+    VAI,         // Clicca su una porta/varco per cambiare stanza
     INDIETRO,   // Torna alla stanza precedente
     FINE,        // Chiude il gioco
     APRI,

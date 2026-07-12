@@ -10,7 +10,7 @@ package com.toystory.server.type;
  */
 public class NonPlayableCharacter extends GameCharacter {
 
-    public NonPlayableCharacter(String name) {
-        super(name);
+    public NonPlayableCharacter(int id, String name, String description) {
+    super(id, name, description);
     }
 }
