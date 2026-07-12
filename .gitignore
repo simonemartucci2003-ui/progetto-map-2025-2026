@@ -25,3 +25,12 @@ replay_pid*
 /adventure/target/
 /toy-story-beat-the-beetles/toy-story-server/target/
 /toy-story-beat-the-beetles/toy-story-client/target/
+
+# Ignora file di database e cartelle di salvataggio
+*.mv.db
+*.trace.db
+/toy-story-beat-the-beetles/toy-story-server/saves/
+
+# Ignora file di configurazione locale o di log creati dal client
+last_game.txt
+recent_games.txt
