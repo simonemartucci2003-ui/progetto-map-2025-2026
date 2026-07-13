@@ -1,10 +1,7 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.toystory.server;
 
 import com.toystory.server.database.DatabaseManager;
+import com.toystory.server.impl.ToyStoryGame;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -12,37 +9,43 @@ public class GameSession {
     private final String gameId;
     private final DatabaseManager db;
     private final List<ServerThread> players;
+    
+    // Aggiungiamo l'Engine e il Game specifici per questa sessione
+    private final ToyStoryGame game;
+    private final Engine engine;
 
-    // Quando creiamo una sessione, le diamo un ID e apriamo il suo database dedicato
     public GameSession(String gameId) throws Exception {
         this.gameId = gameId;
-        // Modificheremo presto il DatabaseManager per accettare questo parametro
-        this.db = DatabaseManager.getInstance(gameId); 
+        this.db = DatabaseManager.getInstance(gameId);
         this.players = new ArrayList<>();
+
+        // 1. Creiamo un mondo di gioco totalmente isolato per questa partita
+        this.game = new ToyStoryGame();
+        
+        // 2. IMPORTANTISSIMO: Diamo il DB al gioco PRIMA di fare init() 
+        // affinché syncWorldWithDatabase() funzioni correttamente
+        this.game.setDb(this.db);
+        this.game.init();
+
+        // 3. Creiamo un motore isolato che gestirà solo questo specifico mondo
+        this.engine = new Engine(this.game);
     }
 
-    // Aggiunge un giocatore alla stanza
     public synchronized void addPlayer(ServerThread player) {
         players.add(player);
     }
 
-    // Rimuove un giocatore (es. se si disconnette)
     public synchronized void removePlayer(ServerThread player) {
         players.remove(player);
     }
 
-    // Invia un messaggio SOLO ai giocatori di questa specifica stanza
     public synchronized void broadcast(String message) {
         for (ServerThread p : players) {
             p.sendMessage(message);
         }
     }
 
-    public String getGameId() {
-        return gameId;
-    }
-
-    public DatabaseManager getDb() {
-        return db;
-    }
+    public String getGameId() { return gameId; }
+    public DatabaseManager getDb() { return db; }
+    public Engine getEngine() { return engine; }
 }

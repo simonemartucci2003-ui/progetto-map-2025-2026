@@ -101,3 +101,44 @@ Questa struttura di tutorial introduce a livello di codice tre pilastri fondamen
 1.  **Stato Dinamico degli Oggetti (FSM)**: La libreria contiene la chiave solo nello stato iniziale; il baule cambia stato da `CHIUSO` ad `APERTO` modificando le hitbox cliccabili.
 2.  **Inventario Condiviso/Locale**: Gestione degli oggetti che entrano ed escono dalle tasche dei giocattoli (es. transizione della Chiave).
 3.  **Abilità Vincolate al Personaggio (Context-Sensitive)**: Il server deve validare le azioni controllando chi le compie (es. l'azione "Laser sotto il letto" è valida solo se inviata da Buzz; l'azione "Lazo sul pomello" è valida solo se inviata da Woody).
+
+## STANZA 1 CORRIDOIO primo piano
+scale + stanza molly + stanza andy
+questa è una stanza di passaggio che permmette di accedere alle altre stanze,
+## STANZA 2 DI MOLLY
+qui ci sara BooBeep che dice di aver sentito dei rumori, che provenivano dalla cucina
+in questa stanza è presente la pallina del cane Buster, sotto al letto, che servirà piu tardi nel gioco.
+è presente nel baule un ferretto per capelli che servirà nelle fogne
+
+## STANZA 3 CORRIDOIO  piano terra
+porta ingresso + porta cucina + scale 
+l'ingresso della cucina è bloccato da Buster che dorme davanti alla porta, dall'interno, utilizzando la pallina Buster si sveglia, aprendo la porta 
+
+## STANZA 4 CUCINA
+qui ce buster con la pallina in bocca.
+e ci sono due scrafaggi sul tavolo iniseme al piatto della torta con qualche priciola, cliccando il tasto PARLA inizia il dialogo con gli scarafaggi in cui si presentano, dicono che hanno rubato la torta per il loro capo dicendo che l'hanno ormai porta via e loro erano rimasti a godersi le briciole.
+
+
+## STANZA 5 GIARDINO
+in questa stanza è presente l'ingresso della fogna 
+della spazzatura in cui si trova torsolo di mela che serve per corrompere scarafaggio nelle fogne piu avanti
+e un albero che jessie puo salire e raccogliere un rametto che servirà dopo nelle fogne 
+
+## STANZA 6 INGRESSO FOGNA
+ingresso della fogna che funge come corridio per accedere ad altre stanze 
+un passaggio è inizialmente bloccato, ce un lucchetto che puo essere sbloccato con il forcina (trovata nella stanza di molly)
+è presente un altra stanza accedibile normalmente
+
+## STANZA 7 FOGNA ROOM 1 
+stanza della porta con il lucchetto, qui è presente la leva utilizzabile con il rametto che permette di abbassare il livello dell'acqua in un altra stanza 
+
+## STANZA 8 FOGNA ROOM 2 
+stanza in cui è presente uno scarafaggio ciccione che ha il ruolo di bloccare il passaggio, è però corrompibile con il torzolo di mela trovato precedentemente 
+
+## STANZA 9 FOGNA ROOM 3
+stanza che inizialmente ha il livello dell acqua troppo alto, ma si vede una botola in fondo accedibile una volta che il livello dell acqua è stato abbassato
+
+
+
+
+

@@ -24,8 +24,6 @@ public class ServerThread extends Thread {
     /** Il canale socket per parlare con il client specifico */
     private final Socket socket;
     
-    /** Riferimento all'Engine di gioco condiviso */
-    private final Engine engine;
     
     /** Canale di output per inviare stringhe di testo verso il rispettivo Client */
     private PrintWriter out;
@@ -36,11 +34,11 @@ public class ServerThread extends Thread {
     /**
      * Costruttore del thread di gestione client.
      * * @param socket Il socket generato dal metodo accept() del ServerMain.
-     * @param engine L'istanza dell'Engine di gioco centralizzata.
+     * @param socket
      */
-    public ServerThread(Socket socket, Engine engine) {
+    public ServerThread(Socket socket) {
         this.socket = socket;
-        this.engine = engine;
+        
     }
 
     /**
@@ -139,33 +137,28 @@ public class ServerThread extends Thread {
 
                     // Usiamo il database specifico della sessione di questo thread
                     DatabaseManager db = this.session.getDb();
+                    Engine sessionEngine = this.session.getEngine(); // Usiamo l'engine della sessione!
 
-                    synchronized (engine) {
+                    // Il blocco synchronized ora protegge SOLO i giocatori della stessa partita.
+                    // Questo serializza perfettamente le operazioni CRUD sul database, 
+                    // prevenendo qualsiasi problema di concorrenza su H2!
+
+                    synchronized (sessionEngine) {
                         try {
-                            // --- MODIFICA DATABASE: transazione sulla sessione corrente ---
                             db.startTransaction();
-
-                            // 2. Interroghiamo l'Engine
-                            String rispostaServer = engine.executeAction(tipoComando, target);
-
-                            // 3. Inviamo il risultato o annulliamo
+                            String rispostaServer = sessionEngine.executeAction(tipoComando, target);
                             if (rispostaServer != null) {
-                                db.commitTransaction();
-                                // Inviamo l'aggiornamento a tutti i giocatori della STESSA sessione
-                                this.session.broadcast(rispostaServer);
+                            db.commitTransaction();
+                            this.session.broadcast(rispostaServer);
                             } else {
-                                db.rollbackTransaction();
+                            db.rollbackTransaction();
                             }
                         } catch (Exception e) {
-                           System.err.println("[Server] Errore critico durante la transazione: " + e.getMessage());
-                            
-                            // Proteggiamo il rollback nel caso in cui il DB sia completamente irraggiungibile
+                            System.err.println("[Server] Errore critico durante la transazione: " + e.getMessage());
                             try {
-                                if (db != null) {
-                                    db.rollbackTransaction();
-                                }
+                                if (db != null) db.rollbackTransaction();
                             } catch (java.sql.SQLException ex) {
-                                System.err.println("[Server] Fallimento critico: Impossibile eseguire il rollback. " + ex.getMessage());
+                                System.err.println("[Server] Fallimento critico di rollback. " + ex.getMessage());
                             }
                         }
                     }

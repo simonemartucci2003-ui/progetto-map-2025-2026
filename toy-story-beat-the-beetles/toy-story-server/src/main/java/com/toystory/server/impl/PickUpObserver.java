@@ -1,79 +1,148 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.toystory.server.impl;
 
 import com.toystory.server.GameDescription;
 import com.toystory.server.GameObserver;
-import com.toystory.server.type.Command;
-import com.toystory.server.type.CommandType;
-import com.toystory.server.type.AdvObject;
-import com.toystory.server.type.PickupableObject;
-import com.toystory.server.type.Room;
+import com.toystory.server.type.*;
 
-/**
- * Gestore della raccolta degli item (Verbo PRENDI).
- * Controlla il tipo di oggetto, la capienza delle tasche e aggiorna il modello.
- */
 public class PickUpObserver implements GameObserver {
 
     @Override
     public String update(Command command, GameDescription state) {
-        // 1. Controllo di competenza: si attiva SOLO per il comando PRENDI
+        // 1. Controllo: si attiva solo per il comando PRENDI
         if (command.getType() != CommandType.PRENDI) {
-            return null; 
+            return null;
         }
 
         String target = command.getTargetName();
-        Room currentRoom = state.getCurrentRoom();
-
         if (target == null || target.isEmpty()) {
             return "TESTO|Cosa vorresti raccogliere?";
         }
 
-        // 2. Cerchiamo l'oggetto nella stanza usando gli Stream e le Lambda
+        PlayableCharacter attivo = state.getCurrentPlayer();
+        Room currentRoom = state.getCurrentRoom();
+
+        // 2. SWITCH CASE: Smista l'azione in base a cosa abbiamo cliccato
+        switch (target.toLowerCase()) {
+            //-- STANZA ANDY --
+            case "libreria":
+                // Se clicchiamo la libreria, deviamo la logica cercando la "chiave"
+                return eseguiRaccolta("chiave", target, state, attivo, currentRoom);
+
+            case "letto":
+     
+                // 1. Controlliamo lo stato del gioco tramite i Flags
+                boolean bauleAperto = state.getFlags().getOrDefault("BAULE_APERTO", false);
+                boolean lazoSbloccato = state.getFlags().getOrDefault("LAZO_UNLOCKED", false);
+
+                // Se il baule è chiuso, nessuno può passare
+                if (!bauleAperto) {
+                    return "TESTO| Sotto al letto non si riesce a vedere niente, e' tropppo buio...";
+                }
+
+                // Se abbiamo già preso il lazo
+                if (lazoSbloccato) {
+                    return "TESTO|Sotto il letto ormai c'è solo polvere. Hai già recuperato tutto.";
+                }
+
+                // Se arriviamo qui: il baule è aperto ma il lazo è ancora lì sotto.
+                String nomeEroe = attivo.getName();
+
+                if (nomeEroe.equalsIgnoreCase("Woody")) {
+                    // WOODY FALLISCE (braccia di pezza)
+                    String testoDialogo = Dialoghi.getWoodySottoAlLetto();
+                    return "TESTO|" + testoDialogo;
+
+                } else if (nomeEroe.equalsIgnoreCase("Jessie")) {
+                    // JESSIE FALLISCE (braccia di pezza)
+                    String testoDialogo = Dialoghi.getJessieSottoAlLetto();
+                    return "TESTO|" + testoDialogo;
+
+                } else if (nomeEroe.equalsIgnoreCase("Buzz Lightyear") || nomeEroe.equalsIgnoreCase("Buzz")) {
+                    // SOLO BUZZ HA SUCCESSO
+                    state.getFlags().put("LAZO_UNLOCKED", true); // Sblocchiamo l'abilità per Woody
+                    
+                    // Buzz trova il Lazo. Non aggiorniamo la GUI del Lazo ora perché siamo su Buzz, 
+                    // ma avvisiamo il giocatore che Woody lo ha ottenuto!
+                    String testoDialogo = Dialoghi.getBuzzSottoAlLetto();
+                    return "TESTO|" + testoDialogo;
+                }
+                
+                return "TESTO|Non riesci a raggiungere niente.";
+                
+            // -- STANZA MOLLY --
+            case "baule_molly":
+                // Se clicchiamo il baule di molly, deviamo la logica cercando la "pallina"
+                return eseguiRaccolta("pallina", target, state, attivo, currentRoom);
+                
+            case "letto_molly":
+                // Se clicchiamo il baule di molly, deviamo la logica cercando la "pallina"
+                return eseguiRaccolta("forcina", target, state, attivo, currentRoom);
+                
+            default:
+                // Per tutti gli altri oggetti generici sparsi nella stanza
+                return eseguiRaccolta(target, target, state, attivo, currentRoom);
+        }
+    }
+
+    
+    
+    /**
+     * Metodo privato di supporto che contiene tutta la logica di raccolta standard.
+     * Evita di dover riscrivere i controlli di Database e Inventario per ogni singolo oggetto!
+     */
+    private String eseguiRaccolta(String nomeDaCercare, String targetOriginale, GameDescription state, PlayableCharacter attivo, Room currentRoom) {
+        
+        // 3. Cerchiamo l'oggetto nella stanza
         AdvObject targetObj = currentRoom.getObjects().stream()
-                .filter(obj -> obj.getName().equalsIgnoreCase(target))
+                .filter(obj -> obj.getName().equalsIgnoreCase(nomeDaCercare))
                 .findFirst()
                 .orElse(null);
 
+        // 4. Feedback se l'oggetto non esiste
         if (targetObj == null) {
-            return "TESTO|Questo oggetto non è presente nella stanza.";
+            if (targetOriginale.equalsIgnoreCase("libreria")) {
+                return "TESTO|Hai già rovistato qui e hai preso tutto quello che c'era.";
+            } else {
+                return "TESTO|Non vedi niente di interessante da prendere.";
+            }
         }
 
-        // 3. CONTROLLO DI SICUREZZA POLIMORFICO (Il tuo codice originale)
+        // 5. Controllo se l'oggetto è raccoglibile
         if (!(targetObj instanceof PickupableObject)) {
-            return "TESTO|Non puoi raccogliere " + targetObj.getName() + ", è un elemento fisso dello scenario!";
+            return "TESTO|Non puoi raccogliere " + targetObj.getName() + ", è un elemento fisso dello scenario.";
         }
 
         PickupableObject oggettoRaccoglibile = (PickupableObject) targetObj;
 
-        // 4. CONTROLLO DELLE TASCHE (Max 2 slot - Gestito dal PlayableCharacter attivo)
-        if (state.getCurrentPlayer().addTemplateObject(oggettoRaccoglibile)) {
-            
-            // Rimuoviamo l'oggetto dalla stanza fisica
-            currentRoom.getObjects().remove(oggettoRaccoglibile);
+        // BLOCCO ANTI-DUPLICAZIONE (Controlla le tasche)
+        boolean giaInTasca = attivo.getPocket().stream()
+                .anyMatch(obj -> obj.getName().equalsIgnoreCase(oggettoRaccoglibile.getName()));
 
-            // --- INIZIO AGGIUNTA DATABASE ---
+        if (giaInTasca) {
+            return "TESTO|Hai già questo oggetto nello zaino!";
+        }
+
+        // 6. Tenta di aggiungere all'inventario
+        if (attivo.addToInventory(oggettoRaccoglibile)) { 
+            
+            // Rimuoviamo dalla stanza
+            currentRoom.removeObject(oggettoRaccoglibile);
+
+            // Aggiornamento Database
             try {
-                // Rimuove l'ID della stanza (NULL) e lo lega al personaggio
-                state.getDb().addToInventory(state.getCurrentPlayer().getName(), oggettoRaccoglibile.getId());
+                state.getDb().addToInventory(attivo.getName(), oggettoRaccoglibile.getId());
             } catch (Exception e) {
-                System.err.println("[PickUpObserver] Errore salvataggio DB: " + e.getMessage());
+                System.err.println("[PickUpObserver] Errore DB: " + e.getMessage());
             }
-            // --- FINE AGGIUNTA DATABASE ---
             
-            // LOGICA SPECIALE DEL TUTORIAL PER NOTIFICARE LA GUI
-            // Se prendiamo la chiave o il lazo, mandiamo un comando speciale alla GUI per aggiornare gli slot!
-            String risposta = "TESTO|" + state.getCurrentPlayer().getName() + " ha messo " + oggettoRaccoglibile.getName() + " in tasca!";
+            String nomeFileIcona = oggettoRaccoglibile.getIcona();
             
-            // Protocollo di rete per l'inventario: es. "INVENTARIO|chiave"
-            risposta += "|INVENTARIO|" + oggettoRaccoglibile.getName(); 
-            
-            return risposta;
+            // Risposta dinamica: il nome dell'oggetto e la sua icona
+            return "TESTO|Hai dato " + oggettoRaccoglibile.getName() + " a " + attivo.getName() + 
+                   "!|INVENTARIO|" + oggettoRaccoglibile.getName() + "|" + nomeFileIcona;
+                   
         } else {
-            return "TESTO|Le tasche di " + state.getCurrentPlayer().getName() + " sono piene! Non puoi portare più di 2 oggetti.";
+            return "TESTO|Le tasche di " + attivo.getName() + " sono piene!";
         }
     }
 }

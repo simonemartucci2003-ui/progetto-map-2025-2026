@@ -86,6 +86,18 @@ public class CallObserver implements GameObserver {
                 risposta += "|ABILITA|Destrezza|/images/skills/destrezza.png";
             }
             
+            // 1. Ordiniamo al client di svuotare graficamente le tasche del vecchio eroe.
+            // Nota: aggiungiamo "|OK" alla fine per non rompere il tuo ciclo for nel GUIHandler (che legge a coppie!)
+            risposta += "|CLEAR_INVENTORY|OK";
+            
+            // 2. Controlliamo se il nuovo eroe ha già oggetti e li mandiamo alla grafica
+            // (Assicurati che PlayableCharacter abbia un metodo getInventory() che restituisce la lista!)
+            if (nuovoEroe.getPocket() != null && !nuovoEroe.getPocket().isEmpty()) {
+                for (com.toystory.server.type.PickupableObject obj : nuovoEroe.getPocket()) {
+                    risposta += "|INVENTARIO|" + obj.getName() + "|" + obj.getIcona();
+                }
+            }
+            
             return risposta;
         }
 

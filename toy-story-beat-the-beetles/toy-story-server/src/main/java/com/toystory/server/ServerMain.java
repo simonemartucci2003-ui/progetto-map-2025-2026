@@ -4,7 +4,6 @@
  */
 package com.toystory.server;
 
-import com.toystory.server.impl.ToyStoryGame;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -65,14 +64,7 @@ public class ServerMain {
         System.out.println("==========================================");
 
         try {
-            // 1. Inizializziamo l'istanza unica del gioco e carichiamo le stanze/personaggi
-            ToyStoryGame game = new ToyStoryGame();
-            game.init(); // Gestito dentro il try-catch generale così intercettiamo i problemi di inizializzazione
             
-            // 2. Inizializziamo il motore logico condiviso che elaborerà i comandi ad eventi
-            Engine engine = new Engine(game);
-
-            System.out.println("[Server] Logica di gioco caricata ed Engine attivo.");
 
             // 3. Apertura della ServerSocket protetta da un blocco try-with-resources
             try (ServerSocket serverSocket = new ServerSocket(PORT)) {
@@ -86,7 +78,7 @@ public class ServerMain {
 
                     // 4. Istanziamo un Thread dedicato a gestire la comunicazione con questo specifico client
                     // Passiamo l'engine UNICO per mantenere lo stato condiviso tra tutti i giocatori
-                    ServerThread thread = new ServerThread(clientSocket, engine);
+                    ServerThread thread = new ServerThread(clientSocket);
                     
                     // Registriamo il thread appena creato nella lista globale prima di avviarlo
                     clientThreads.add(thread);

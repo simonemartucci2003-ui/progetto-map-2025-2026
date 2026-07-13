@@ -10,10 +10,13 @@ package com.toystory.server.type;
  */
 public class PickupableObject extends AdvObject {
 
-    /**
-     * Costruttore che richiama il costruttore della classe madre tramite 'super'.
-     */
-    public PickupableObject(int id, String name, String description) {
+   private String icona;
+
+   public PickupableObject(int id, String name, String description, String icona) {
         super(id, name, description);
+        this.icona = icona;
     }
-}
+
+    public String getIcona() { return icona; }
+    
+ }

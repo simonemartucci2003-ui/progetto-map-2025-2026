@@ -25,10 +25,13 @@ public class GameWindow extends javax.swing.JFrame {
      */
     public GameWindow() {
         initComponents();
-        
-        impostaIconaSuBottone(btnSelezionaBuzz, "icone_buzz.png");
-        impostaIconaSuBottone(btnSelezionaWoody, "icone_woody.png");
-        impostaIconaSuBottone(btnSelezionaJessie, "icone_jessie.png");
+        txtAreaStoria.setPreferredSize(null);
+        impostaIconaSuBottone(btnSelezionaBuzz, "/icone_buzz.png");
+        impostaIconaSuBottone(btnSelezionaWoody, "/icone_woody.png");
+        impostaIconaSuBottone(btnSelezionaJessie, "/icone_jessie.png");
+         
+        btnSelezionaWoody.setSelected(true); // Seleziona Woody fisicamente
+        aggiornaBordiPersonaggi();
         
         // 1. Inizializziamo l'handler passandogli la finestra corrente (this)
         this.handlerGrafico = new GUIHandler(this); 
@@ -94,35 +97,19 @@ public class GameWindow extends javax.swing.JFrame {
         applicaStileToyStory(btnParla, "PARLA");
         applicaStileToyStory(btnDai, "DAI");
         applicaStileToyStory(btnSpingi, "SPINGI");
-        applicaStileToyStory(btnTira, "TIRA");
+        applicaStileToyStory(btnVai, "VAI");
         
-        // ====================================================================
-        // INIZIALIZZAZIONE E TRACCIAMENTO DELLE COORDINATE DELLA STANZA
-        // ====================================================================
-
-        // 1. Puliamo il pannello da eventuali vecchi residui grafici
-        pnlRappresentazioneStanza.removeAll();
-
-        // 2. Creiamo il visualizzatore adattivo
-        com.toystory.client.view.PannelloImmagineAdattiva visualizzatoreStanza = 
-                new com.toystory.client.view.PannelloImmagineAdattiva();
-
-        // 3. Lo impostiamo al centro del pannello principale
-        pnlRappresentazioneStanza.setLayout(new java.awt.BorderLayout());
-        pnlRappresentazioneStanza.add(visualizzatoreStanza, java.awt.BorderLayout.CENTER);
-
-        // 4. Diciamo al visualizzatore di inoltrare i clic a "pnlRappresentazioneStanzaMouseClicked"
-        visualizzatoreStanza.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseClicked(java.awt.event.MouseEvent evt) {
-                pnlRappresentazioneStanzaMouseClicked(evt);
-            }
-        });
-
-        // 5. Aggiorniamo la grafica del pannello per renderlo visibile subito
-        pnlRappresentazioneStanza.revalidate();
-        pnlRappresentazioneStanza.repaint();
     }
+        
+        
+
+  
+
+        
+
+       
+
+        
     
     // Metodo per avviare una nuova partita
     private void avviaNuovaPartita() {
@@ -180,6 +167,7 @@ public class GameWindow extends javax.swing.JFrame {
         jScrollPane2 = new javax.swing.JScrollPane();
         jTable1 = new javax.swing.JTable();
         jToggleButton1 = new javax.swing.JToggleButton();
+        buttonGroup1 = new javax.swing.ButtonGroup();
         pnlSuperiore = new javax.swing.JPanel();
         btnMenu = new javax.swing.JButton();
         lblNomeStanza = new javax.swing.JLabel();
@@ -197,18 +185,21 @@ public class GameWindow extends javax.swing.JFrame {
         btnSpingi = new javax.swing.JButton();
         btnChiudi = new javax.swing.JButton();
         btnParla = new javax.swing.JButton();
-        btnTira = new javax.swing.JButton();
+        btnVai = new javax.swing.JButton();
         pnlTasche = new javax.swing.JPanel();
         btnSlotInventario1 = new javax.swing.JButton();
         btnSlotInventario2 = new javax.swing.JButton();
         lblIconaAbilita = new javax.swing.JLabel();
         pnlPersonaggio = new javax.swing.JPanel();
-        lblGiocatoreCorrente = new javax.swing.JLabel();
         labelAvatar = new javax.swing.JLabel();
         cambiaIconaAvatar = new javax.swing.JPanel();
+        Woody = new javax.swing.JPanel();
         btnSelezionaWoody = new javax.swing.JToggleButton();
-        btnSelezionaBuzz = new javax.swing.JToggleButton();
+        Jessie = new javax.swing.JPanel();
         btnSelezionaJessie = new javax.swing.JToggleButton();
+        Buzz = new javax.swing.JPanel();
+        btnSelezionaBuzz = new javax.swing.JToggleButton();
+        lblGiocatoreCorrente = new javax.swing.JLabel();
 
         jTable1.setModel(new javax.swing.table.DefaultTableModel(
             new Object [][] {
@@ -255,7 +246,7 @@ public class GameWindow extends javax.swing.JFrame {
         pnlRappresentazioneStanza.setLayout(pnlRappresentazioneStanzaLayout);
         pnlRappresentazioneStanzaLayout.setHorizontalGroup(
             pnlRappresentazioneStanzaLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 762, Short.MAX_VALUE)
+            .addGap(0, 1116, Short.MAX_VALUE)
         );
         pnlRappresentazioneStanzaLayout.setVerticalGroup(
             pnlRappresentazioneStanzaLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -292,9 +283,11 @@ public class GameWindow extends javax.swing.JFrame {
         pnlVerbi.add(btnDai);
 
         btnPrendi.setText("Prendi");
+        btnPrendi.addActionListener(this::btnPrendiActionPerformed);
         pnlVerbi.add(btnPrendi);
 
         btnUsa.setText("Usa");
+        btnUsa.addActionListener(this::btnUsaActionPerformed);
         pnlVerbi.add(btnUsa);
 
         btnApri.setText("Apri");
@@ -313,10 +306,12 @@ public class GameWindow extends javax.swing.JFrame {
         pnlVerbi.add(btnChiudi);
 
         btnParla.setText("Parla");
+        btnParla.addActionListener(this::btnParlaActionPerformed);
         pnlVerbi.add(btnParla);
 
-        btnTira.setText("Tira");
-        pnlVerbi.add(btnTira);
+        btnVai.setText("Vai");
+        btnVai.addActionListener(this::btnVaiActionPerformed);
+        pnlVerbi.add(btnVai);
 
         pnlPulsantiera.add(pnlVerbi);
 
@@ -339,42 +334,47 @@ public class GameWindow extends javax.swing.JFrame {
         pnlPersonaggio.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 3, 1, 3));
         pnlPersonaggio.setLayout(new java.awt.BorderLayout());
 
+        labelAvatar.setEnabled(false);
+        pnlPersonaggio.add(labelAvatar, java.awt.BorderLayout.CENTER);
+
+        cambiaIconaAvatar.setPreferredSize(new java.awt.Dimension(208, 80));
+        cambiaIconaAvatar.setLayout(new java.awt.GridLayout(1, 3));
+
+        Woody.setOpaque(false);
+
+        buttonGroup1.add(btnSelezionaWoody);
+        btnSelezionaWoody.setText("jToggleButton2");
+        btnSelezionaWoody.setPreferredSize(new java.awt.Dimension(75, 75));
+        btnSelezionaWoody.addActionListener(this::btnSelezionaWoodyActionPerformed);
+        Woody.add(btnSelezionaWoody);
+
+        cambiaIconaAvatar.add(Woody);
+
+        Jessie.setOpaque(false);
+
+        buttonGroup1.add(btnSelezionaJessie);
+        btnSelezionaJessie.setText("jToggleButton2");
+        btnSelezionaJessie.setPreferredSize(new java.awt.Dimension(75, 75));
+        btnSelezionaJessie.addActionListener(this::btnSelezionaJessieActionPerformed);
+        Jessie.add(btnSelezionaJessie);
+
+        cambiaIconaAvatar.add(Jessie);
+
+        Buzz.setOpaque(false);
+
+        buttonGroup1.add(btnSelezionaBuzz);
+        btnSelezionaBuzz.setText("jToggleButton2");
+        btnSelezionaBuzz.setPreferredSize(new java.awt.Dimension(75, 75));
+        btnSelezionaBuzz.addActionListener(this::btnSelezionaBuzzActionPerformed);
+        Buzz.add(btnSelezionaBuzz);
+
+        cambiaIconaAvatar.add(Buzz);
+
+        pnlPersonaggio.add(cambiaIconaAvatar, java.awt.BorderLayout.PAGE_START);
+
         lblGiocatoreCorrente.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
         lblGiocatoreCorrente.setText("NOME PERSONAGGIO ATTIVO");
         pnlPersonaggio.add(lblGiocatoreCorrente, java.awt.BorderLayout.SOUTH);
-        pnlPersonaggio.add(labelAvatar, java.awt.BorderLayout.CENTER);
-
-        btnSelezionaWoody.setText("jToggleButton2");
-
-        btnSelezionaBuzz.setText("jToggleButton2");
-
-        btnSelezionaJessie.setText("jToggleButton2");
-
-        javax.swing.GroupLayout cambiaIconaAvatarLayout = new javax.swing.GroupLayout(cambiaIconaAvatar);
-        cambiaIconaAvatar.setLayout(cambiaIconaAvatarLayout);
-        cambiaIconaAvatarLayout.setHorizontalGroup(
-            cambiaIconaAvatarLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, cambiaIconaAvatarLayout.createSequentialGroup()
-                .addContainerGap(17, Short.MAX_VALUE)
-                .addComponent(btnSelezionaJessie, javax.swing.GroupLayout.PREFERRED_SIZE, 67, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(btnSelezionaBuzz, javax.swing.GroupLayout.PREFERRED_SIZE, 67, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
-                .addComponent(btnSelezionaWoody, javax.swing.GroupLayout.PREFERRED_SIZE, 67, javax.swing.GroupLayout.PREFERRED_SIZE)
-                .addContainerGap())
-        );
-        cambiaIconaAvatarLayout.setVerticalGroup(
-            cambiaIconaAvatarLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGroup(cambiaIconaAvatarLayout.createSequentialGroup()
-                .addContainerGap()
-                .addGroup(cambiaIconaAvatarLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
-                    .addComponent(btnSelezionaJessie, javax.swing.GroupLayout.PREFERRED_SIZE, 56, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnSelezionaBuzz, javax.swing.GroupLayout.PREFERRED_SIZE, 56, javax.swing.GroupLayout.PREFERRED_SIZE)
-                    .addComponent(btnSelezionaWoody, javax.swing.GroupLayout.PREFERRED_SIZE, 56, javax.swing.GroupLayout.PREFERRED_SIZE))
-                .addContainerGap(63, Short.MAX_VALUE))
-        );
-
-        pnlPersonaggio.add(cambiaIconaAvatar, java.awt.BorderLayout.PAGE_START);
 
         pnlPulsantiera.add(pnlPersonaggio);
 
@@ -437,6 +437,41 @@ public class GameWindow extends javax.swing.JFrame {
         // TODO add your handling code here:
     }//GEN-LAST:event_btnSlotInventario1ActionPerformed
 
+    private void btnSelezionaWoodyActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSelezionaWoodyActionPerformed
+        this.clientRete.sendCommand("CHIAMA", "Woody");
+        aggiornaBordiPersonaggi();
+    }//GEN-LAST:event_btnSelezionaWoodyActionPerformed
+
+    private void btnSelezionaBuzzActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSelezionaBuzzActionPerformed
+       this.clientRete.sendCommand("CHIAMA", "Buzz");
+       aggiornaBordiPersonaggi();
+    }//GEN-LAST:event_btnSelezionaBuzzActionPerformed
+
+    private void btnSelezionaJessieActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSelezionaJessieActionPerformed
+        this.clientRete.sendCommand("CHIAMA", "Jessie");
+        aggiornaBordiPersonaggi();
+    }//GEN-LAST:event_btnSelezionaJessieActionPerformed
+
+    private void btnPrendiActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPrendiActionPerformed
+       this.azioneSelezionata = "PRENDI";
+        txtAreaStoria.append("[Sistema]: Hai selezionato l'azione PRENDI. Ora clicca su un oggetto nello scenario.\n");
+    }//GEN-LAST:event_btnPrendiActionPerformed
+
+    private void btnUsaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUsaActionPerformed
+       this.azioneSelezionata = "USA";
+       txtAreaStoria.append("[Sistema]: Hai selezionato USA. Clicca sull'oggetto con cui interagire.\n");
+    }//GEN-LAST:event_btnUsaActionPerformed
+
+    private void btnVaiActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnVaiActionPerformed
+       this.azioneSelezionata = "VAI";
+       txtAreaStoria.append("[Sistema]: Hai selezionato VAI. Clicca dove vuoi andare.\n");
+    }//GEN-LAST:event_btnVaiActionPerformed
+
+    private void btnParlaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnParlaActionPerformed
+        this.azioneSelezionata = "PARLA";
+        txtAreaStoria.append("[Sistema]: Hai selezionato PARLA. Clicca con chi vuoi parlare.\n");
+    }//GEN-LAST:event_btnParlaActionPerformed
+
     /**
      * @param args the command line arguments
      */
@@ -485,6 +520,7 @@ public class GameWindow extends javax.swing.JFrame {
 
     /**
      * Cambia la foto dell'avatar a destra.
+     * @param idStanza
      * @param percorsoImmagine
      */
     /*public void cambiaIconaAvatar(String percorsoImmagine) {
@@ -502,15 +538,77 @@ public class GameWindow extends javax.swing.JFrame {
      */
     public void aggiornaSfondoScenario(String idStanza) {
         scriviNelLog("[Cambio Scenario]: Ti sposti nella stanza ID " + idStanza);
+        
+        String percorsoImmagine = "";
+        
+        // Mappatura dinamica degli ID alle immagini fisiche
+        if (idStanza.equals("CORRIDOIO_PRIMO_PIANO")) {
+            percorsoImmagine = "/CorridoioRoom2.jpg"; 
+        } else if (idStanza.equals("CAMERA_DI_ANDY")) {
+            percorsoImmagine = "/AndyRoom1.jpg";
+        } else if (idStanza.equals("CAMERA_DI_MOLLY")) {
+            percorsoImmagine = "/MollyRoom3.png"; // (Esempio)
+        } else if (idStanza.equals("CORRIDOIO_PIANO_TERRA")) {
+            percorsoImmagine = "/CorridoioRoom4.png"; // (Esempio per le scale)
+        } else if (idStanza.equals("CUCINA")) {
+            percorsoImmagine = "/CucinaRoom6.png"; 
+        } else if (idStanza.equals("GIARDINO")) {
+            percorsoImmagine = "/StradaRoom5.png"; 
+        }else if (idStanza.equals("INGRESSO_FOGNATURE")) {
+            percorsoImmagine = "/IngressoFognaRoom7.png"; 
+        }else if (idStanza.equals("FOGNE_PRIMA_STANZA")) {
+            percorsoImmagine = "/FognaRoom8.png"; 
+        }else if (idStanza.equals("STANZA_BUIA")) {
+            percorsoImmagine = "/FognaRoom11.png"; 
+        }else if (idStanza.equals("CASA_DEL_TOPO")) {
+            percorsoImmagine = "/StanzaTopoRoom9.png"; 
+        }else if (idStanza.equals("STANZA_DELLA_LEVA")) {
+            percorsoImmagine = "/FognaRoom10.png"; 
+        }else if (idStanza.equals("FOGNE_SECONDA_STANZA")) {
+            percorsoImmagine = "/FognaRoom12.png"; 
+        }else if (idStanza.equals("STANZA_CON_ACQUA")) {
+            percorsoImmagine = "/FognaRoom13.1.png"; 
+        }else if (idStanza.equals("STANZA_SENZA_ACQUA")) {
+            percorsoImmagine = "/FognaRoom13.2.png"; 
+        //}else if (idStanza.equals("BOSS_FINALE")) {
+           // percorsoImmagine = "/"; 
+        }
+        
+        
+        
+        if (!percorsoImmagine.isEmpty()) {
+            ((com.toystory.client.view.PannelloImmagineAdattiva) pnlRappresentazioneStanza).cambiaImmagine(percorsoImmagine);
+        }
     }
 
     /**
-     * Gestisce l'aggiornamento di slot o abilità.
-     * @param nomeAbilita
-     * @param icona
+     * Gestisce l'aggiornamento dello slot abilità.
+     * @param nomeAbilita Il nome testuale (es. "Lazo", "Laser" o "Nessuna")
+     * @param icona Il percorso dell'immagine inviato dal server
      */
     public void aggiornaSlotAbilita(String nomeAbilita, String icona) {
-        scriviNelLog("[Notifica Gioco]: " + nomeAbilita);
+        scriviNelLog("[Notifica Gioco]: Abilità attiva - " + nomeAbilita);
+        
+        // Se il server ci dice che c'è un'icona valida (non è "vuoto")
+        if (icona != null && !icona.isEmpty() && !icona.equals("vuoto")) {
+            try {
+                java.net.URL imgURL = getClass().getResource(icona);
+                if (imgURL != null) {
+                    lblIconaAbilita.setIcon(new javax.swing.ImageIcon(imgURL));
+                    lblIconaAbilita.setText(""); // Nasconde il testo per mostrare solo l'immagine
+                } else {
+                    System.err.println("[GUI] Immagine abilità non trovata: " + icona);
+                    lblIconaAbilita.setIcon(null);
+                    lblIconaAbilita.setText(nomeAbilita); // Fallback: mostra il testo
+                }
+            } catch (Exception e) {
+                System.err.println("[GUI] Errore caricamento icona abilità: " + e.getMessage());
+            }
+        } else {
+            // Se il personaggio non ha abilità (es. Woody all'inizio del gioco)
+            lblIconaAbilita.setIcon(null); // Rimuove eventuali vecchie immagini
+            lblIconaAbilita.setText("[Nessuna Abilità]");
+        }
     }
     
     private void applicaStileToyStory(javax.swing.JButton bottone, String verbo) {
@@ -546,38 +644,148 @@ public class GameWindow extends javax.swing.JFrame {
      * @param imagePath Il percorso dell'immagine inviato dal Server (es. "/images/avatars/buzz.png")
      */
     private void impostaIconaSuBottone(javax.swing.AbstractButton bottone, String nomeFile) {
-        // Cerchiamo in tutti i modi possibili
-        java.net.URL imgURL = null;
-
-        // Tentativo 1: Cercare dal classloader (spesso risolve i problemi di pacchetto)
-        imgURL = Thread.currentThread().getContextClassLoader().getResource(nomeFile);
-
-        // Tentativo 2: Cercare nella cartella resources come root
-        if (imgURL == null) {
-            imgURL = getClass().getResource("/resources/" + nomeFile);
-        }
-
-        // Tentativo 3: Cercare nel percorso esatto che vedevi prima
-        if (imgURL == null) {
-            imgURL = getClass().getResource("/com/toystory/client/resources/" + nomeFile);
-        }
-
-        System.out.println("DEBUG: Cercando " + nomeFile + ". Trovato: " + imgURL);
-
+        String path = nomeFile.startsWith("/") ? nomeFile : "/" + nomeFile;
+        java.net.URL imgURL = getClass().getResource(path);
+        
         if (imgURL != null) {
-            bottone.setIcon(new javax.swing.ImageIcon(imgURL));
-            bottone.setText("");
+            // 1. Carichiamo l'icona originale
+            javax.swing.ImageIcon iconaOriginale = new javax.swing.ImageIcon(imgURL);
+            
+            // 2. Definiamo le dimensioni desiderate (es. 50x50 pixel, o quelle del tuo bottone)
+            int larghezza = 75; 
+            int altezza = 75;
+            
+            // 3. Creiamo una versione scalata dell'immagine
+            java.awt.Image imgScalata = iconaOriginale.getImage().getScaledInstance(larghezza, altezza, java.awt.Image.SCALE_SMOOTH);
+            
+            // 4. Applichiamo l'immagine ridimensionata al bottone
+            bottone.setIcon(new javax.swing.ImageIcon(imgScalata));
+ 
+            //Forza il bottone ad avere esattamente l'ingombro dell'immagine
+            bottone.setPreferredSize(new java.awt.Dimension(larghezza, altezza));
+            
+            // Pulizia grafica
+            bottone.setText(""); 
             bottone.setContentAreaFilled(false);
-            bottone.setBorderPainted(false);
+            bottone.setBorderPainted(true);
+            
         } else {
             System.err.println("[GUI] ERRORE GRAVE: Immagine " + nomeFile + " introvabile.");
         }
     }
+    private void aggiornaBordiPersonaggi() {
+        // 1. Aggiorna il testo della label in base al bottone attualmente premuto
+        if (btnSelezionaWoody.isSelected()) {
+            lblGiocatoreCorrente.setText("WOODY");
+        } else if (btnSelezionaBuzz.isSelected()) {
+            lblGiocatoreCorrente.setText("BUZZ LIGHTYEAR");
+        } else if (btnSelezionaJessie.isSelected()) {
+            lblGiocatoreCorrente.setText("JESSIE");
+        }
+        
+        // Bordo Verde se selezionato, Rosso se non selezionato (spessore 3 pixel)
+        btnSelezionaWoody.setBorder(javax.swing.BorderFactory.createLineBorder(
+            btnSelezionaWoody.isSelected() ? java.awt.Color.GREEN : java.awt.Color.RED, 3));
+            
+        btnSelezionaBuzz.setBorder(javax.swing.BorderFactory.createLineBorder(
+            btnSelezionaBuzz.isSelected() ? java.awt.Color.GREEN : java.awt.Color.RED, 3));
+            
+        btnSelezionaJessie.setBorder(javax.swing.BorderFactory.createLineBorder(
+            btnSelezionaJessie.isSelected() ? java.awt.Color.GREEN : java.awt.Color.RED, 3));
+    }
 
+    public void aggiungiAllInventario(String nomeOggetto) {
+        // Formattiamo il nome per renderlo carino (es. "chiave" -> "CHIAVE")
+        String nomePulito = nomeOggetto.toUpperCase();
 
+        // Controlliamo se il primo slot è libero
+        if (btnSlotInventario1.getText().equals("[Vuoto]")) {
+            btnSlotInventario1.setText(nomePulito);
+        } 
+        // Se il primo è pieno, proviamo col secondo
+        else if (btnSlotInventario2.getText().equals("[Vuoto]")) {
+            btnSlotInventario2.setText(nomePulito);
+        } 
+        // Se sono entrambi pieni (non dovrebbe succedere se il server fa i controlli, ma per sicurezza)
+        else {
+            scriviNelLog("[Sistema - GUI]: Le tue tasche sono piene!");
+        }
+    }
+    public void aggiungiAllInventario(String nomeOggetto, String nomeFile) {
+        // Carichiamo l'immagine dalla cartella resources
+        java.net.URL imgURL = getClass().getResource("/" + nomeFile);
+        javax.swing.ImageIcon icona = null;
+    
+        if (imgURL != null) {
+            icona = new javax.swing.ImageIcon(imgURL);
+            // Scaliamo l'immagine per farla stare nel bottone
+            java.awt.Image imgScalata = icona.getImage().getScaledInstance(50, 50, java.awt.Image.SCALE_SMOOTH);
+            icona = new javax.swing.ImageIcon(imgScalata);
+        }
+
+        if (btnSlotInventario1.getText().equals("[Vuoto]") || btnSlotInventario1.getIcon() == null) {
+            btnSlotInventario1.setIcon(icona);
+            btnSlotInventario1.setText(""); // Togliamo il testo
+        } else if (btnSlotInventario2.getText().equals("[Vuoto]") || btnSlotInventario2.getIcon() == null) {
+            btnSlotInventario2.setIcon(icona);
+            btnSlotInventario2.setText("");
+        }
+    }
+    
+    public void svuotaInventario() {
+        // Togliamo le icone e rimettiamo la scritta [Vuoto]
+        btnSlotInventario1.setIcon(null);
+        btnSlotInventario1.setText("[Vuoto]");
+        
+        btnSlotInventario2.setIcon(null);
+        btnSlotInventario2.setText("[Vuoto]");
+    }
+    
+    // Aggiungi questo metodo in GameWindow.java
+    public void stampaTestoConPausa(String testoCompleto) {
+        // 1. Traduciamo il nostro codice di rete <BR> in un vero e proprio "a capo" per la grafica
+        testoCompleto = testoCompleto.replace("<BR>", "\n");
+
+        if (!testoCompleto.contains("<PAUSA>")) {
+            txtAreaStoria.append(testoCompleto + "\n");
+            txtAreaStoria.setCaretPosition(txtAreaStoria.getDocument().getLength());
+            return;
+        }
+
+        // Dividiamo il testo usando il nostro segnalibro temporale
+        String[] battute = testoCompleto.split("<PAUSA>");
+        
+        // Stampiamo subito la prima frase senza aspettare
+        txtAreaStoria.append(battute[0] + "\n");
+        txtAreaStoria.setCaretPosition(txtAreaStoria.getDocument().getLength());
+        
+        // Timer per stampare le restanti frasi ogni 1.5 secondi
+        javax.swing.Timer timer = new javax.swing.Timer(1000, new java.awt.event.ActionListener() {
+            // PARTIAMO DA 1 (perché la frase 0 l'abbiamo appena stampata!)
+            int indice = 1; 
+
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                if (indice < battute.length) {
+                    txtAreaStoria.append(battute[indice] + "\n");
+                    txtAreaStoria.setCaretPosition(txtAreaStoria.getDocument().getLength());
+                    indice++;
+                } else {
+                    ((javax.swing.Timer) e.getSource()).stop();
+                }
+            }
+        });
+
+        timer.setInitialDelay(1500);
+        timer.start();
+    }
+    
     public MappaScenario getMappaScenario() { return mappaScenario; }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
+    private javax.swing.JPanel Buzz;
+    private javax.swing.JPanel Jessie;
+    private javax.swing.JPanel Woody;
     private javax.swing.JButton btnApri;
     private javax.swing.JButton btnChiudi;
     private javax.swing.JButton btnDai;
@@ -591,8 +799,9 @@ public class GameWindow extends javax.swing.JFrame {
     private javax.swing.JButton btnSlotInventario1;
     private javax.swing.JButton btnSlotInventario2;
     private javax.swing.JButton btnSpingi;
-    private javax.swing.JButton btnTira;
     private javax.swing.JButton btnUsa;
+    private javax.swing.JButton btnVai;
+    private javax.swing.ButtonGroup buttonGroup1;
     private javax.swing.JPanel cambiaIconaAvatar;
     private javax.swing.JScrollPane jScrollPane1;
     private javax.swing.JScrollPane jScrollPane2;

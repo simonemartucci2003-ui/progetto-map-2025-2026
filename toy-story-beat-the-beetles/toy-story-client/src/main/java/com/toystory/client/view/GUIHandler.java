@@ -35,7 +35,7 @@ public class GUIHandler {
             switch (comando) {
                 case "TESTO":
                     // Accede ai metodi pubblici della tua finestra per scrivere il testo
-                    finestra.scriviNelLog(valore);
+                    finestra.stampaTestoConPausa(valore);
                     break;
                     
                 case "CAMBIA_SFONDO":
@@ -54,15 +54,30 @@ public class GUIHandler {
                     String icona = "";
                     if (i + 2 < tokens.length) {
                         icona = tokens[i + 2];
+                        i++;
                     }
                     
                     // Chiamiamo il metodo sulla finestra passandogli le due stringhe pulite
                     finestra.aggiornaSlotAbilita(valore, icona);
                     
-                    // Se c'era l'icona, avanziamo l'indice del ciclo per saltare il token extra
-                    if (!valore.equalsIgnoreCase("Nessuna")) {
-                        i++; 
+                    break;
+                    
+                case "INVENTARIO":
+                    // Il 'valore' in questo caso è il nome dell'oggetto (es: "chiave")
+                    // Il nome del file dell'icona è il token successivo (tokens[i+2])
+                    String nomeOggetto = valore; 
+                    String nomeFile = "";
+                    
+                    if (i + 2 < tokens.length) {
+                        nomeFile = tokens[i + 2];
+                        i++; // Avanziamo l'indice perché abbiamo "consumato" un token in più
                     }
+                    
+                    finestra.aggiungiAllInventario(nomeOggetto, nomeFile);
+                    break;
+                    
+                case "CLEAR_INVENTORY":
+                    finestra.svuotaInventario();
                     break;
             }
         }

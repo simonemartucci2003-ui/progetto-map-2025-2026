@@ -46,7 +46,7 @@ public class PlayableCharacter extends GameCharacter {
         return pocket.size() < MAX_POCKET_SIZE;
     }
 
-    public boolean addTemplateObject(PickupableObject obj) {
+    public boolean addToInventory(PickupableObject obj) {
         if (canPickUp()) {
             pocket.add(obj);
             return true;
@@ -57,4 +57,6 @@ public class PlayableCharacter extends GameCharacter {
     public void removeObject(PickupableObject obj) {
         pocket.remove(obj);
     }
+    
+  
 }

@@ -34,4 +34,14 @@ public class PannelloImmagineAdattiva extends JPanel {
             g.drawImage(immagineStanza, 0, 0, getWidth(), getHeight(), this);
         }
     }
+    
+    public void cambiaImmagine(String percorsoRisorsa) {
+        java.net.URL url = getClass().getResource(percorsoRisorsa);
+        if (url != null) {
+            this.immagineStanza = new javax.swing.ImageIcon(url).getImage();
+            this.repaint(); // Forza il ridisegno immediato con il nuovo sfondo!
+        } else {
+            System.err.println("[Errore Grafica] Immagine sfondo non trovata: " + percorsoRisorsa);
+        }
+    }
 }

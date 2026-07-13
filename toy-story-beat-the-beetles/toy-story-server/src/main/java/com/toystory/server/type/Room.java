@@ -56,11 +56,16 @@ public class Room {
      * @param obj L'oggetto da piazzare nella stanza.
      */
     public void addObject(AdvObject obj) { this.objects.add(obj); }
+    
     /**
-     * Rimuove un oggetto dalla stanza (es. quando un personaggio lo raccoglie).
-     * @param obj L'oggetto da rimuovere dal pavimento.
+     * Rimuove un oggetto dalla stanza in modo sicuro (es. quando viene raccolto).
+     * @param obj L'oggetto da rimuovere.
      */
-    public void removeObject(AdvObject obj) { this.objects.remove(obj); }
+    public void removeObject(AdvObject obj) { 
+        // Rimuove l'oggetto dalla lista se il nome corrisponde esattamente. 
+        // Questo evita i bug di mancata cancellazione di Java!
+        this.objects.removeIf(o -> o.getName().equalsIgnoreCase(obj.getName())); 
+    }
 
     /**
      * Registra un'uscita cliccabile per questa stanza (Configurazione della mappa).
