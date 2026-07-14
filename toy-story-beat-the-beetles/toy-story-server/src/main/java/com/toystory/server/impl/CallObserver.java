@@ -64,40 +64,15 @@ public class CallObserver implements GameObserver {
 
             if (nuovoEroe.getName().equalsIgnoreCase("Buzz Lightyear")) {
                 risposta += " 'Verso l'infinito e oltre!'";
-                risposta += "|SWITCH_AVATAR|/images/avatars/buzz.png";
-                risposta += "|ABILITA|Laser|/images/skills/laser.png";
-                
             } else if (nuovoEroe.getName().equalsIgnoreCase("Woody")) {
                 risposta += " 'C'è un serpente nel mio stivale!'";
-                risposta += "|SWITCH_AVATAR|/images/avatars/woody.png";
-                
-                // Verifichiamo se Woody ha già sbloccato il lazo tramite i flag
-                boolean lazoSbloccato = state.getFlags().getOrDefault("LAZO_UNLOCKED", false);
-                if (lazoSbloccato) {
-                    risposta += "|ABILITA|Lazo|/images/skills/lazo.png";
-                } else {
-                    risposta += "|ABILITA|Nessuna|vuoto";
-                }
-                
             } else if (nuovoEroe.getName().equalsIgnoreCase("Jessie")) {
-                // Aggiunta la terza eroina: Jessie!
                 risposta += " 'Yee-haw!'";
-                risposta += "|SWITCH_AVATAR|/images/avatars/jessie.png";
-                risposta += "|ABILITA|Destrezza|/images/skills/destrezza.png";
             }
-            
-            // 1. Ordiniamo al client di svuotare graficamente le tasche del vecchio eroe.
-            // Nota: aggiungiamo "|OK" alla fine per non rompere il tuo ciclo for nel GUIHandler (che legge a coppie!)
-            risposta += "|CLEAR_INVENTORY|OK";
-            
-            // 2. Controlliamo se il nuovo eroe ha già oggetti e li mandiamo alla grafica
-            // (Assicurati che PlayableCharacter abbia un metodo getInventory() che restituisce la lista!)
-            if (nuovoEroe.getPocket() != null && !nuovoEroe.getPocket().isEmpty()) {
-                for (com.toystory.server.type.PickupableObject obj : nuovoEroe.getPocket()) {
-                    risposta += "|INVENTARIO|" + obj.getName() + "|" + obj.getIcona();
-                }
-            }
-            
+
+            // Riusiamo la stessa logica di stato condivisa con la sincronizzazione al resume
+            risposta += "|" + state.buildCharacterStatusFragment();
+
             return risposta;
         }
 

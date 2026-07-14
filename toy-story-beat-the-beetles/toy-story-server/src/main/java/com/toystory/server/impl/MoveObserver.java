@@ -31,6 +31,9 @@ public class MoveObserver implements GameObserver {
             case "porta":
                 // L'enigma del tutorial con il lazo
                 return gestisciPorta(state, attivo, currentRoom);
+                
+            case "porta_cucina":
+                return gestisciPortaCucina(state, attivo, currentRoom);
 
             // QUI POTRAI AGGIUNGERE ALTRE PORTE O PASSAGGI IN FUTURO!
             // case "finestra":
@@ -89,6 +92,25 @@ public class MoveObserver implements GameObserver {
             
         } else {
             return "TESTO|Hai aperto la porta, ma oltre c'è solo un muro nero. (Errore: Stanza di destinazione non configurata nella mappa di Room!)";
+        }
+    }
+    
+    private String gestisciPortaCucina(GameDescription state, PlayableCharacter attivo, Room currentRoom) {
+        boolean portaSbloccata = state.getFlags().getOrDefault("PORTA_SBLOCCATA", false);
+
+        if (!portaSbloccata) {
+            return "TESTO|La porta è bloccata da Buster, non hai niente per distrarlo";
+        }
+
+        Room prossimaStanza = currentRoom.getExit("porta_cucina");
+
+        if (prossimaStanza != null) {
+            state.setCurrentRoom(prossimaStanza);
+            String idStanza = prossimaStanza.getName().toUpperCase().replace(" ", "_");
+
+            return "TESTO|Buster è troppo distratto dalla sua pallina per accorgersi di te. Sgattaioli oltre la porta.|CAMBIA_SFONDO|" + idStanza;
+        } else {
+            return "TESTO|La porta è aperta, ma oltre c'è solo un muro nero. (Errore: Stanza di destinazione non configurata!)";
         }
     }
 

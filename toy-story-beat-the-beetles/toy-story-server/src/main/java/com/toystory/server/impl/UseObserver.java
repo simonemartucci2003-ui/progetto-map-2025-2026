@@ -62,7 +62,7 @@ public class UseObserver implements GameObserver {
                 }
 
                 // 4. Impostiamo il flag per il baule aperto
-                state.getFlags().put("BAULE_APERTO", true);
+                state.saveFlag("BAULE_APERTO", true);
 
                 // 5. COSTRUZIONE DELLA RISPOSTA 
                 String testoNarrativo = Dialoghi.getDialogoBauleAperto();
@@ -81,6 +81,61 @@ public class UseObserver implements GameObserver {
                 return risposta;
             
             }
+        }
+        
+        // 2. LOGICA DEL BAULE
+        if (target.equalsIgnoreCase("porta_cucina")) {
+            
+            boolean PortaSbloccata = state.getFlags().getOrDefault("PORTA_SBLOCCATA", false);
+            // Controlliamo se l'eroe attivo ha la chiave nello zaino
+            boolean haLaPallina = attivo.getPocket().stream()
+                    .anyMatch(obj -> obj.getName().equalsIgnoreCase("pallina"));
+
+            if (!haLaPallina) {
+                // L'eroe non ha la pallina
+                return "TESTO|La porta è bloccata da Buster, non hai niente per distrarlo";
+            } else {
+                // L'eroe ha la pallina! 
+                
+                // 1. Troviamo l'oggetto "pallina" esatto nell'inventario
+                com.toystory.server.type.PickupableObject pallinaUsata = (com.toystory.server.type.PickupableObject) attivo.getPocket().stream()
+                        .filter(obj -> obj.getName().equalsIgnoreCase("pallina"))
+                        .findFirst()
+                        .orElse(null);
+
+                if (pallinaUsata != null) {
+                    // 2. RIMOZIONE DALLA MEMORIA
+                    attivo.getPocket().remove(pallinaUsata);
+
+                    // 3. RIMOZIONE DAL DATABASE (Non è automatico!)
+                    try {
+                        // Assicurati di avere un metodo del genere nel tuo gestore DB
+                        state.getDb().consumeItem(attivo.getName(), pallinaUsata.getId());
+                    } catch (Exception e) {
+                        System.err.println("[UseObserver] Errore DB durante rimozione: " + e.getMessage());
+                    }
+                }
+                
+                // 4. Impostiamo il flag per il baule aperto
+                state.saveFlag("PORTA_SBLOCCATA", true);
+
+                // 5. COSTRUZIONE DELLA RISPOSTA 
+                String testoNarrativo = Dialoghi.getDialogoPortaCucinaAperta();
+                String risposta = "TESTO|" + testoNarrativo;
+                
+                // Diciamo al client di pulire la grafica...
+                risposta += "|CLEAR_INVENTORY|OK";
+                
+                // ...e rimandiamo solo gli oggetti RIMASTI in tasca (se ce ne sono)
+                if (attivo.getPocket() != null && !attivo.getPocket().isEmpty()) {
+                    for (com.toystory.server.type.PickupableObject obj : attivo.getPocket()) {
+                        risposta += "|INVENTARIO|" + obj.getName() + "|" + obj.getIcona();
+                    }
+                }
+
+                return risposta;
+            }
+            
         }
 
         // Se l'utente clicca USA su qualcos'altro che non abbiamo programmato

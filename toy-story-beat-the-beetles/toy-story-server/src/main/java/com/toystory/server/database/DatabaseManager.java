@@ -222,6 +222,18 @@ public class DatabaseManager {
         }
         return flags;
     }
+    
+    
+    public String getFlagAsString(String key) throws SQLException {
+        String sql = "SELECT value FROM game_flags WHERE key = ?";
+        try (PreparedStatement pstm = conn.prepareStatement(sql)) {
+            pstm.setString(1, key);
+            try (ResultSet rs = pstm.executeQuery()) {
+                if (rs.next()) return rs.getString("value");
+            }
+        }
+        return null;
+    }
 
     // Controlla se un contenitore è aperto
     public boolean isObjectOpen(int objectId) throws SQLException {

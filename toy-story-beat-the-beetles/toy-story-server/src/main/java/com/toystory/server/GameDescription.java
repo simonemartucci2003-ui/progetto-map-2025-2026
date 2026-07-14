@@ -86,12 +86,16 @@ public abstract class GameDescription {
         try {
             if (db.isDatabaseEmpty()) {
                 System.out.println("[GameDescription] Database vuoto: popolamento iniziale...");
-                for (Room r : this.rooms) {
-                    db.insertRoom(r);
-                    for (AdvObject obj : r.getObjects()) {
-                        db.insertObject(obj, r.getId());
+                 for (Room r : this.rooms) {
+                     try {
+                        db.insertRoom(r);
+                        for (AdvObject obj : r.getObjects()) {
+                            db.insertObject(obj, r.getId());
+                        }
+                     } catch (Exception e) {
+                        System.err.println("[GameDescription] Errore inserimento stanza '" + r.getName() + "': " + e.getMessage());
+                        }
                     }
-                }
             } else {
                 System.out.println("[GameDescription] Caricamento stato da database...");
                 loadGameFromDatabase();
@@ -102,45 +106,58 @@ public abstract class GameDescription {
     }
 
     private void loadGameFromDatabase() {
-        if (this.db == null) return;
-        
-        try {
-            // 1. Ripristino dei Flag 
-            this.flags.putAll(db.getAllFlags()); 
+    if (this.db == null) return;
 
-            // 2. Ripristino delle posizioni degli oggetti
-            for (Room room : this.rooms) {
-                room.getObjects().clear();
-                List<Integer> objectIds = db.getObjectIdsInRoom(room.getId());
-            
-                for (Integer id : objectIds) {
-                    AdvObject obj = findObjectById(id); 
-                    if (obj != null) {
-                        room.addObject(obj);
-                        // 3. Ripristino stato contenitori 
-                        if (obj instanceof ContainerObject) {
-                            ((ContainerObject) obj).setOpen(db.isObjectOpen(id));
-                            ((ContainerObject) obj).setLocked(db.isObjectLocked(id));
-                        }
-                    }
+    try {
+        // 1. Ripristino dei Flag 
+        this.flags.putAll(db.getAllFlags()); 
+
+        // 2. Ripristino della stanza corrente
+        String roomIdStr = db.getFlagAsString("CURRENT_ROOM_ID");
+        if (roomIdStr != null) {
+            int savedRoomId = Integer.parseInt(roomIdStr);
+            for (Room r : this.rooms) {
+                if (r.getId() == savedRoomId) {
+                    this.currentRoom = r;   // assegnazione diretta, NON usare setCurrentRoom() qui!
+                    break;
                 }
             }
-
-            // 4. Ripristino Inventario Personaggio
-            if (this.currentPlayer != null) {
-                List<Integer> inventoryIds = db.getInventory(this.currentPlayer.getName());
-                this.currentPlayer.getPocket().clear();
-                for (Integer id : inventoryIds) {
-                    AdvObject obj = findObjectById(id);
-                    if (obj != null && obj instanceof PickupableObject) {
-                        this.currentPlayer.getPocket().add((PickupableObject) obj);
-                    }
-                }
-            }
-        } catch (Exception e) {
-                System.err.println("[GameDescription] Errore nel caricamento del mondo: " + e.getMessage());
         }
+
+        // 3. Ripristino delle posizioni degli oggetti
+        for (Room room : this.rooms) {
+            room.getObjects().clear();
+            List<Integer> objectIds = db.getObjectIdsInRoom(room.getId());
+
+            for (Integer id : objectIds) {
+                AdvObject obj = findObjectById(id);
+                if (obj != null) {
+                    room.addObject(obj);
+                    // Ripristino stato contenitori 
+                    if (obj instanceof ContainerObject) {
+                        ((ContainerObject) obj).setOpen(db.isObjectOpen(id));
+                        ((ContainerObject) obj).setLocked(db.isObjectLocked(id));
+                    }
+                }
+            }
+        }
+
+        // 4. Ripristino Inventario per TUTTI i personaggi
+        for (PlayableCharacter player : this.players) {
+            List<Integer> inventoryIds = db.getInventory(player.getName());
+            player.getPocket().clear();
+            for (Integer id : inventoryIds) {
+                AdvObject obj = findObjectById(id);
+                if (obj != null && obj instanceof PickupableObject) {
+                    player.getPocket().add((PickupableObject) obj);
+                }
+            }
+        }
+
+    } catch (Exception e) {
+        System.err.println("[GameDescription] Errore nel caricamento del mondo: " + e.getMessage());
     }
+}
 
     /**
      * Cerca un oggetto in memoria basandosi sul suo ID.
@@ -200,6 +217,45 @@ public abstract class GameDescription {
 
     public Room getCurrentRoom() {
         return currentRoom;
+    }
+    
+    /**
+    * Costruisce il frammento di messaggio con avatar, abilità e inventario 
+    * del personaggio attualmente attivo. Riusato sia da CallObserver 
+    * (cambio personaggio manuale) sia dalla sincronizzazione al resume.
+    */
+    public String buildCharacterStatusFragment() {
+       if (this.currentPlayer == null) return "";
+
+       StringBuilder sb = new StringBuilder();
+       String nome = this.currentPlayer.getName();
+
+       if (nome.equalsIgnoreCase("Buzz Lightyear") || nome.equalsIgnoreCase("Buzz")) {
+           sb.append("SWITCH_AVATAR|/images/avatars/buzz.png|");
+           sb.append("ABILITA|Laser|/images/skills/laser.png|");
+
+       } else if (nome.equalsIgnoreCase("Woody")) {
+           sb.append("SWITCH_AVATAR|/images/avatars/woody.png|");
+           boolean lazoSbloccato = this.flags.getOrDefault("LAZO_UNLOCKED", false);
+           if (lazoSbloccato) {
+               sb.append("ABILITA|Lazo|/images/skills/lazo.png|");
+           } else {
+               sb.append("ABILITA|Nessuna|vuoto|");
+           }
+
+       } else if (nome.equalsIgnoreCase("Jessie")) {
+           sb.append("SWITCH_AVATAR|/images/avatars/jessie.png|");
+           sb.append("ABILITA|Destrezza|/images/skills/destrezza.png|");
+       }
+
+       sb.append("CLEAR_INVENTORY|OK");
+       if (this.currentPlayer.getPocket() != null) {
+           for (com.toystory.server.type.PickupableObject obj : this.currentPlayer.getPocket()) {
+               sb.append("|INVENTARIO|").append(obj.getName()).append("|").append(obj.getIcona());
+           }
+       }
+
+       return sb.toString();
     }
 
     public void setCurrentRoom(Room currentRoom) {

@@ -91,25 +91,49 @@ public class ServerThread extends Thread {
                     }
 
                 } else if (initialCommand.startsWith("UNISCITI_PARTITA|")) {
-                    String gameId = initialCommand.split("\\|")[1];
+                    String gameId = initialCommand.split("\\|")[1].toUpperCase().trim();
                     
                     // Controlliamo se la partita esiste nel registro globale del ServerMain
-                    if (ServerMain.activeSessions.containsKey(gameId)) {
-                        GameSession sessioneEsistente = ServerMain.activeSessions.get(gameId);
+                    try {
+                        GameSession sessione = ServerMain.activeSessions.get(gameId);
                         
-                        this.setSession(sessioneEsistente);
-                        sessioneEsistente.addPlayer(this);
+                        // Se non è in memoria, controlliamo se esiste già su disco 
+                        // (partita creata in una precedente esecuzione del server)
+                        if (sessione == null) {
+                            java.io.File dbFile = new java.io.File("./saves/toystory_" + gameId + ".mv.db");
+                            if (dbFile.exists()) {
+                                System.out.println("[Server] Partita " + gameId + " trovata su disco, ricarico la sessione...");
+                                sessione = new GameSession(gameId);
+                                ServerMain.activeSessions.put(gameId, sessione);
+                            }
+                        }
                         
-                        out.println("CONNESSIONE_SUCCESSO|");
-                        System.out.println("[Server] Un giocatore si è unito alla partita: " + gameId);
-                    } else {
-                        // Partita non trovata: avvisiamo il client e chiudiamo la connessione
-                        out.println("ERRORE|Partita non trovata");
+                        if (sessione != null) {
+                            this.setSession(sessione);
+                            sessione.addPlayer(this);
+
+                            out.println("CONNESSIONE_SUCCESSO|");
+                            System.out.println("[Server] Un giocatore si è unito alla partita: " + gameId);
+                            // NUOVO: sincronizziamo subito il client con lo stato reale della partita
+                            // (stanza, avatar, abilità, inventario), senza bisogno di click manuali.
+                            String syncMsg = sessione.getEngine().buildResumeSyncMessage();
+                            if (syncMsg != null && !syncMsg.isEmpty()) {
+                                out.println(syncMsg);
+                            }
+                        } else {
+                            out.println("ERRORE|Partita non trovata");
+                            socket.close();
+                            return;
+                        }
+
+                    } catch (Exception e) {
+                        System.err.println("[Server] Errore nel ripristino della sessione " + gameId + ": " + e.getMessage());
+                        out.println("ERRORE|Impossibile caricare la partita.");
                         socket.close();
-                        return; // Terminiamo il thread
+                        return;
                     }
-                }
-            }
+                }    
+             }
 
             // ========================================================
             // FASE 2: GIOCO VERO E PROPRIO (Gameplay)
