@@ -413,7 +413,7 @@ public class ToyStoryGame extends GameDescription {
 
     private void configureIngressoFogna() {
         // 1. USCITE (I collegamenti bidirezionali)
-        ingressoFogna.addExit("tombino", giardino);
+        ingressoFogna.addExit("grata_sopra", giardino);
         ingressoFogna.addExit("tunnel", fognaPrimaStanza); // Accessibile liberamente
         
         // Il cancello porta alla Prima Stanza (dove c'è il topo elettricista), ma la logica
@@ -450,13 +450,13 @@ public class ToyStoryGame extends GameDescription {
 
     private void configureFogniaPrimaStanza() {
         // 1. USCITE (I collegamenti bidirezionali)
-        fognaPrimaStanza.addExit("tunnel", ingressoFogna); // Per tornare indietro
+        fognaPrimaStanza.addExit("tunnel_ritorno", ingressoFogna); // Per tornare indietro
         fognaPrimaStanza.addExit("tubo_buio", stanzaBuia); // La stanza buia da esplorare con Buzz
         fognaPrimaStanza.addExit("porticina", casaTopo); // Inizialmente bloccata dalla logica del gioco
         
         // 2. NPC E OGGETTI DELLA STORIA
         AdvObject topo = new AdvObject(801, "topo", "Un topo con degli spessi occhiali da vista e una giacchetta rossa logora. Se ne sta seduto comodamente su una piattaforma, bloccando l'accesso alla sua porticina. Dobbiamo parlargli per convincerlo a farci passare.");
-        AdvObject tunnel = new AdvObject(804, "tunnel", "");
+        AdvObject tunnel = new AdvObject(804, "tunnel_ritorno", "");
         AdvObject tuboBuioObj = new AdvObject(802, "tubo_buio", "Un gigantesco tubo di scarico circolare sulla parete sinistra. Lì dentro è completamente buio, non si vede a un palmo di naso.");
         AdvObject porticinaObj = new AdvObject(803, "porticina", "Una minuscola porta di legno rinforzata con dei cardini di metallo.");
 

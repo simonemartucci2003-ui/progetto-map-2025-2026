@@ -189,6 +189,46 @@ public class Dialoghi {
         return "Buzz analizza il perimetro dell'albero cercando un appiglio tattico, ma la sua armatura di plastica scivola sulla corteccia.<PAUSA>" +
                "Buzz: Rapporto danni: niente da fare, Sceriffo. Senza il mio jetpack funzionante, questo ostacolo è insuperabile anche per uno Space Ranger.<PAUSA>";
     }
+    
+    public static String getDescrizoneGrata() {
+        return "La grata ci offre una via di fuga da questo luogo sudicio.";
+    }
+    
+    public static String getDescrizioneTunnel() {
+        return "Questo tunnel non sembra per nulla invitanete, ma dobbiamo fare il possibile per salvare il compleanno di Andy.";
+    }
+    
+    public static String getDescrizioneCancello() {
+        return "Un cancello chiuso a chiave..qui nelle fogne..Chissa cosa avranno da nascondere questi insetti...";
+    }
+
+    
+    public static String getDialogoCancelloAperto(){
+        return "Prendi la forcina dalle tue tasche e con maestria le infili nella toppa della serratura<PAUSA>" + 
+               " Woody: Forza! Non c'è tempo da perdere, tra poco arriveranno tutti per il compleanno di Andy..<PAUSA>" +
+               "..*Click*! Il pesante lucchetto cade a terra. Con pazienza e destrezza sei riuscito a sbloccare il lucchetto<PAUSA>" +
+               "Buzz: Il perimetro è libero, squadra, muoviamoci!";
+    }
+    
+    public static String getCancelloAperto(){
+        return "Il cancello è aperto grazie alla tua destria da scassinatore";
+    }
+    
+     public static String getDescrizonetunnelRitorno() {
+        return "Questo tunnel è spaventoso, ma almeno sappiamo dove porta";
+    }
+    
+    public static String getDescrizioneTopo() {
+        return "ehi, ma li c'è uno strano topino..chissa se è un alleato di quegli insetti.";
+    }
+    
+    public static String getDescrizioneporticina() {
+        return "Una piccola porticina, probabilmente sara la tana di quel topolino.";
+    }
+    
+    public static String getDescrizioneTuboBuio() {
+        return "Questo passaggio è cosi buio ..Servirebbe un po di luce per vederci attraverso.";
+    }
 
     // In futuro potrai aggiungere qui altri dialoghi, es:
     // public static String getDialogoIncontroBuzz() { ... }

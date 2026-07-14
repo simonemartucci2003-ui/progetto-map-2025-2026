@@ -83,7 +83,7 @@ public class UseObserver implements GameObserver {
             }
         }
         
-        // 2. LOGICA DEL BAULE
+        // 2. LOGICA DELLA PORTA DELLA CUCINA
         if (target.equalsIgnoreCase("porta_cucina")) {
             
             boolean PortaSbloccata = state.getFlags().getOrDefault("PORTA_SBLOCCATA", false);
@@ -121,6 +121,61 @@ public class UseObserver implements GameObserver {
 
                 // 5. COSTRUZIONE DELLA RISPOSTA 
                 String testoNarrativo = Dialoghi.getDialogoPortaCucinaAperta();
+                String risposta = "TESTO|" + testoNarrativo;
+                
+                // Diciamo al client di pulire la grafica...
+                risposta += "|CLEAR_INVENTORY|OK";
+                
+                // ...e rimandiamo solo gli oggetti RIMASTI in tasca (se ce ne sono)
+                if (attivo.getPocket() != null && !attivo.getPocket().isEmpty()) {
+                    for (com.toystory.server.type.PickupableObject obj : attivo.getPocket()) {
+                        risposta += "|INVENTARIO|" + obj.getName() + "|" + obj.getIcona();
+                    }
+                }
+
+                return risposta;
+            }
+            
+        }
+        
+        //CANCELLO FOGNA
+        if (target.equalsIgnoreCase("cancello")) {
+            
+            boolean CancelloSbloccato = state.getFlags().getOrDefault("CANCELLO_SBLOCCATO", false);
+            // Controlliamo se l'eroe attivo ha la chiave nello zaino
+            boolean haLaForcina = attivo.getPocket().stream()
+                    .anyMatch(obj -> obj.getName().equalsIgnoreCase("forcina"));
+
+            if (!haLaForcina) {
+                // L'eroe non ha la forcina
+                return "TESTO| Il cancello è bloccato da un pesante lucchetto..ti servirebbe qualcosa per scassinarlo";
+            } else {
+                // L'eroe ha la forcina! 
+                
+                // 1. Troviamo l'oggetto "forcina" esatto nell'inventario
+                com.toystory.server.type.PickupableObject forcinaUsata = (com.toystory.server.type.PickupableObject) attivo.getPocket().stream()
+                        .filter(obj -> obj.getName().equalsIgnoreCase("forcina"))
+                        .findFirst()
+                        .orElse(null);
+
+                if (forcinaUsata != null) {
+                    // 2. RIMOZIONE DALLA MEMORIA
+                    attivo.getPocket().remove(forcinaUsata);
+
+                    // 3. RIMOZIONE DAL DATABASE (Non è automatico!)
+                    try {
+                        // Assicurati di avere un metodo del genere nel tuo gestore DB
+                        state.getDb().consumeItem(attivo.getName(), forcinaUsata.getId());
+                    } catch (Exception e) {
+                        System.err.println("[UseObserver] Errore DB durante rimozione: " + e.getMessage());
+                    }
+                }
+                
+                // 4. Impostiamo il flag per il baule aperto
+                state.saveFlag("CANCELLO_SBLOCCATO", true);
+
+                // 5. COSTRUZIONE DELLA RISPOSTA 
+                String testoNarrativo = Dialoghi.getDialogoCancelloAperto();
                 String risposta = "TESTO|" + testoNarrativo;
                 
                 // Diciamo al client di pulire la grafica...

@@ -115,14 +115,14 @@ public class MappaScenario {
         giardino.add(new BoundingBox(893, 1097, 595, 715, "tombino", imgW, imgH));
         
         //4. spazzatura dove si trovail torsolo di mela 
-        giardino.add(new BoundingBox(1106, 1309, 448, 625, "sacchiSpazzatura", imgW, imgH));
+        giardino.add(new BoundingBox(1106, 1309, 448, 625, "sacchi_neri", imgW, imgH));
         
         stanze.put("GIARDINO", giardino);
         
         // --- MAPPA DELL INGRESSO FOGNA ---
         List<BoundingBox> ingressoFogna = new ArrayList<>();
         // 1. tombino per risalire in superficie
-        ingressoFogna.add(new BoundingBox(563, 871 ,137 ,221 , "tombino", imgW, imgH));
+        ingressoFogna.add(new BoundingBox(563, 871 ,137 ,221 , "grata_sopra", imgW, imgH));
         
         //2. tunnel per accedere a fogna stanza 2
         ingressoFogna.add(new BoundingBox(1054, 1379 ,153 ,499 , "tunnel", imgW, imgH));

@@ -165,10 +165,49 @@ public class LookAtObserver implements GameObserver {
                 descrizione = Dialoghi.getDescrizioneAlbero();
                 return "TESTO|" + descrizione;
                 
+             
+            //INGRESSO FOGNA    
+            case "grata_sopra":
+                descrizione = Dialoghi.getDescrizoneGrata();
+                return "TESTO|" + descrizione;
+                
+            case "cancello":
+                boolean CancelloSbloccato = state.getFlags().getOrDefault("CANCELLO_SBLOCCATO", false);
+                
+                 if (!CancelloSbloccato) {
+                        // cancello NON ancora aperta
+                         descrizione = Dialoghi.getDescrizioneCancello();
+                        return "TESTO|" + descrizione;
+                    } else {
+                        // porta aperta
+                        String testoDialogo = Dialoghi.getCancelloAperto(); 
+                        return "TESTO|" + testoDialogo;
+                    }
+                
+            case "tunnel":
+                descrizione = Dialoghi.getDescrizioneTunnel();
+                return "TESTO|" + descrizione;
                 
                 default:
                 descrizione = "Lì non c'è nulla di interessante. ";
                 break;  
+                
+            //STANZA 1
+            case "tunnel_ritorno":
+                descrizione = Dialoghi.getDescrizonetunnelRitorno();
+                return "TESTO|" + descrizione;
+                
+            case "topo":
+                descrizione = Dialoghi.getDescrizioneTopo();
+                return "TESTO|" + descrizione;
+                
+            case "porticina":
+                descrizione = Dialoghi.getDescrizioneporticina();
+                return "TESTO|" + descrizione;
+                
+            case "tubo_buio":
+                descrizione = Dialoghi.getDescrizioneTuboBuio();
+                return "TESTO|" + descrizione;     
         }
         
        
