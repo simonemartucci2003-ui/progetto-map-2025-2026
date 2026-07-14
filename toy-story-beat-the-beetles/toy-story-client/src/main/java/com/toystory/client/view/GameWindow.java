@@ -71,19 +71,9 @@ public class GameWindow extends javax.swing.JFrame {
         if (scelta == 0) { 
             avviaNuovaPartita();
         } else if (scelta == 1) { 
-            uniscitiPartita(null);
-        } else if (scelta == 2 && !partiteSalvate.isEmpty()) {
-            // Se l'utente clicca su Riprendi, facciamo scegliere quale tra quelle salvate
-            String[] arrayPartite = partiteSalvate.toArray(new String[0]);
-            String partitaScelta = (String) javax.swing.JOptionPane.showInputDialog(this, 
-                    "Quale partita vuoi riprendere?", "Riprendi Partita", 
-                    javax.swing.JOptionPane.QUESTION_MESSAGE, null, arrayPartite, arrayPartite[0]);
-
-            if (partitaScelta != null) {
-                eseguiJoin(partitaScelta);
-            } else {
-                System.exit(0);
-            }
+            uniscitiPartita(null, false);
+        } else if (scelta == 2) {
+            uniscitiPartita(null, true);    // true = mostra lista partite recenti
         } else {
             System.exit(0);
     }
@@ -137,16 +127,41 @@ public class GameWindow extends javax.swing.JFrame {
     }
     
     // Questo metodo gestisce la richiesta di unirti a una partita digitando l'ID
-    private void uniscitiPartita(String idPredefinito) {
+    private void uniscitiPartita(String idPredefinito, boolean mostraRecenti) {
         String gameId = idPredefinito;
         
         // Se non abbiamo un ID passato (es. cliccando il bottone generico), lo chiediamo
         if (gameId == null) {
+        if (mostraRecenti) {
+            java.util.Set<String> recenti = com.toystory.client.SaveManager.leggiTutteLePartite();
+            
+            if (recenti.isEmpty()) {
+                javax.swing.JOptionPane.showMessageDialog(this, 
+                        "Non hai ancora nessuna partita salvata su questo dispositivo.\nInserisci manualmente un ID se ne conosci uno.", 
+                        "Nessuna partita recente", 
+                        javax.swing.JOptionPane.INFORMATION_MESSAGE);
+            }
+            
+            javax.swing.JComboBox<String> comboId = new javax.swing.JComboBox<>(recenti.toArray(new String[0]));
+            comboId.setEditable(true); // permette comunque di digitare un ID diverso
+            
+            int scelta = javax.swing.JOptionPane.showConfirmDialog(
+                    this, comboId, 
+                    "Scegli la partita da riprendere:", 
+                    javax.swing.JOptionPane.OK_CANCEL_OPTION,
+                    javax.swing.JOptionPane.PLAIN_MESSAGE);
+            
+            if (scelta == javax.swing.JOptionPane.OK_OPTION) {
+                gameId = (String) comboId.getEditor().getItem();
+            }
+            
+        } else {
             gameId = javax.swing.JOptionPane.showInputDialog(this, 
                     "Inserisci il Game ID della partita:", 
                     "Unisciti", 
                     javax.swing.JOptionPane.PLAIN_MESSAGE);
         }
+    }
         
         if (gameId != null && !gameId.trim().isEmpty()) {
             eseguiJoin(gameId.trim().toUpperCase());

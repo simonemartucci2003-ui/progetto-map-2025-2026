@@ -23,6 +23,7 @@ public class PickUpObserver implements GameObserver {
 
         // 2. SWITCH CASE: Smista l'azione in base a cosa abbiamo cliccato
         switch (target.toLowerCase()) {
+            
             //-- STANZA ANDY --
             case "libreria":
                 // Se clicchiamo la libreria, deviamo la logica cercando la "chiave"
@@ -59,7 +60,7 @@ public class PickUpObserver implements GameObserver {
 
                 } else if (nomeEroe.equalsIgnoreCase("Buzz Lightyear") || nomeEroe.equalsIgnoreCase("Buzz")) {
                     // SOLO BUZZ HA SUCCESSO
-                    state.getFlags().put("LAZO_UNLOCKED", true); // Sblocchiamo l'abilità per Woody
+                    state.saveFlag("LAZO_UNLOCKED", true); // Sblocchiamo l'abilità per Woody
                     
                     // Buzz trova il Lazo. Non aggiorniamo la GUI del Lazo ora perché siamo su Buzz, 
                     // ma avvisiamo il giocatore che Woody lo ha ottenuto!
@@ -76,7 +77,70 @@ public class PickUpObserver implements GameObserver {
                 
             case "letto_molly":
                 // Se clicchiamo il baule di molly, deviamo la logica cercando la "pallina"
-                return eseguiRaccolta("forcina", target, state, attivo, currentRoom);
+                //return eseguiRaccolta("forcina", target, state, attivo, currentRoom);
+                
+                // 1. Controlliamo lo stato del gioco tramite i Flags               
+                boolean forcinaSbloccata = state.getFlags().getOrDefault("FORCINA_UNLOCKED", false);
+
+                // Se abbiamo già preso il lazo
+                if (forcinaSbloccata) {
+                    return "TESTO|Sotto il letto ormai c'è solo polvere. Hai già recuperato tutto.";
+                }
+
+                nomeEroe = attivo.getName();
+
+                if (nomeEroe.equalsIgnoreCase("Woody")) {
+                    // WOODY FALLISCE (braccia di pezza)
+                    String testoDialogo = Dialoghi.getWoodySottoAlLetto();
+                    return "TESTO|" + testoDialogo;
+
+                } else if (nomeEroe.equalsIgnoreCase("Jessie")) {
+                    // JESSIE FALLISCE (braccia di pezza)
+                    String testoDialogo = Dialoghi.getJessieSottoAlLetto();
+                    return "TESTO|" + testoDialogo;
+
+                } else if (nomeEroe.equalsIgnoreCase("Buzz Lightyear") || nomeEroe.equalsIgnoreCase("Buzz")) {
+                    // SOLO BUZZ HA SUCCESSO
+                   
+                    state.saveFlag("FORCINA_UNLOCKED", true); // raccogliamo la forcina
+                    String testoDialogo = Dialoghi.getBuzzSottoAlLettoMolly();
+                    
+                    return eseguiRaccolta("forcina", target, state, attivo, currentRoom);
+                }
+                
+                
+             //GIARDINO
+            case "sacchi_neri":
+                // Se clicchiamo l albero, deviamo la logica cercando "torsolo"
+                return eseguiRaccolta("torsolo", target, state, attivo, currentRoom);
+                
+            case "albero":
+                // 1. Controlliamo lo stato del gioco tramite i Flags               
+                boolean RamettoSbloccato = state.getFlags().getOrDefault("RAMETTO_UNLOCKED", false);
+
+                // Se abbiamo già preso il lazo
+                if (RamettoSbloccato) {
+                    return "TESTO|Hai già controllato qui su. Hai preso tutto quello che c'era.";
+                }
+
+                nomeEroe = attivo.getName();
+
+                if (nomeEroe.equalsIgnoreCase("Woody")) {
+                    // WOODY FALLISCE (braccia di pezza)
+                    String testoDialogo = Dialoghi.getWoodySottoAlLetto();
+                    return "TESTO|" + testoDialogo;
+
+                } else if (nomeEroe.equalsIgnoreCase("Jessie")) {
+                    // SOLO JESSIE RIESCIE A RAGGIUNGERE IL RAMETTO GRAZIE ALLA SUA DESTREZZA
+                    String testoDialogo = Dialoghi.getJessieSottoAlLetto();
+                    return "TESTO|" + testoDialogo;
+
+                } else if (nomeEroe.equalsIgnoreCase("Buzz Lightyear") || nomeEroe.equalsIgnoreCase("Buzz")) {
+                    // BUZZ FALLISCE
+                    state.saveFlag("FORCINA_UNLOCKED", true); // raccogliamo la forcina
+                    String testoDialogo = Dialoghi.getBuzzSottoAlLettoMolly();
+                    return "TESTO|" + testoDialogo;
+                }
                 
             default:
                 // Per tutti gli altri oggetti generici sparsi nella stanza

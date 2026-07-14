@@ -141,7 +141,7 @@ public class ToyStoryGame extends GameDescription {
         // ---------------------------------------------------------------------
         // AVVIO CONFIGURAZIONE DELLE STANZE
         // ---------------------------------------------------------------------
-        // Configura il primo livello (Tutorial nella Camera di Andy)
+        // Configura
         configureCameraAndy();
         configureCorridoioPrimoPiano();
         configureCorridoioPianoTerra();
@@ -162,11 +162,16 @@ public class ToyStoryGame extends GameDescription {
         // 2. Chiediamo alla classe base di occuparsi del database
         // ToyStoryGame non sa NIENTE del DB, sa solo che il mondo deve essere sincronizzato.
         this.syncWorldWithDatabase();
+        
+        // 3. Se dopo il caricamento non risulta ancora nessuna stanza corrente 
+        // (partita nuova, nessun dato da ripristinare), impostiamo la Camera di Andy come partenza di default.
+        if (this.getCurrentRoom() == null) {
+            this.setCurrentRoom(cameraAndy);
+        }
     }
 
     /**
-     * Genera la mappa, gli oggetti interattivi, le hitbox logiche e i personaggi 
-     * per la prima stanza di gioco (Camera di Andy).
+     * Genera la mappa, gli oggetti interattivi, le hitbox logiche e i personaggi
      */
     private void configureCameraAndy() {
         // 1. Uscite (Collegamenti logici)
@@ -175,7 +180,6 @@ public class ToyStoryGame extends GameDescription {
         // 2. CREAZIONE OGGETTI
         // Chiave: l'oggetto che vogliamo raccogliere
         PickupableObject chiave = new PickupableObject(101, "chiave", "Una piccola chiave dorata.", "chiave.png");
-        cameraAndy.getObjects().add(chiave);
         
         // Oggetti di scenario: lasciamo la descrizione vuota o minima, 
         // così la gestione narrativa rimane centralizzata nel LookAtObserver.
@@ -194,21 +198,19 @@ public class ToyStoryGame extends GameDescription {
         cameraAndy.getObjects().add(baule);
         cameraAndy.getObjects().add(letto);
         cameraAndy.getObjects().add(porta);
-        
-        this.setCurrentRoom(cameraAndy);
     }
     
     private void configureCorridoioPrimoPiano() {
         // TODO: Inserisci qui addExit e aggiunta oggetti
-        corridoioPrimoPiano.addExit("porta_andy", cameraAndy);
-        corridoioPrimoPiano.addExit("porta_molly", cameraMolly);
-        corridoioPrimoPiano.addExit("scale",corridoioPianoTerra);
+        corridoioPrimoPiano.addExit("porta_camera_andy", cameraAndy);
+        corridoioPrimoPiano.addExit("porta_camera_molly", cameraMolly);
+        corridoioPrimoPiano.addExit("scale_giu",corridoioPianoTerra);
         
         // OGGETTI DI SCENARIO (Fissi, non si possono raccogliere)
         // Usiamo ID univoci a partire da 205 per non sovrapporci agli oggetti della Camera di Andy (che arrivavano a 204).
-        AdvObject portaAndyObj = new AdvObject(205, "porta_andy", "La porta della camera di Andy. Ci sono degli adesivi spaziali incollati sul legno.");
-        AdvObject portaMollyObj = new AdvObject(206, "porta_molly", "La porta della camera di Molly. È di un rosa pastello molto acceso.");
-        AdvObject scaleObj = new AdvObject(207, "scale", "La rampa di scale in legno che scende al piano terra. Da laggiù il rumore si sente in modo più distinto.");
+        AdvObject portaAndyObj = new AdvObject(205, "porta_camera_andy", "");
+        AdvObject portaMollyObj = new AdvObject(206, "porta_camera_molly", "");
+        AdvObject scaleObj = new AdvObject(207, "scale_giu", "");
 
         // 3. OGGETTI DI SCENARIO EXTRA (Non raccoglibili, solo per immersione) DA AGGIUNGERE ALLA FINE SE ABBIAMO TEMPO
         AdvObject finestra = new AdvObject(208, "finestra", "Dalla finestra si vede il tranquillo vicinato. È una bella giornata, ma noi abbiamo una missione da compiere!");
@@ -231,13 +233,13 @@ public class ToyStoryGame extends GameDescription {
     }
 
     private void configureCorridoioPianoTerra() {
-        corridoioPianoTerra.addExit("scale",corridoioPrimoPiano);
+        corridoioPianoTerra.addExit("scale_su",corridoioPrimoPiano);
         corridoioPianoTerra.addExit("porta_cucina",cucina);
         corridoioPianoTerra.addExit("porticina_cane",giardino);
         
         AdvObject portaCucinaObj = new AdvObject(302, "porta_cucina", "");
         AdvObject porticina = new AdvObject(310, "porticina_cane", "");
-        AdvObject scaleObj = new AdvObject(304, "scale", "");
+        AdvObject scaleObj = new AdvObject(304, "scale_su", "");
          
         /*// 3. OGGETTI DI SCENARIO EXTRA (Basati sull'immagine)
         AdvObject portaIngresso = new AdvObject(303, "porta_ingresso", "La massiccia porta d'ingresso della casa. È chiusa a chiave, ma la luce filtra dai vetri in alto.");
@@ -266,7 +268,7 @@ public class ToyStoryGame extends GameDescription {
 
     private void configureCameraMolly() {
         // 1. USCITE (I collegamenti bidirezionali)
-        cameraMolly.addExit("porta", corridoioPrimoPiano);
+        cameraMolly.addExit("porta_molly", corridoioPrimoPiano);
         
         // 2. Oggetti: la pallina inizia "nascosta" (non nella stanza)
         PickupableObject pallina = new PickupableObject(403, "pallina", "La pallina di Buster!", "pallina.png");
@@ -275,7 +277,7 @@ public class ToyStoryGame extends GameDescription {
         // Oggetto baule (solo scenario)
         AdvObject bauleMolly = new AdvObject(404, "baule_molly", "Il baule dei giocattoli. Sembra socchiuso.");
         AdvObject letto = new AdvObject(405, "letto_molly", "") {};
-        AdvObject porta = new AdvObject(406, "porta", "") {};
+        AdvObject porta = new AdvObject(406, "porta_molly", "") {};
         AdvObject BoPeep = new AdvObject(407, "bo_peep", "") {};
         cameraAndy.getObjects().add(bauleMolly);
         cameraAndy.getObjects().add(letto);
@@ -329,10 +331,10 @@ public class ToyStoryGame extends GameDescription {
 
     private void configureCucina() {
         // 1. USCITE (I collegamenti bidirezionali)
-        cucina.addExit("porta", corridoioPianoTerra);
+        cucina.addExit("porta_interna_cucina", corridoioPianoTerra);
         
         AdvObject scarafaggi = new AdvObject(603, "scarafaggi", "") {};
-        AdvObject porta = new AdvObject(604, "porta", "") {};
+        AdvObject porta = new AdvObject(604, "porta_interna_cucina", "") {};
         
         cucina.getObjects().add(scarafaggi);
         cucina.getObjects().add(porta);
@@ -370,7 +372,7 @@ public class ToyStoryGame extends GameDescription {
     }
 
     private void configureGiardino() {
-        giardino.addExit("porta",corridoioPianoTerra);
+        giardino.addExit("porta_cane",corridoioPianoTerra);
         giardino.addExit("tombino",ingressoFogna);
 
        /* // 3. OGGETTI PER GLI ENIGMI DELLA STORIA
@@ -381,8 +383,8 @@ public class ToyStoryGame extends GameDescription {
         PickupableObject torsolo = new PickupableObject(602, "torsolo", "Un torsolo di mela mezzo marcio recuperato dalla spazzatura. Noi di plastica non mangiamo, ma a qualcuno potrebbe far gola!", "mela.png");
         PickupableObject rametto = new PickupableObject(604, "rametto", "Un solido rametto di legno. È dritto e resistente.", "rametto.png");
         
-        AdvObject sacchiSpazzatura = new AdvObject(601, "sacchi_neri", "Due giganteschi sacchi della spazzatura neri. Puzzano terribilmente e sono viscidi, ma a mali estremi...");
-        AdvObject albero = new AdvObject(603, "albero", "Un albero imponente. C'è un ramo spezzato impigliato tra le foglie più basse. È un'arrampicata pericolosa, ci vorrebbe molta agilità per recuperarlo.");
+        AdvObject sacchiSpazzatura = new AdvObject(601, "sacchi_neri", "");
+        AdvObject albero = new AdvObject(603, "albero", "");
         
 
         // 4. OGGETTI DI SCENARIO EXTRA (Basati sull'immagine giardino.jpg)

@@ -51,13 +51,13 @@ public class MappaScenario {
         
        
         // 1. Porta per tornare in camera di Andy
-        corridoio.add(new BoundingBox(93, 222, 63, 560, "porta_andy", imgW, imgH));
+        corridoio.add(new BoundingBox(93, 222, 63, 560, "porta_camera_andy", imgW, imgH));
         
         // 2. Porta per andare in camera di Molly
-        corridoio.add(new BoundingBox(1025, 1221, 98, 489, "porta_molly", imgW, imgH));
+        corridoio.add(new BoundingBox(1025, 1221, 98, 489, "porta_camera_molly", imgW, imgH));
         
         // 3. Scale per scendere al piano terra
-        corridoio.add(new BoundingBox(596, 1422, 583, 720, "scale", imgW, imgH));
+        corridoio.add(new BoundingBox(596, 1422, 583, 720, "scale_giu", imgW, imgH));
 
         // Registriamo la mappa del corridoio nel sistema usando il suo ID logico
         stanze.put("CORRIDOIO_PRIMO_PIANO", corridoio);
@@ -66,7 +66,7 @@ public class MappaScenario {
         List<BoundingBox> cameraMolly = new ArrayList<>();
         
         // 1. Porta (per tornare al corridoio)
-        cameraMolly.add(new BoundingBox(1249, 1402, 150, 494, "porta", imgW, imgH));
+        cameraMolly.add(new BoundingBox(1249, 1402, 150, 494, "porta_molly", imgW, imgH));
         
         // 2. Baule (ora puoi usare PRENDI pallina direttamente cliccando qui)
         cameraMolly.add(new BoundingBox(1120, 1414, 518, 677, "baule_molly", imgW, imgH));
@@ -83,7 +83,7 @@ public class MappaScenario {
         List<BoundingBox> corridoioTerra = new ArrayList<>();
         
         // 1. Scale per tornare su
-        corridoioTerra.add(new BoundingBox(841, 1422, 1, 650, "scale", imgW, imgH));
+        corridoioTerra.add(new BoundingBox(841, 1422, 1, 650, "scale_su", imgW, imgH));
         
         // 2. Porta cucina
         corridoioTerra.add(new BoundingBox(567, 800, 159, 571, "porta_cucina", imgW, imgH));
@@ -96,7 +96,7 @@ public class MappaScenario {
         // --- MAPPA DELLA CUCINA ---
         List<BoundingBox> cucina = new ArrayList<>();
         // 1. porta per uscire dalla cucina
-        cucina.add(new BoundingBox(105, 370, 118, 692, "porta", imgW, imgH));
+        cucina.add(new BoundingBox(105, 370, 118, 692, "porta_interna_cucina", imgW, imgH));
         
         // 2. scarafaggi che mangiano le briciole
         cucina.add(new BoundingBox(920, 1125, 505, 638, "scarafaggi", imgW, imgH));
@@ -106,7 +106,7 @@ public class MappaScenario {
         // --- MAPPA DEL GIARDINO ---
         List<BoundingBox> giardino = new ArrayList<>();
         // 1. porta per entrare in casa
-        giardino.add(new BoundingBox(444, 598, 119, 431, "porta", imgW, imgH));
+        giardino.add(new BoundingBox(444, 598, 119, 431, "porta_cane", imgW, imgH));
         
         //2. albero su cui puo salire jessie e trovare il ramo
         giardino.add(new BoundingBox(790, 1122, 26, 270, "albero", imgW, imgH));

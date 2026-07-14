@@ -58,4 +58,26 @@ public class Engine extends GameObservable {
         // prenderà in carico l'azione, eseguirà la logica e restituirà il testo.
         return this.notifyObservers(comando, game);
     }
+    
+    /**
+    * Costruisce il messaggio di sincronizzazione da inviare al client 
+    * subito dopo il resume di una partita esistente: stanza corrente, 
+    * avatar, abilità e inventario del personaggio attivo.
+    */
+    public String buildResumeSyncMessage() {
+       StringBuilder sb = new StringBuilder();
+
+       if (game.getCurrentRoom() != null) {
+           String idStanza = game.getCurrentRoom().getName().toUpperCase().replace(" ", "_");
+           sb.append("CAMBIA_SFONDO|").append(idStanza);
+       }
+
+       String characterFragment = game.buildCharacterStatusFragment();
+       if (!characterFragment.isEmpty()) {
+           if (sb.length() > 0) sb.append("|");
+           sb.append(characterFragment);
+       }
+
+       return sb.length() > 0 ? sb.toString() : null;
+    }
 }
