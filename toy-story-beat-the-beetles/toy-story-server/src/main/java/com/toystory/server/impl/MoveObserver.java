@@ -34,10 +34,11 @@ public class MoveObserver implements GameObserver {
                 
             case "porta_cucina":
                 return gestisciPortaCucina(state, attivo, currentRoom);
+                
+            case "cancello":
+                return gestisciCancello(state, attivo, currentRoom);
 
-            // QUI POTRAI AGGIUNGERE ALTRE PORTE O PASSAGGI IN FUTURO!
-            // case "finestra":
-            //     return gestisciFinestra(state, attivo, currentRoom);
+            
                 
             default:
                 // Logica di movimento standard per le stanze libere
@@ -99,7 +100,7 @@ public class MoveObserver implements GameObserver {
         boolean portaSbloccata = state.getFlags().getOrDefault("PORTA_SBLOCCATA", false);
 
         if (!portaSbloccata) {
-            return "TESTO|La porta è bloccata da Buster, non hai niente per distrarlo";
+            return "TESTO|La porta è bloccata da Buster, hai bisogno di qualcosa per distrarlo";
         }
 
         Room prossimaStanza = currentRoom.getExit("porta_cucina");
@@ -111,6 +112,32 @@ public class MoveObserver implements GameObserver {
             return "TESTO|Buster è troppo distratto dalla sua pallina per accorgersi di te. Sgattaioli oltre la porta.|CAMBIA_SFONDO|" + idStanza;
         } else {
             return "TESTO|La porta è aperta, ma oltre c'è solo un muro nero. (Errore: Stanza di destinazione non configurata!)";
+        }
+    }
+    
+    private String gestisciCancello(GameDescription state, PlayableCharacter attivo, Room currentRoom) {
+        boolean CancelloSbloccato = state.getFlags().getOrDefault("CANCELLO_SBLOCCATO", false);
+
+        if (!CancelloSbloccato) {
+            return "TESTO|Il cancello è bloccato da un lucchetto, dobbiamo sapere cosa c'è li dentro.";
+        }
+
+        Room prossimaStanza = currentRoom.getExit("cancello");
+
+        if (prossimaStanza != null) {
+            state.saveFlag("CANCELLO_SBLOCCATO", true);
+            
+            // 1. Aggiorniamo la stanza corrente nel Server
+            state.setCurrentRoom(prossimaStanza);
+            
+            // 2. Generiamo l'ID logico in modo automatico
+            String idStanza = prossimaStanza.getName().toUpperCase().replace(" ", "_");
+            
+            String testoDialogo = Dialoghi.getCancelloAperto(); 
+            return "TESTO|" + testoDialogo + "|CAMBIA_SFONDO|" + idStanza;
+            
+        } else {
+            return "TESTO|Hai aperto la porta, ma oltre c'è solo un muro nero. (Errore: Stanza di destinazione non configurata nella mappa di Room!)";
         }
     }
 

@@ -118,7 +118,6 @@ public class PickUpObserver implements GameObserver {
                 // 1. Controlliamo lo stato del gioco tramite i Flags               
                 boolean RamettoSbloccato = state.getFlags().getOrDefault("RAMETTO_UNLOCKED", false);
 
-                // Se abbiamo già preso il lazo
                 if (RamettoSbloccato) {
                     return "TESTO|Hai già controllato qui su. Hai preso tutto quello che c'era.";
                 }
@@ -127,20 +126,23 @@ public class PickUpObserver implements GameObserver {
 
                 if (nomeEroe.equalsIgnoreCase("Woody")) {
                     // WOODY FALLISCE (braccia di pezza)
-                    String testoDialogo = Dialoghi.getWoodySottoAlLetto();
+                    String testoDialogo = Dialoghi.getWoodyAlbero();
                     return "TESTO|" + testoDialogo;
 
                 } else if (nomeEroe.equalsIgnoreCase("Jessie")) {
                     // SOLO JESSIE RIESCIE A RAGGIUNGERE IL RAMETTO GRAZIE ALLA SUA DESTREZZA
-                    String testoDialogo = Dialoghi.getJessieSottoAlLetto();
-                    return "TESTO|" + testoDialogo;
+                    state.saveFlag("RAMETTO_UNLOCKED", true); // raccogliamo la forcina
+                    return eseguiRaccolta("rametto", target, state, attivo, currentRoom);
 
                 } else if (nomeEroe.equalsIgnoreCase("Buzz Lightyear") || nomeEroe.equalsIgnoreCase("Buzz")) {
                     // BUZZ FALLISCE
-                    state.saveFlag("FORCINA_UNLOCKED", true); // raccogliamo la forcina
-                    String testoDialogo = Dialoghi.getBuzzSottoAlLettoMolly();
+                    String testoDialogo = Dialoghi.getBuzzAlbero();
                     return "TESTO|" + testoDialogo;
                 }
+                
+            //INGRESSO FOGNA
+            
+                
                 
             default:
                 // Per tutti gli altri oggetti generici sparsi nella stanza
