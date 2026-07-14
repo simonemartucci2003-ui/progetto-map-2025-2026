@@ -120,8 +120,18 @@ public class LookAtObserver implements GameObserver {
                 return "TESTO|" + descrizione;
                 
             case "porta_cucina":
-                descrizione = Dialoghi.getDescrizonePortaCucuna();
-                return "TESTO|" + descrizione;
+                 boolean PortaSbloccata = state.getFlags().getOrDefault("PORTA_SBLOCCATA", false);
+                
+                 if (!PortaSbloccata) {
+                        // porta NON ancora aperta
+                        descrizione = Dialoghi.getDescrizonePortaCucuna();
+                        return "TESTO|" + descrizione;
+                    } else {
+                        // porta aperta
+                        String testoDialogo = Dialoghi.getDescrizionePortaCucunaSbloccata(); 
+                        return "TESTO|" + testoDialogo;
+                    }
+
                 
             case "porticina_cane":
                 descrizione = Dialoghi.getDescrizonePorticina();

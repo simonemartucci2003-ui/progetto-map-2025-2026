@@ -133,6 +133,10 @@ public class Dialoghi {
                "Buzz: Per i crateri di Marte... è Buster! Sta dormendo proprio davanti alla fessura. Dobbiamo trovare un'esca per distrarlo e liberare il passaggio.<PAUSA>";
     }
     
+    public static String getDescrizionePortaCucunaSbloccata(){
+        return "Fortunatamente siamo riusciti a spostare Buster, ora la via per la cucina è libera";
+    }
+    
     public static String getDialogoPortaCucinaAperta() {
         return "Stringi la pallina presa dalle tue tasche... *SQUEAK SQUEAK*!<PAUSA>" +
                "Buster: Wof! Wof! Wof!<PAUSA>" +

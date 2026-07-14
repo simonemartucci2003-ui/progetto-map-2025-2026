@@ -101,9 +101,11 @@ public class PickUpObserver implements GameObserver {
 
                 } else if (nomeEroe.equalsIgnoreCase("Buzz Lightyear") || nomeEroe.equalsIgnoreCase("Buzz")) {
                     // SOLO BUZZ HA SUCCESSO
+                   
                     state.saveFlag("FORCINA_UNLOCKED", true); // raccogliamo la forcina
                     String testoDialogo = Dialoghi.getBuzzSottoAlLettoMolly();
-                    return "TESTO|" + testoDialogo;
+                    
+                    return eseguiRaccolta("forcina", target, state, attivo, currentRoom);
                 }
                 
                 
