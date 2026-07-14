@@ -73,23 +73,57 @@ public class GameWindow extends javax.swing.JFrame {
         } else if (scelta == 1) { 
             uniscitiPartita(null, false);
         } else if (scelta == 2) {
-            uniscitiPartita(null, true);    // true = mostra lista partite recenti
+            uniscitiPartita(null, false);    // true = mostra lista partite recenti
         } else {
             System.exit(0);
     }
+        
+        // Font bianco e in grassetto per la storia
+        txtAreaStoria.setFont(new java.awt.Font("Verdana", java.awt.Font.BOLD, 12));
+        txtAreaStoria.setForeground(java.awt.Color.WHITE);
           
         // Trasformiamo i bottoni standard in bottoni Pixel Art azzurri con le nuvole
         applicaStileToyStory(btnGuarda, "GUARDA");
         applicaStileToyStory(btnPrendi, "PRENDI");
         applicaStileToyStory(btnUsa, "USA");
-        applicaStileToyStory(btnApri, "APRI");
-        applicaStileToyStory(btnChiudi, "CHIUDI");
         applicaStileToyStory(btnParla, "PARLA");
-        applicaStileToyStory(btnDai, "DAI");
-        applicaStileToyStory(btnSpingi, "SPINGI");
         applicaStileToyStory(btnVai, "VAI");
         
+        
+        // --- STILE PANNELLO VERBI ---
+        PixelButtonGenerator.applicaSfondoBottoni(pnlVerbi);
+        // --- STILE PANNELLO PERSONAGGI ---
+        PixelButtonGenerator.applicaSfondoPersonaggi(pnlPersonaggio);
+        
+        
+        // Personalizziamo il font del titolo della stanza
+        lblNomeStanza.setFont(new java.awt.Font("Arial Black", java.awt.Font.BOLD, 16));
+        lblNomeStanza.setForeground(new java.awt.Color(255, 225, 0)); // Giallo Toy Story
+        
+        
+        
+        // --- STILE INVENTARIO (CASSA DI LEGNO) ---
+        //1. Usiamo il nostro generatore per trasformare l'intero pannello in una cassa
+        PixelButtonGenerator.applicaSfondoTasche(pnlTasche);
+        
+        // 2. Rendiamo i bottoni trasparenti (così le icone degli oggetti poggeranno sul legno)
+        btnSlotInventario1.setContentAreaFilled(false);
+        btnSlotInventario1.setOpaque(false);
+        btnSlotInventario1.setBorderPainted(false);
+        
+        btnSlotInventario2.setContentAreaFilled(false);
+        btnSlotInventario2.setOpaque(false);
+        btnSlotInventario2.setBorderPainted(false);
+        
+        lblIconaAbilita.setOpaque(false);
+        
+        
+        
+       
+        
     }
+    
+    
         
         
 
@@ -192,19 +226,15 @@ public class GameWindow extends javax.swing.JFrame {
         txtAreaStoria = new javax.swing.JTextArea();
         pnlPulsantiera = new javax.swing.JPanel();
         pnlVerbi = new javax.swing.JPanel();
-        btnDai = new javax.swing.JButton();
         btnPrendi = new javax.swing.JButton();
         btnUsa = new javax.swing.JButton();
-        btnApri = new javax.swing.JButton();
         btnGuarda = new javax.swing.JButton();
-        btnSpingi = new javax.swing.JButton();
-        btnChiudi = new javax.swing.JButton();
         btnParla = new javax.swing.JButton();
         btnVai = new javax.swing.JButton();
         pnlTasche = new javax.swing.JPanel();
         btnSlotInventario1 = new javax.swing.JButton();
-        btnSlotInventario2 = new javax.swing.JButton();
         lblIconaAbilita = new javax.swing.JLabel();
+        btnSlotInventario2 = new javax.swing.JButton();
         pnlPersonaggio = new javax.swing.JPanel();
         labelAvatar = new javax.swing.JLabel();
         cambiaIconaAvatar = new javax.swing.JPanel();
@@ -291,11 +321,7 @@ public class GameWindow extends javax.swing.JFrame {
         pnlPulsantiera.setLayout(new java.awt.GridLayout(1, 3));
 
         pnlVerbi.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 3, 1, 3));
-        pnlVerbi.setLayout(new java.awt.GridLayout(3, 3, 5, 5));
-
-        btnDai.setText("Dai");
-        btnDai.addActionListener(this::btnDaiActionPerformed);
-        pnlVerbi.add(btnDai);
+        pnlVerbi.setLayout(new java.awt.GridLayout(3, 2, 5, 5));
 
         btnPrendi.setText("Prendi");
         btnPrendi.addActionListener(this::btnPrendiActionPerformed);
@@ -305,20 +331,9 @@ public class GameWindow extends javax.swing.JFrame {
         btnUsa.addActionListener(this::btnUsaActionPerformed);
         pnlVerbi.add(btnUsa);
 
-        btnApri.setText("Apri");
-        btnApri.addActionListener(this::btnApriActionPerformed);
-        pnlVerbi.add(btnApri);
-
         btnGuarda.setText("Guarda");
         btnGuarda.addActionListener(this::btnGuardaActionPerformed);
         pnlVerbi.add(btnGuarda);
-
-        btnSpingi.setText("Chiudi");
-        btnSpingi.addActionListener(this::btnSpingiActionPerformed);
-        pnlVerbi.add(btnSpingi);
-
-        btnChiudi.setText("Chiudi");
-        pnlVerbi.add(btnChiudi);
 
         btnParla.setText("Parla");
         btnParla.addActionListener(this::btnParlaActionPerformed);
@@ -334,15 +349,12 @@ public class GameWindow extends javax.swing.JFrame {
         pnlTasche.setMaximumSize(new java.awt.Dimension(32767, 30000));
         pnlTasche.setLayout(new java.awt.GridLayout(2, 1, 0, 10));
 
-        btnSlotInventario1.setText("[Vuoto]");
         btnSlotInventario1.addActionListener(this::btnSlotInventario1ActionPerformed);
         pnlTasche.add(btnSlotInventario1);
 
-        btnSlotInventario2.setText("[Vuoto]");
-        pnlTasche.add(btnSlotInventario2);
-
         lblIconaAbilita.setText("abilita");
         pnlTasche.add(lblIconaAbilita);
+        pnlTasche.add(btnSlotInventario2);
 
         pnlPulsantiera.add(pnlTasche);
 
@@ -352,6 +364,7 @@ public class GameWindow extends javax.swing.JFrame {
         labelAvatar.setEnabled(false);
         pnlPersonaggio.add(labelAvatar, java.awt.BorderLayout.CENTER);
 
+        cambiaIconaAvatar.setOpaque(false);
         cambiaIconaAvatar.setPreferredSize(new java.awt.Dimension(208, 80));
         cambiaIconaAvatar.setLayout(new java.awt.GridLayout(1, 3));
 
@@ -388,7 +401,6 @@ public class GameWindow extends javax.swing.JFrame {
         pnlPersonaggio.add(cambiaIconaAvatar, java.awt.BorderLayout.PAGE_START);
 
         lblGiocatoreCorrente.setHorizontalAlignment(javax.swing.SwingConstants.CENTER);
-        lblGiocatoreCorrente.setText("NOME PERSONAGGIO ATTIVO");
         pnlPersonaggio.add(lblGiocatoreCorrente, java.awt.BorderLayout.SOUTH);
 
         pnlPulsantiera.add(pnlPersonaggio);
@@ -403,10 +415,6 @@ public class GameWindow extends javax.swing.JFrame {
     private void btnMenuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMenuActionPerformed
         // TODO add your handling code here:
     }//GEN-LAST:event_btnMenuActionPerformed
-
-    private void btnDaiActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnDaiActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnDaiActionPerformed
 
     private void pnlRappresentazioneStanzaMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_pnlRappresentazioneStanzaMouseClicked
                                                    
@@ -437,16 +445,6 @@ public class GameWindow extends javax.swing.JFrame {
         this.azioneSelezionata = "GUARDA";
         txtAreaStoria.append("[Sistema]: Hai selezionato l'azione GUARDA. Ora clicca su un oggetto nello scenario.\n");
     }//GEN-LAST:event_btnGuardaActionPerformed
-
-    private void btnApriActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnApriActionPerformed
-        // TODO add your handling code here:
-        this.azioneSelezionata = "APRI";
-        txtAreaStoria.append("[Sistema]: Hai selezionato l'azione APRI. Ora clicca su un oggetto nello scenario.\n");
-    }//GEN-LAST:event_btnApriActionPerformed
-
-    private void btnSpingiActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSpingiActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnSpingiActionPerformed
 
     private void btnSlotInventario1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSlotInventario1ActionPerformed
         // TODO add your handling code here:
@@ -688,15 +686,10 @@ public class GameWindow extends javax.swing.JFrame {
             System.err.println("[GUI] ERRORE GRAVE: Immagine " + nomeFile + " introvabile.");
         }
     }
+    
+    
     private void aggiornaBordiPersonaggi() {
-        // 1. Aggiorna il testo della label in base al bottone attualmente premuto
-        if (btnSelezionaWoody.isSelected()) {
-            lblGiocatoreCorrente.setText("WOODY");
-        } else if (btnSelezionaBuzz.isSelected()) {
-            lblGiocatoreCorrente.setText("BUZZ LIGHTYEAR");
-        } else if (btnSelezionaJessie.isSelected()) {
-            lblGiocatoreCorrente.setText("JESSIE");
-        }
+        
         
         // Bordo Verde se selezionato, Rosso se non selezionato (spessore 3 pixel)
         btnSelezionaWoody.setBorder(javax.swing.BorderFactory.createLineBorder(
@@ -801,9 +794,6 @@ public class GameWindow extends javax.swing.JFrame {
     private javax.swing.JPanel Buzz;
     private javax.swing.JPanel Jessie;
     private javax.swing.JPanel Woody;
-    private javax.swing.JButton btnApri;
-    private javax.swing.JButton btnChiudi;
-    private javax.swing.JButton btnDai;
     private javax.swing.JButton btnGuarda;
     private javax.swing.JButton btnMenu;
     private javax.swing.JButton btnParla;
@@ -813,7 +803,6 @@ public class GameWindow extends javax.swing.JFrame {
     private javax.swing.JToggleButton btnSelezionaWoody;
     private javax.swing.JButton btnSlotInventario1;
     private javax.swing.JButton btnSlotInventario2;
-    private javax.swing.JButton btnSpingi;
     private javax.swing.JButton btnUsa;
     private javax.swing.JButton btnVai;
     private javax.swing.ButtonGroup buttonGroup1;
