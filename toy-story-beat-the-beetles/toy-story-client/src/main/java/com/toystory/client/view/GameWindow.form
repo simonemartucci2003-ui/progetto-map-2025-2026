@@ -208,20 +208,12 @@
               </Properties>
 
               <Layout class="org.netbeans.modules.form.compat2.layouts.DesignGridLayout">
-                <Property name="columns" type="int" value="3"/>
+                <Property name="columns" type="int" value="2"/>
                 <Property name="horizontalGap" type="int" value="5"/>
                 <Property name="rows" type="int" value="3"/>
                 <Property name="verticalGap" type="int" value="5"/>
               </Layout>
               <SubComponents>
-                <Component class="javax.swing.JButton" name="btnDai">
-                  <Properties>
-                    <Property name="text" type="java.lang.String" value="Dai"/>
-                  </Properties>
-                  <Events>
-                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnDaiActionPerformed"/>
-                  </Events>
-                </Component>
                 <Component class="javax.swing.JButton" name="btnPrendi">
                   <Properties>
                     <Property name="text" type="java.lang.String" value="Prendi"/>
@@ -238,14 +230,6 @@
                     <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnUsaActionPerformed"/>
                   </Events>
                 </Component>
-                <Component class="javax.swing.JButton" name="btnApri">
-                  <Properties>
-                    <Property name="text" type="java.lang.String" value="Apri"/>
-                  </Properties>
-                  <Events>
-                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnApriActionPerformed"/>
-                  </Events>
-                </Component>
                 <Component class="javax.swing.JButton" name="btnGuarda">
                   <Properties>
                     <Property name="text" type="java.lang.String" value="Guarda"/>
@@ -253,19 +237,6 @@
                   <Events>
                     <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnGuardaActionPerformed"/>
                   </Events>
-                </Component>
-                <Component class="javax.swing.JButton" name="btnSpingi">
-                  <Properties>
-                    <Property name="text" type="java.lang.String" value="Chiudi"/>
-                  </Properties>
-                  <Events>
-                    <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnSpingiActionPerformed"/>
-                  </Events>
-                </Component>
-                <Component class="javax.swing.JButton" name="btnChiudi">
-                  <Properties>
-                    <Property name="text" type="java.lang.String" value="Chiudi"/>
-                  </Properties>
                 </Component>
                 <Component class="javax.swing.JButton" name="btnParla">
                   <Properties>
@@ -304,22 +275,16 @@
               </Layout>
               <SubComponents>
                 <Component class="javax.swing.JButton" name="btnSlotInventario1">
-                  <Properties>
-                    <Property name="text" type="java.lang.String" value="[Vuoto]"/>
-                  </Properties>
                   <Events>
                     <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="btnSlotInventario1ActionPerformed"/>
                   </Events>
-                </Component>
-                <Component class="javax.swing.JButton" name="btnSlotInventario2">
-                  <Properties>
-                    <Property name="text" type="java.lang.String" value="[Vuoto]"/>
-                  </Properties>
                 </Component>
                 <Component class="javax.swing.JLabel" name="lblIconaAbilita">
                   <Properties>
                     <Property name="text" type="java.lang.String" value="abilita"/>
                   </Properties>
+                </Component>
+                <Component class="javax.swing.JButton" name="btnSlotInventario2">
                 </Component>
               </SubComponents>
             </Container>
@@ -346,6 +311,7 @@
                 </Component>
                 <Container class="javax.swing.JPanel" name="cambiaIconaAvatar">
                   <Properties>
+                    <Property name="opaque" type="boolean" value="false"/>
                     <Property name="preferredSize" type="java.awt.Dimension" editor="org.netbeans.beaninfo.editors.DimensionEditor">
                       <Dimension value="[208, 80]"/>
                     </Property>
@@ -435,7 +401,6 @@
                 <Component class="javax.swing.JLabel" name="lblGiocatoreCorrente">
                   <Properties>
                     <Property name="horizontalAlignment" type="int" value="0"/>
-                    <Property name="text" type="java.lang.String" value="NOME PERSONAGGIO ATTIVO"/>
                   </Properties>
                   <Constraints>
                     <Constraint layoutClass="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout" value="org.netbeans.modules.form.compat2.layouts.DesignBorderLayout$BorderConstraintsDescription">
