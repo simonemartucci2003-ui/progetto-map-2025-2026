@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.toystory.client;
 
 import java.io.BufferedReader;
@@ -13,9 +9,18 @@ import java.util.function.Consumer;
 
 /**
  * Gestisce l'infrastruttura di rete lato Client (Socket e I/O).
- * È completamente disaccoppiata dalla visualizzazione grazie all'uso 
- * delle Interfacce Funzionali (Lambda Expression).
- * * @author Il Tuo Nome / Gruppo
+ * <p>
+ * Questa classe è responsabile della gestione della connessione TCP con il server,
+ * dell'invio dei comandi e dell'ascolto asincrono dei messaggi in arrivo tramite 
+ * un thread dedicato ({@link NetworkListenerThread}).
+ * </p>
+ * <p>
+ * L'architettura è completamente disaccoppiata dalla visualizzazione grafica grazie 
+ * all'uso di un'interfaccia funzionale ({@link Consumer}), che permette di delegare 
+ * la gestione dei messaggi ricevuti a qualsiasi classe esterna (es. il Controller).
+ * </p>
+ * 
+ * @author simon
  */
 public class GameClient {
 
@@ -25,9 +30,17 @@ public class GameClient {
     private Socket socket;
     private PrintWriter out;
     private BufferedReader in;
-    private boolean running = false;
+    /** Flag volatile per garantire la sincronizzazione tra i thread in fase di chiusura */
+    private volatile boolean running = false;
 
-    /** Interfaccia funzionale (Callback) per notificare l'arrivo di stringhe dal server */
+   /**
+     * Callback funzionale che definisce l'azione da intraprendere alla ricezione di ogni messaggio dal server.
+     * <p>
+     * L'uso di {@link Consumer} permette di disaccoppiare la logica di rete dalla gestione dell'interfaccia 
+     * utente: il client si limita a "recapitare" il messaggio ricevuto, delegando totalmente al chiamante 
+     * (es. il Controller) la decisione su come processarlo o visualizzarlo.
+     * </p>
+     */
     private final Consumer<String> onMessageReceived;
 
     /**
@@ -38,8 +51,6 @@ public class GameClient {
     public GameClient(Consumer<String> onMessageReceived) {
         this.onMessageReceived = onMessageReceived;
     }
-    
-    
     
     /**
      * Stabilisce la connessione con il Server e avvia il thread di ascolto in background.
@@ -56,7 +67,7 @@ public class GameClient {
             this.running = true;
             System.out.println("[Client-Rete] Connessione completata con successo.");
 
-            // Facciamo partire il thread in background per evitare il congelamento (freeze) del programma principal/GUI
+            // Facciamo partire il thread in background per evitare il freeze del programma principale/GUI
             new NetworkListenerThread().start();
 
         } catch (IOException e) {
@@ -66,10 +77,13 @@ public class GameClient {
     }
     
     /**
-     * Stabilisce la connessione con il Server e gestisce la creazione o l'unione a una partita.
-     * @param isHost true se l'utente clicca "Nuova Partita", false se clicca "Unisciti".
-     * @param gameId Se clicca "Unisciti", questo conterrà il codice digitato nella barra.
-     * @return Stringa con il codice della partita (se creata), "SUCCESS" (se unito), o "ERROR".
+     * Stabilisce la connessione con il Server e gestisce la fase di handshake 
+     * per la creazione o l'unione a una partita.
+     * 
+     * @param isHost true se l'utente richiede la creazione di una nuova partita, 
+     *               false se intende unirsi a una esistente.
+     * @param gameId L'identificativo della partita (richiesto se {@code isHost} è false).
+     * @return L'ID della partita creata, "SUCCESS" se l'unione è riuscita, o "ERROR" in caso di fallimento.
      */
     public String connectAndHandshake(boolean isHost, String gameId) {
         try {
@@ -109,7 +123,7 @@ public class GameClient {
     }
 
     /**
-     * Invia un comando formattato ("AZIONE|TARGET") generato dall'interazione dell'utente.
+     * Invia un comando formattato (es: "AZIONE|TARGET") generato dall'interazione dell'utente.
      * @param action Il tipo di comando (es. "GUARDA", "PRENDI")
      * @param target L'oggetto o la stanza bersaglio dell'azione
      */
@@ -123,7 +137,7 @@ public class GameClient {
     }
 
     /**
-     * Chiude in sicurezza tutte le risorse di rete aperte.
+     * Chiude in sicurezza il socket e i flussi di comunicazione.
      */
     public void disconnect() {
         this.running = false;
@@ -136,7 +150,7 @@ public class GameClient {
     }
 
     /**
-     * Thread interno (Inner Class) adibito al monitoraggio costante dei messaggi 
+     * Thread interno adibito al monitoraggio costante dei messaggi
      * provenienti dal Server. Cattura i dati in broadcast (multiplayer) in tempo reale.
      */
     private class NetworkListenerThread extends Thread {
@@ -152,8 +166,8 @@ public class GameClient {
                         serverMessage = serverMessage.split("\\|")[1];
                     }
                     
-                    // UTILIZZO DELLA LAMBDA: Passiamo la stringa all'esterno. 
-                    // Sarà chi ha istanziato GameClient a decidere dove mostrarla!
+                    // Notifica l'observer esterno tramite la callback definita al momento dell'istanziazione,
+                    // mantenendo il client indipendente dalla logica di visualizzazione.
                     onMessageReceived.accept(serverMessage);
                 }
             } catch (IOException e) {

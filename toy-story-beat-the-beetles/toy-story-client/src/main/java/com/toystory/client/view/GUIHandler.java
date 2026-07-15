@@ -1,7 +1,5 @@
 package com.toystory.client.view;
 
-import com.toystory.client.view.GameWindow;
-
 /**
  * Gestisce l'interpretazione dei messaggi inviati dal server, traducendoli in
  * aggiornamenti grafici sulla {@link GameWindow}.

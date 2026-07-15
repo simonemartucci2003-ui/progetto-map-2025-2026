@@ -68,7 +68,9 @@ public class GameWindowController {
             GameDialogs.mostraSuccessoCreazione(finestra, gameId);
             finestra.setTitle("Toy Story - Partita ID: " + gameId);
             finestra.setVisible(true); 
+            finestra.aggiornaNomeStanza("CAMERA DI ANDY");
         }
+        
     }
     
     /**
@@ -91,6 +93,7 @@ public class GameWindowController {
     public void cambiaStanzaMappa(String idStanza) {
         // 1. Aggiorna la logica interna
         mappaScenario.setStanzaCorrenteId(idStanza);
+        finestra.aggiornaNomeStanza(idStanza);
         finestra.scriviNelLog("[Cambio Scenario]: Ti sposti nella stanza ID " + idStanza);
         
         // 2. Chiede alla mappa quale immagine usare
