@@ -1,11 +1,21 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/GUIForms/JFrame.java to edit this template
- */
 package com.toystory.client.view;
 
+import com.toystory.client.view.components.PixelButtonGenerator;
+
+
+
 /**
- *
+ * Finestra principale dell'applicazione client.
+ * <p>
+ * Rappresenta la Vista (View) nel pattern MVC. Gestisce l'intera interfaccia grafica,
+ * il rendering degli elementi di gioco e l'invio degli input utente al {@link GameWindowController}.
+ * </p>
+ * <p>
+ * Questa classe utilizza componenti Swing personalizzati per mantenere lo stile 
+ * visivo del gioco e non contiene logica di business, limitandosi a eseguire 
+ * comandi grafici ricevuti dal sistema.
+ * </p>
+ * 
  * @author simon
  */
 public class GameWindow extends javax.swing.JFrame {
@@ -16,35 +26,36 @@ public class GameWindow extends javax.swing.JFrame {
     
 
     /**
-     * Creates new form GameWindow
+     * Inizializza la finestra di gioco, applica gli stili grafici ai componenti
+     * e avvia il flusso di connessione tramite il controller.
      */
     public GameWindow() {
         initComponents();
-        // 1. Font e Testi
+        // --- 1. Configurazione Font e Testi ---
         txtAreaStoria.setPreferredSize(null);
         txtAreaStoria.setFont(new java.awt.Font("Verdana", java.awt.Font.BOLD, 12));
         txtAreaStoria.setForeground(java.awt.Color.WHITE);
         lblNomeStanza.setFont(new java.awt.Font("Arial Black", java.awt.Font.BOLD, 16));
         lblNomeStanza.setForeground(new java.awt.Color(255, 225, 0)); // Giallo Toy Story
          
-        // 2. Avatar Personaggi (Ora usa il generatore)
+        // --- 2. Inizializzazione Stili Componenti (via PixelButtonGenerator) ---
         PixelButtonGenerator.impostaIconaAvatar(btnSelezionaBuzz, "/icone_buzz.png");
         PixelButtonGenerator.impostaIconaAvatar(btnSelezionaWoody, "/icone_woody.png");
         PixelButtonGenerator.impostaIconaAvatar(btnSelezionaJessie, "/icone_jessie.png");
         
-        // 3. Stile Bottoni Azioni
+        // Stile Bottoni Azioni
         PixelButtonGenerator.applicaStileToyStory(btnGuarda, "GUARDA");
         PixelButtonGenerator.applicaStileToyStory(btnPrendi, "PRENDI");
         PixelButtonGenerator.applicaStileToyStory(btnUsa, "USA");
         PixelButtonGenerator.applicaStileToyStory(btnParla, "PARLA");
         PixelButtonGenerator.applicaStileToyStory(btnVai, "VAI");
         
-        // 4. Stile Sfondi Pannelli
+        // Stile Sfondi Pannelli
         PixelButtonGenerator.applicaSfondoBottoni(pnlVerbi);
         PixelButtonGenerator.applicaSfondoPersonaggi(pnlPersonaggio);
         PixelButtonGenerator.applicaSfondoTasche(pnlTasche);
         
-        // 5. Stile Inventario
+        // --- 3. Configurazione Inventario ---
         btnSlotInventario1.setContentAreaFilled(false);
         btnSlotInventario1.setOpaque(false);
         btnSlotInventario1.setBorderPainted(false);
@@ -55,27 +66,27 @@ public class GameWindow extends javax.swing.JFrame {
         
         lblIconaAbilita.setOpaque(false);
         
-        // 6. Selezione di default
+        // Selezione di default
         btnSelezionaWoody.setSelected(true); 
         aggiornaBordiPersonaggi();
         
-        // 7. INIZIALIZZA IL CONTROLLER E AVVIA IL MENU (AGGIUNGI QUESTE RIGHE)
+        // --- 4. Avvio Controller ---
         this.controller = new GameWindowController(this);
         java.awt.EventQueue.invokeLater(() -> controller.avviaFlussoIniziale());
         
-        // 8 ---PROPORZIONI FINESTRA ---
+        // --- 5. Layout e Dimensioni ---
         
-        // 8.1. Diamo al pannello le proporzioni esatte (es. la metà esatta di 1424x748)
+        // 5.1. Diamo al pannello le proporzioni esatte 
         pnlRappresentazioneStanza.setPreferredSize(new java.awt.Dimension(712, 374));
         
-        // 8.2. Blocchiamo la finestra in modo che il giocatore non possa sformarla
+        // 5.2. Blocchiamo la finestra in modo che il giocatore non possa sformarla
         this.setResizable(false); 
         
-        // 8.3. Diciamo alla finestra di riadattare la sua grandezza generale 
+        // 5.3. Diciamo alla finestra di riadattare la sua grandezza generale 
         // in base alle nuove dimensioni perfette del pannello
         this.pack();
         
-        // 8.4. Centriamo la finestra perfettamente al centro dello schermo
+        // 5.4. Centriamo la finestra perfettamente al centro dello schermo
         this.setLocationRelativeTo(null);
         
         jScrollPane1.setPreferredSize(new java.awt.Dimension(0, 70));
@@ -98,7 +109,7 @@ public class GameWindow extends javax.swing.JFrame {
         pnlSuperiore = new javax.swing.JPanel();
         btnMenu = new javax.swing.JButton();
         lblNomeStanza = new javax.swing.JLabel();
-        pnlRappresentazioneStanza = new com.toystory.client.view.PannelloImmagineAdattiva();
+        pnlRappresentazioneStanza = new com.toystory.client.view.components.PannelloImmagineAdattiva();
         pnlInferiore = new javax.swing.JPanel();
         jScrollPane1 = new javax.swing.JScrollPane();
         txtAreaStoria = new javax.swing.JTextArea();
@@ -360,8 +371,8 @@ public class GameWindow extends javax.swing.JFrame {
     // =============================================================================
 
     /**
-     * Scrive un testo nell'area principale dei dialoghi.
-     * @param testo
+     * Aggiunge una riga di testo nel registro degli eventi (log) della storia.
+     * @param testo Il messaggio da visualizzare.
      */
     public void scriviNelLog(String testo) {
         txtAreaStoria.append(testo + "\n");
@@ -369,8 +380,8 @@ public class GameWindow extends javax.swing.JFrame {
     }
 
     /**
-     * Aggiorna il titolo della stanza in alto.
-     * @param nomeStanza
+     * Aggiorna il nome della stanza visualizzato nell'header.
+     * @param nomeStanza Il nome della nuova stanza.
      */
     public void aggiornaNomeStanza(String nomeStanza) {
         lblNomeStanza.setText(nomeStanza.toUpperCase());
@@ -378,37 +389,12 @@ public class GameWindow extends javax.swing.JFrame {
 
 
     /**
-     * Notifica lo spostamento in una nuova stanza.
-     * @param idStanza
+     * Aggiorna l'immagine di sfondo del pannello di gioco.
+     * @param percorsoImmagine Percorso del file immagine.
      */
-    public void aggiornaSfondoScenario(String idStanza) {
-        scriviNelLog("[Cambio Scenario]: Ti sposti nella stanza ID " + idStanza);
-        
-        String percorsoImmagine = "";
-        
-        switch (idStanza) {
-            case "CORRIDOIO_PRIMO_PIANO":  percorsoImmagine = "/CorridoioRoom2.jpg"; break;
-            case "CAMERA_DI_ANDY":         percorsoImmagine = "/AndyRoom1.jpg"; break;
-            case "CAMERA_DI_MOLLY":        percorsoImmagine = "/MollyRoom3.png"; break;
-            case "CORRIDOIO_PIANO_TERRA":  percorsoImmagine = "/CorridoioRoom4.png"; break;
-            case "CUCINA":                 percorsoImmagine = "/CucinaRoom6.png"; break;
-            case "GIARDINO":               percorsoImmagine = "/StradaRoom5.png"; break;
-            case "INGRESSO_FOGNATURE":     percorsoImmagine = "/IngressoFognaRoom7.png"; break;
-            case "FOGNE_PRIMA_STANZA":     percorsoImmagine = "/FognaRoom8.png"; break;
-            case "STANZA_BUIA":            percorsoImmagine = "/FognaRoom11.png"; break;
-            case "CASA_DEL_TOPO":          percorsoImmagine = "/StanzaTopoRoom9.png"; break;
-            case "STANZA_DELLA_LEVA":      percorsoImmagine = "/FognaRoom10.png"; break;
-            case "FOGNE_SECONDA_STANZA":   percorsoImmagine = "/FognaRoom12.png"; break;
-            case "STANZA_CON_ACQUA":       percorsoImmagine = "/FognaRoom13.1.png"; break;
-            case "STANZA_SENZA_ACQUA":     percorsoImmagine = "/FognaRoom13.2.png"; break;
-            // case "BOSS_FINALE":         percorsoImmagine = "/"; break;
-            default:
-                System.err.println("[GUI] Stanza non riconosciuta per lo sfondo: " + idStanza);
-                break;
-        }
-        
-        if (!percorsoImmagine.isEmpty()) {
-            ((com.toystory.client.view.PannelloImmagineAdattiva) pnlRappresentazioneStanza).cambiaImmagine(percorsoImmagine);
+    public void impostaSfondo(String percorsoImmagine) {
+        if (percorsoImmagine != null && !percorsoImmagine.isEmpty()) {
+            ((com.toystory.client.view.components.PannelloImmagineAdattiva) pnlRappresentazioneStanza).cambiaImmagine(percorsoImmagine);
         }
     }
 
@@ -442,7 +428,10 @@ public class GameWindow extends javax.swing.JFrame {
     }
 
     
-    // Questo serve al Server per cambiare l'immagine (NON ELIMINARLO)
+    /**
+     * Mostra l'immagine del personaggio giocabile nell'interfaccia.
+     * @param imagePath Percorso del file immagine dell'avatar.
+     */
     public void cambiaIconaAvatar(String imagePath) {
         try {
             java.net.URL imgURL = getClass().getResource(imagePath);
@@ -456,7 +445,10 @@ public class GameWindow extends javax.swing.JFrame {
         }
     }
     
- 
+    /**
+     * Aggiorna visivamente i bordi dei bottoni di selezione personaggio in base allo stato di selezione.
+     * (rosso/verde)
+     */
     public void aggiornaBordiPersonaggi() {
         
         // Bordo Verde se selezionato, Rosso se non selezionato (spessore 3 pixel)
@@ -469,7 +461,12 @@ public class GameWindow extends javax.swing.JFrame {
         btnSelezionaJessie.setBorder(javax.swing.BorderFactory.createLineBorder(
             btnSelezionaJessie.isSelected() ? java.awt.Color.GREEN : java.awt.Color.RED, 3));
     }
-
+    
+    /**
+     * Aggiunge un oggetto grafico all'inventario se vi è spazio disponibile.
+     * @param nomeOggetto Nome dell'oggetto.
+     * @param nomeFile Percorso dell'icona.
+     */
     public void aggiungiAllInventario(String nomeOggetto, String nomeFile) {
         // 1. Prepariamo l'icona usando la nostra utility centralizzata
         java.net.URL imgURL = getClass().getResource("/" + nomeFile);
@@ -487,8 +484,11 @@ public class GameWindow extends javax.swing.JFrame {
         }
     }
     
+    /**
+     * Rimuove tutti gli oggetti dall'inventario grafico.
+     */
     public void svuotaInventario() {
-        // Togliamo le icone e rimettiamo la scritta [Vuoto]
+        // Togliamo le icone
         btnSlotInventario1.setIcon(null);
         btnSlotInventario1.setText("");
         
@@ -496,7 +496,10 @@ public class GameWindow extends javax.swing.JFrame {
         btnSlotInventario2.setText("");
     }
     
-    // Aggiungi questo metodo in GameWindow.java
+    /**
+     * Stampa un testo nel registro con un effetto di pausa automatizzata tra le frasi.
+     * @param testoCompleto Testo contenente i marcatori.
+     */
     public void stampaTestoConPausa(String testoCompleto) {
         // 1. Traduciamo il nostro codice di rete <BR> in un vero e proprio "a capo" per la grafica
         testoCompleto = testoCompleto.replace("<BR>", "\n");
@@ -516,7 +519,7 @@ public class GameWindow extends javax.swing.JFrame {
         
         // Timer per stampare le restanti frasi ogni 1.5 secondi
         javax.swing.Timer timer = new javax.swing.Timer(1000, new java.awt.event.ActionListener() {
-            // PARTIAMO DA 1 (perché la frase 0 l'abbiamo appena stampata!)
+            // PARTIAMO DA 1 (perché la frase 0 l'abbiamo appena stampata)
             int indice = 1; 
 
             @Override
