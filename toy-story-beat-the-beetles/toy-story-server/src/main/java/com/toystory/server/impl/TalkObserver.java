@@ -30,9 +30,28 @@ public class TalkObserver implements GameObserver {
                 testoDialogo = Dialoghi.getDialogoScarafaggi();
                 return "TESTO|" + testoDialogo;
             
+            case "topo":
+                return gestisciDialogoTopo(state);
             
             default:
                 return "TESTO|Non c'è nessuna risposta da " + target + ".";
         }
     }
+    
+    /**
+     * Metodo privato per gestire il dialogo dinamico con il Topo.
+     */
+    private String gestisciDialogoTopo(GameDescription state) {
+        // Leggiamo lo stato del generatore
+        boolean generatoreAcceso = state.getFlags().getOrDefault("GENERATORE_ACCESO", false);
+
+        if (generatoreAcceso) {
+            // DIALOGO POST-GENERATORE (Successo)
+            return "TESTO|" + Dialoghi.getDialogoTopoRingraziamento();
+        } else {
+            // DIALOGO PRE-GENERATORE (Iniziale)
+            return "TESTO|" + Dialoghi.getDialogoTopo();
+        }
+    }
+    
 }

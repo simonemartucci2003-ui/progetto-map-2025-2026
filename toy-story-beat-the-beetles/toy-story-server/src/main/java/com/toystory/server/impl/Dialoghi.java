@@ -158,7 +158,13 @@ public class Dialoghi {
     }
     
     public static String getDialogoScarafaggi() {
-        return "Stronzi! Levatevi di torno, miseri pezzi di plastica! Vi conviene non impicciarvi negli affari nostri!";
+        return "Woody: Fermi tutti! Siete voi che avete fatto sparire la torta di compleanno di Andy?!<PAUSA> " +
+        "BeatleJohn: Ehi, calmi con le accuse sceriffo! Noi stiamo solo dando una pulita alle briciole.<PAUSA>" +
+        "BeatlePaul: Esatto! La torta non è qui... è già stata portata via dal nostro Capo nelle fogne!<PAUSA>" +
+        "Jessie: Il vostro Capo? Perché mai dovrebbe rubare una torta di compleanno?<PAUSA>" +
+        "BeatleJohn: È la sua ossessione! Ruba ogni singola torta di compleanno che trova in questa città.<PAUSA>" +
+        "BeatlePaul: Ormai è laggiù nei tunnel. Se volete recuperarla, dovrete vedervela con lui... e buona fortuna, perché non ama gli ospiti!<PAUSA>" +
+        "Jessie: Alle fogne quindi! Non lasceremo che quel ladro rovini la festa di Andy, andiamo ragazzi!";
     }
     
     public static String getDescrizioneTombino() {
@@ -230,6 +236,18 @@ public class Dialoghi {
         return "Questo passaggio è cosi buio ..Servirebbe un po di luce per vederci attraverso.";
     }
 
-    // In futuro potrai aggiungere qui altri dialoghi, es:
-    // public static String getDialogoIncontroBuzz() { ... }
+   public static String getDialogoTopo(){
+      return "Topo: Ehi voi! Fermi lì! Non avvicinatevi troppo, c'è un casino infernale qui davanti.<PAUSA>" +
+        "Woody: Ehi, calmati piccolo amico, siamo solo di passaggio. Che cosa è successo alla tua porta?<PAUSA>" +
+        "Topo: Quei maledetti scarafaggi! Hanno fatto saltare la corrente principale, ora la mia porta tecnologica è bloccata!<PAUSA>" +
+        "Topo: Devo riattivare il generatore che si trova in fondo a quel tunnel buio, ma non ci vedo una cippa! Troppi anni passati a fissare i monitor dei miei computer mi hanno rovinato la vista.<PAUSA>" +
+        "Buzz: La tua vista è compromessa, ma la mia tecnologia è intatta. Il mio laser spaziale illuminerà a giorno quel tunnel.<PAUSA>" +
+        "Buzz: Restate qui, vado io a riaccendere il generatore. Nessun topo rimarrà al buio sotto il mio comando!";
+   }
+   
+   public static String getDialogoTopoRingraziamento(){
+      return "Topo: Ragazzi, siete fantastici! Sento di nuovo il ronzio dei miei amati server e la porta tecnologica è sbloccata.<PAUSA>" +
+             "Topo: Prego, entrate pure a casa mia, siete i benvenuti e fate come foste a casa vostra!<PAUSA>" +
+             "Woody: Ottimo lavoro di squadra. Andiamo a dare un'occhiata lì dentro.";
+   }
 }

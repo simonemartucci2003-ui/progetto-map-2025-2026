@@ -37,6 +37,12 @@ public class MoveObserver implements GameObserver {
                 
             case "cancello":
                 return gestisciCancello(state, attivo, currentRoom);
+                
+            case "tubo_buio":
+                return gestisciTuboBuio(state, attivo, currentRoom);
+                
+            case "porticina": 
+                return gestisciCasaTopo(state, attivo, currentRoom);
 
             
                 
@@ -138,6 +144,52 @@ public class MoveObserver implements GameObserver {
             
         } else {
             return "TESTO|Hai aperto la porta, ma oltre c'è solo un muro nero. (Errore: Stanza di destinazione non configurata nella mappa di Room!)";
+        }
+    }
+    
+    private String gestisciTuboBuio(GameDescription state, PlayableCharacter attivo, Room currentRoom) {
+        
+        // 1. Controllo Personaggio: Solo Buzz può entrare nel tubo buio
+        if (!attivo.getName().equalsIgnoreCase("Buzz Lightyear")) {
+            return "TESTO|È troppo buio lì dentro! Woody e gli altri non vedrebbero nulla. Serve qualcuno con una tecnologia avanzata per illuminare quel tunnel.";
+        }
+
+        // 2. Spostamento
+        Room prossimaStanza = currentRoom.getExit("tubo_buio");
+
+        if (prossimaStanza != null) {
+            state.setCurrentRoom(prossimaStanza);
+            String idStanza = prossimaStanza.getName().toUpperCase().replace(" ", "_");
+
+            return "TESTO|Grazie al laser della mia tuta, riesco a scorgere il sentiero tra l'oscurità. Il tubo è stretto, ma ce la farò!|CAMBIA_SFONDO|" + idStanza;
+        } else {
+            return "TESTO|Il passaggio sembra esserci, ma è bloccato da detriti. (Errore: Stanza di destinazione non configurata!)";
+        }
+    }
+    
+    /**
+     * Metodo privato per gestire l'ingresso nella casa del topo.
+     * Richiede che il generatore sia stato riattivato.
+     */
+    private String gestisciCasaTopo(GameDescription state, PlayableCharacter attivo, Room currentRoom) {
+        
+        // Controlliamo se il generatore è acceso
+        boolean generatoreAcceso = state.getFlags().getOrDefault("GENERATORE_ACCESO", false);
+        
+        if (!generatoreAcceso) {
+            return "TESTO|La porta tecnologica è bloccata e le luci sono spente. Non puoi entrare finché non riattivi la corrente nella zona!";
+        }
+
+        // Se c'è corrente, procediamo con lo spostamento
+        Room prossimaStanza = currentRoom.getExit("porticina");
+
+        if (prossimaStanza != null) {
+            state.setCurrentRoom(prossimaStanza);
+            String idStanza = prossimaStanza.getName().toUpperCase().replace(" ", "_");
+
+            return "TESTO|La porta tecnologica si apre con un ronzio meccanico e le luci dei monitor ti accolgono. Entri nella casa del topo.|CAMBIA_SFONDO|" + idStanza;
+        } else {
+            return "TESTO|Errore: Stanza di destinazione non configurata!";
         }
     }
 
