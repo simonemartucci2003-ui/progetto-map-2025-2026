@@ -4,11 +4,13 @@ import com.toystory.server.GameObserver;
 import com.toystory.server.GameDescription;
 import com.toystory.server.type.Command;
 import com.toystory.server.type.CommandType;
+import com.toystory.server.ClientState;
+import com.toystory.server.GameSession;
 
 public class TalkObserver implements GameObserver {
 
     @Override
-    public String update(Command command, GameDescription state) {
+    public String update(Command command, GameDescription state, ClientState client, GameSession session) {
         // 1. Il TalkObserver si attiva solo per il comando PARLA
         if (command.getType() != CommandType.PARLA) {
             return null;

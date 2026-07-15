@@ -114,15 +114,13 @@ public abstract class GameDescription {
 
         // 2. Ripristino della stanza corrente
         String roomIdStr = db.getFlagAsString("CURRENT_ROOM_ID");
-        if (roomIdStr != null) {
-            int savedRoomId = Integer.parseInt(roomIdStr);
-            for (Room r : this.rooms) {
-                if (r.getId() == savedRoomId) {
-                    this.currentRoom = r;   // assegnazione diretta, NON usare setCurrentRoom() qui!
-                    break;
-                }
+        
+        for (java.util.Map.Entry<String, Boolean> e : db.getAllFlags().entrySet()) {
+            if (!e.getKey().startsWith("ROOM_OF_")) {
+                this.flags.put(e.getKey(), e.getValue());
             }
         }
+        
         
         // 2.5. Costruiamo un catalogo di TUTTI gli oggetti creati da init(),
         // PRIMA di svuotare qualunque stanza. Senza questo passaggio, un 
@@ -170,14 +168,14 @@ public abstract class GameDescription {
      * Cerca un oggetto in memoria basandosi sul suo ID.
      * @return 
      */
-    protected AdvObject findObjectById(int id) {
+    protected AdvObject findObjectById(int id, PlayableCharacter attore) {
         for (Room room : this.rooms) {
             for (AdvObject obj : room.getObjects()) {
                 if (obj.getId() == id) return obj;
             }
         }
-        if (currentPlayer != null) {
-            for (AdvObject obj : currentPlayer.getPocket()) {
+        if (attore != null) {
+            for (AdvObject obj : attore.getPocket()) {
                 if (obj.getId() == id) return obj;
             }
         }
@@ -232,44 +230,68 @@ public abstract class GameDescription {
     * del personaggio attualmente attivo. Riusato sia da CallObserver 
     * (cambio personaggio manuale) sia dalla sincronizzazione al resume.
     */
-    public String buildCharacterStatusFragment() {
-       if (this.currentPlayer == null) return "";
+    public String buildCharacterStatusFragment(PlayableCharacter attore) {
+        if (attore == null) return "";
 
-       StringBuilder sb = new StringBuilder();
-       String nome = this.currentPlayer.getName();
+        StringBuilder sb = new StringBuilder();
+        String nome = attore.getName();
 
-       if (nome.equalsIgnoreCase("Buzz Lightyear") || nome.equalsIgnoreCase("Buzz")) {
-           sb.append("SWITCH_AVATAR|/images/avatars/buzz.png|");
-           sb.append("ABILITA|Laser|/Laser.png|");
+        sb.append("PERSONAGGIO_ATTIVO|").append(nome);
 
-       } else if (nome.equalsIgnoreCase("Woody")) {
-           sb.append("SWITCH_AVATAR|/images/avatars/woody.png|");
-           boolean lazoSbloccato = this.flags.getOrDefault("LAZO_UNLOCKED", false);
-           if (lazoSbloccato) {
-               sb.append("ABILITA|Lazo|/Lazo.png|");
-           } else {
-               sb.append("ABILITA|Nessuna|vuoto|");
-           }
+        if (nome.equalsIgnoreCase("Buzz Lightyear") || nome.equalsIgnoreCase("Buzz")) {
+            sb.append("|SWITCH_AVATAR|/images/avatars/buzz.png|");
+            sb.append("ABILITA|Laser|/Laser.png|");
+        } else if (nome.equalsIgnoreCase("Woody")) {
+            sb.append("|SWITCH_AVATAR|/images/avatars/woody.png|");
+            boolean lazoSbloccato = this.flags.getOrDefault("LAZO_UNLOCKED", false);
+            if (lazoSbloccato) {
+                sb.append("ABILITA|Lazo|/Lazo.png|");
+            } else {
+                sb.append("ABILITA|Nessuna|vuoto|");
+            }
+        } else if (nome.equalsIgnoreCase("Jessie")) {
+            sb.append("|SWITCH_AVATAR|/images/avatars/jessie.png|");
+            sb.append("ABILITA|Destrezza|/Destrezza.png|");
+        }
 
-       } else if (nome.equalsIgnoreCase("Jessie")) {
-           sb.append("SWITCH_AVATAR|/images/avatars/jessie.png|");
-           sb.append("ABILITA|Destrezza|/Destrezza.png|");
-       }
-
-       sb.append("CLEAR_INVENTORY|OK");
-       if (this.currentPlayer.getPocket() != null) {
-           for (com.toystory.server.type.PickupableObject obj : this.currentPlayer.getPocket()) {
-               sb.append("|INVENTARIO|").append(obj.getName()).append("|").append(obj.getIcona());
-           }
-       }
-
-       return sb.toString();
-    }
+        sb.append("CLEAR_INVENTORY|OK");
+        if (attore.getPocket() != null) {
+            for (com.toystory.server.type.PickupableObject obj : attore.getPocket()) {
+                sb.append("|INVENTARIO|").append(obj.getName()).append("|").append(obj.getIcona());
+            }
+        }
+        return sb.toString();
+     }
 
     public void setCurrentRoom(Room currentRoom) {
         this.currentRoom = currentRoom;
         if (this.currentRoom != null) {
             saveCurrentRoomToDatabase(this.currentRoom.getId());
         }
+    }
+    
+    public void saveCharacterRoom(PlayableCharacter character, Room room) {
+        if (this.db == null || character == null || room == null) return;
+        try {
+            this.db.saveFlag("ROOM_OF_" + character.getId(), String.valueOf(room.getId()));
+        } catch (Exception e) {
+            System.err.println("[GameDescription] Errore salvataggio stanza per '" + character.getName() + "': " + e.getMessage());
+        }
+    }
+
+    public Room loadCharacterRoom(PlayableCharacter character) {
+        if (this.db == null || character == null) return null;
+        try {
+            String roomIdStr = this.db.getFlagAsString("ROOM_OF_" + character.getId());
+            if (roomIdStr != null) {
+                int savedRoomId = Integer.parseInt(roomIdStr);
+                for (Room r : this.rooms) {
+                    if (r.getId() == savedRoomId) return r;
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("[GameDescription] Errore caricamento stanza per '" + character.getName() + "': " + e.getMessage());
+        }
+        return null;
     }
 }

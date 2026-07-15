@@ -20,5 +20,5 @@ public interface GameObserver {
      * @return La stringa di risposta del Server da inviare al Client (es. "TESTO|Hai preso la chiave"), 
      * oppure null se l'observer ignora il comando perché non di sua competenza.
      */
-    String update(Command command, GameDescription state);
+    String update(Command command, GameDescription state, ClientState client, GameSession session);
 }

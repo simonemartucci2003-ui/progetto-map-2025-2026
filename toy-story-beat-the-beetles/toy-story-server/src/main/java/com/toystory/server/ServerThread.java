@@ -11,6 +11,7 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import com.toystory.server.database.DatabaseManager;
+import com.toystory.server.type.PlayableCharacter;
 
 /**
  * Thread dedicato alla gestione del flusso di comunicazione con un singolo client connesso.
@@ -30,6 +31,8 @@ public class ServerThread extends Thread {
 
     /** NUOVO: La sessione (stanza) a cui questo giocatore appartiene */
     private GameSession session;
+    
+    private final ClientState clientState = new ClientState();
 
     /**
      * Costruttore del thread di gestione client.
@@ -69,54 +72,74 @@ public class ServerThread extends Thread {
             if (initialCommand != null) {
                 if (initialCommand.equals("CREA_PARTITA")) {
                    try {
-                        // 1. Generiamo un ID casuale di 6 caratteri
                         String newGameId = java.util.UUID.randomUUID().toString().substring(0, 6).toUpperCase();
-                        
-                        // 2. Creiamo la nuova sessione (Ora in un blocco protetto!)
                         GameSession nuovaSessione = new GameSession(newGameId);
                         ServerMain.activeSessions.put(newGameId, nuovaSessione);
-                        
-                        // 3. Inseriamo questo giocatore nella sessione
+
                         this.setSession(nuovaSessione);
                         nuovaSessione.addPlayer(this);
-                        
-                        // 4. Rispondiamo al Client con il codice generato
-                        out.println("PARTITA_CREATA|" + newGameId);
-                        System.out.println("[Server] Nuova partita creata con ID: " + newGameId);
-                        
+
+                        PlayableCharacter personaggio = nuovaSessione.assignInitialCharacter(clientState);
+                        if (personaggio == null) {
+                            out.println("ERRORE|Impossibile assegnare un personaggio.");
+                            socket.close();
+                            return;
+                        }
+
+                        out.println("PARTITA_CREATA|" + newGameId + "|" + personaggio.getName());
+                        System.out.println("[Server] Nuova partita creata con ID: " + newGameId
+                                + " - Host controlla: " + personaggio.getName());
+
+                        String syncMsg = nuovaSessione.getEngine().buildResumeSyncMessage(clientState);
+                        if (syncMsg != null && !syncMsg.isEmpty()) {
+                            out.println(syncMsg);
+                        }
+
                     } catch (Exception e) {
-                        // Se la creazione del DB fallisce, avvisiamo il client invece di far crashare il server
                         out.println("ERRORE|Impossibile creare la stanza sul server.");
                         System.err.println("[Server] Errore creazione sessione: " + e.getMessage());
+                        if (e.getCause() != null) {
+                            System.err.println("[Server] Causa reale: " + e.getCause());
+                        }
+                        e.printStackTrace();
                     }
 
                 } else if (initialCommand.startsWith("UNISCITI_PARTITA|")) {
                     String gameId = initialCommand.split("\\|")[1].toUpperCase().trim();
-                    
-                    // Controlliamo se la partita esiste nel registro globale del ServerMain
+
                     try {
-                        GameSession sessione = ServerMain.activeSessions.get(gameId);
-                        
-                        // Se non è in memoria, controlliamo se esiste già su disco 
-                        // (partita creata in una precedente esecuzione del server)
-                        if (sessione == null) {
-                            java.io.File dbFile = new java.io.File("./saves/toystory_" + gameId + ".mv.db");
+                        // computeIfAbsent = operazione atomica: evita che due client, unendosi
+                        // nello stesso istante, creino due sessioni diverse per la stessa partita
+                        GameSession sessione = ServerMain.activeSessions.computeIfAbsent(gameId, id -> {
+                            java.io.File dbFile = new java.io.File("./saves/toystory_" + id + ".mv.db");
                             if (dbFile.exists()) {
-                                System.out.println("[Server] Partita " + gameId + " trovata su disco, ricarico la sessione...");
-                                sessione = new GameSession(gameId);
-                                ServerMain.activeSessions.put(gameId, sessione);
+                                try {
+                                    System.out.println("[Server] Partita " + id + " trovata su disco, ricarico la sessione...");
+                                    return new GameSession(id);
+                                } catch (Exception e) {
+                                    throw new RuntimeException(e);
+                                }
                             }
-                        }
-                        
+                            return null;
+                        });
+
                         if (sessione != null) {
                             this.setSession(sessione);
                             sessione.addPlayer(this);
 
-                            out.println("CONNESSIONE_SUCCESSO|");
-                            System.out.println("[Server] Un giocatore si è unito alla partita: " + gameId);
-                            // NUOVO: sincronizziamo subito il client con lo stato reale della partita
-                            // (stanza, avatar, abilità, inventario), senza bisogno di click manuali.
-                            String syncMsg = sessione.getEngine().buildResumeSyncMessage();
+                            PlayableCharacter personaggio = sessione.assignInitialCharacter(clientState);
+                            if (personaggio == null) {
+                                out.println("ERRORE|Partita piena, tutti i personaggi sono già controllati.");
+                                sessione.removePlayer(this);
+                                socket.close();
+                                return;
+                            }
+
+                            out.println("CONNESSIONE_SUCCESSO|" + personaggio.getName());
+                            System.out.println("[Server] Un giocatore si è unito alla partita: " + gameId
+                                    + " - controlla: " + personaggio.getName());
+
+                            String syncMsg = sessione.getEngine().buildResumeSyncMessage(clientState);
                             if (syncMsg != null && !syncMsg.isEmpty()) {
                                 out.println(syncMsg);
                             }
@@ -132,7 +155,7 @@ public class ServerThread extends Thread {
                         socket.close();
                         return;
                     }
-                }    
+                } 
              }
 
             // ========================================================
@@ -170,12 +193,12 @@ public class ServerThread extends Thread {
                     synchronized (sessionEngine) {
                         try {
                             db.startTransaction();
-                            String rispostaServer = sessionEngine.executeAction(tipoComando, target);
+                            String rispostaServer = sessionEngine.executeAction(tipoComando, target, clientState, this.session);
                             if (rispostaServer != null) {
-                            db.commitTransaction();
-                            this.session.broadcast(rispostaServer);
+                                db.commitTransaction();
+                                this.sendMessage(rispostaServer); // risposta privata, solo a chi ha agito
                             } else {
-                            db.rollbackTransaction();
+                                db.rollbackTransaction();
                             }
                         } catch (Exception e) {
                             System.err.println("[Server] Errore critico durante la transazione: " + e.getMessage());
@@ -197,6 +220,10 @@ public class ServerThread extends Thread {
         } finally {
             // Rimuoviamo il thread dal registro multiplayer
             ServerMain.clientThreads.remove(this);
+             if (this.session != null) {
+                this.session.removePlayer(this);
+                this.session.releaseClient(clientState);   // libera il personaggio che stava controllando
+            }
             try {
                 socket.close();
             } catch (IOException e) {

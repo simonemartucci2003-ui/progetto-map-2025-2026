@@ -55,7 +55,7 @@ public class DatabaseManager {
         stm.executeUpdate("CREATE TABLE IF NOT EXISTS game_objects (" +
                           "id INT PRIMARY KEY, " +
                           "name VARCHAR(255), " +
-                          "room_id INT, "); // NULL se l'oggetto è in inventario
+                          "room_id INT)"); // NULL se l'oggetto è in inventario
 
         // 4. Tabella Inventario: lega il giocatore all'oggetto
         stm.executeUpdate("CREATE TABLE IF NOT EXISTS inventory (" +
@@ -95,7 +95,7 @@ public class DatabaseManager {
 
     // Inserisce un oggetto nel database
     public void insertObject(AdvObject obj, int roomId) throws SQLException {
-        String sql = "INSERT INTO game_objects (id, name, room_id, is_open, is_locked) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO game_objects (id, name, room_id, is_open, is_locked) VALUES (?, ?, ?)";
         try (PreparedStatement pstm = conn.prepareStatement(sql)) {
             pstm.setInt(1, obj.getId());
             pstm.setString(2, obj.getName());

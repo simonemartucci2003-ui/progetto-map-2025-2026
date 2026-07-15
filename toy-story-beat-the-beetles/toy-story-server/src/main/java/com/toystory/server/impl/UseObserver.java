@@ -5,18 +5,20 @@ import com.toystory.server.GameObserver;
 import com.toystory.server.type.Command;
 import com.toystory.server.type.CommandType;
 import com.toystory.server.type.PlayableCharacter;
+import com.toystory.server.ClientState;
+import com.toystory.server.GameSession;
 
 public class UseObserver implements GameObserver {
 
     @Override
-    public String update(Command command, GameDescription state) {
+    public String update(Command command, GameDescription state, ClientState client, GameSession session) {
         // 1. Controllo: si attiva solo per il comando USA
         if (command.getType() != CommandType.USA) {
             return null;
         }
 
         String target = command.getTargetName();
-        PlayableCharacter attivo = state.getCurrentPlayer();
+        PlayableCharacter attivo = client.getCurrentCharacter();
 
         if (target == null || target.isEmpty()) {
             return "TESTO|Cosa vorresti usare?";

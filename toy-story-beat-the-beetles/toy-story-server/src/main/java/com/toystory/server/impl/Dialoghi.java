@@ -325,4 +325,21 @@ public class Dialoghi {
            "Scarafaggio: (afferra il torsolo con voracità) Oh, che meraviglia! Sapete, il capo non mi offre mai nulla di così buono.<PAUSA>  " +
            "Buzz: Ottimo lavoro. Mentre è distratto a mangiare, sgusciamo via da questa parte!<PAUSA> ";
     }
+    
+    public static String getDialogoBossFinale() {
+        return "Woody: Fermi tutti! Abbiamo trovato la torta... e anche il ladro!<PAUSA>" +
+               "Buzz: Per tutti i crateri marziani... sei tu il capo degli scarafaggi? Un pupazzo da ventriloquo?<PAUSA>" +
+               "Boss: Esatto, Space Ranger. Benvenuti nel mio oscuro regno! Nessuno toccherà quel dolce!<PAUSA>" +
+               "Jessie: Ma perché rubare la torta di compleanno di Andy? Che male ti ha fatto quel bambino?!<PAUSA>" +
+               "Boss: I compleanni... (abbassa lo sguardo di scatto). Io sono stato il regalo di un bambino, tanto tempo fa. Ma appena ha strappato la carta da regalo, ha urlato.<PAUSA>" +
+               "Boss: Ha detto che ero 'troppo brutto' e inquietante! Mi ha gettato via subito, il giorno stesso del suo compleanno!<PAUSA>" +
+               "Boss: Da quel momento ho giurato a me stesso che nessun bambino avrebbe più sorriso davanti a una torta! Le rovinerò tutte, per sempre!<PAUSA>" +
+               "Woody: Ascoltami bene, amico. Capisco il tuo dolore, l'abbandono è la cosa peggiore che possa capitare a un giocattolo. Ma Andy non è così!<PAUSA>" +
+               "Buzz: Il nostro bambino ha un cuore grande. Tratta ogni giocattolo con rispetto, inventando avventure incredibili per tutti noi!<PAUSA>" +
+               "Jessie: Ha ragione! Andy amerebbe un pupazzo come te! Saresti un perfetto cattivo del selvaggio West, oppure un misterioso alieno spaziale! Vieni con noi, ti accoglierà a braccia aperte!<PAUSA>" +
+               "Boss: Voi... voi dite davvero? Credete che potrei avere un'altra occasione? Che un bambino vorrebbe giocare con me dopo tutto questo tempo?<PAUSA>" +
+               "Woody: Hai la parola di uno Sceriffo. Ma devi lasciarci riportare la torta a casa, la festa sta per cominciare.<PAUSA>" +
+               "Boss: E va bene... (si alza lentamente, spolverandosi il vestito). Aiutatemi a portarla su. Andiamo a conoscere questo Andy...<PAUSA>" +
+               "--- IL BOSS SI UNISCE ALLA SQUADRA E LA TORTA È SALVA ---";
+    }
 }

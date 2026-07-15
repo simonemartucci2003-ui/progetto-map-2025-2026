@@ -44,10 +44,10 @@ public class GameObservable {
      * @param state Lo stato corrente del gioco.
      * @return La stringa di risposta da inviare al client, o un messaggio di errore standard se nessuno ha gestito il comando.
      */
-    public String notifyObservers(Command command, GameDescription state) {
+    public String notifyObservers(Command command, GameDescription state, ClientState client, GameSession session) {
         for (GameObserver observer : observers) {
             // Risveglia l'osservatore
-            String response = observer.update(command, state);
+            String response = observer.update(command, state, client, session);
             
             // Se l'osservatore ha preso in carico il comando e ha restituito una risposta valida,
             // la rimandiamo indietro fermando il ciclo.
