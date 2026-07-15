@@ -5,7 +5,7 @@
 package com.toystory.server;
 
 import com.toystory.server.type.AdvObject;
-import com.toystory.server.type.ContainerObject;
+
 import com.toystory.server.type.PlayableCharacter;
 import com.toystory.server.type.PickupableObject;
 import com.toystory.server.type.Room;
@@ -144,11 +144,6 @@ public abstract class GameDescription {
                 AdvObject obj = catalogoOggetti.get(id);;
                 if (obj != null) {
                     room.addObject(obj);
-                    // Ripristino stato contenitori 
-                    if (obj instanceof ContainerObject) {
-                        ((ContainerObject) obj).setOpen(db.isObjectOpen(id));
-                        ((ContainerObject) obj).setLocked(db.isObjectLocked(id));
-                    }
                 }
             }
         }
