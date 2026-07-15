@@ -35,9 +35,7 @@ public class Engine extends GameObservable {
         this.addObserver(new com.toystory.server.impl.UseObserver());
         this.addObserver(new com.toystory.server.impl.MoveObserver());
         this.addObserver(new com.toystory.server.impl.CallObserver());
-        this.addObserver(new com.toystory.server.impl.OpenObserver());
         this.addObserver(new com.toystory.server.impl.TalkObserver()); 
-        this.addObserver(new com.toystory.server.impl.GiveObserver());
     }
 
     /**

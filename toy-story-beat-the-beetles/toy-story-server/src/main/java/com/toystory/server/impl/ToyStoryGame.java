@@ -7,10 +7,8 @@ package com.toystory.server.impl;
 import com.toystory.server.GameDescription;
 import com.toystory.server.type.Room;
 import com.toystory.server.type.AdvObject;
-import com.toystory.server.type.ContainerObject;
 import com.toystory.server.type.PickupableObject;
 import com.toystory.server.type.PlayableCharacter;
-import com.toystory.server.type.NonPlayableCharacter;
 import com.toystory.server.type.Ability;
 
 /**
@@ -185,9 +183,7 @@ public class ToyStoryGame extends GameDescription {
         // così la gestione narrativa rimane centralizzata nel LookAtObserver.
         AdvObject libreria = new AdvObject(201, "libreria", "") {};
         
-        ContainerObject baule = new ContainerObject(202, "baule", "") {};
-        baule.setLocked(true); 
-        baule.setOpen(false);
+        AdvObject baule = new AdvObject(202, "baule", "") {};
 
         AdvObject letto = new AdvObject(203, "letto", "") {};
         AdvObject porta = new AdvObject(204, "porta", "") {};

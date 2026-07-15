@@ -5,7 +5,6 @@
 package com.toystory.server.database;
 
 import java.sql.*;
-import java.util.Properties;
 import com.toystory.server.type.*;
 import java.util.List;
 import java.util.ArrayList;
@@ -56,9 +55,7 @@ public class DatabaseManager {
         stm.executeUpdate("CREATE TABLE IF NOT EXISTS game_objects (" +
                           "id INT PRIMARY KEY, " +
                           "name VARCHAR(255), " +
-                          "room_id INT, " + // NULL se l'oggetto è in inventario
-                          "is_open BOOLEAN DEFAULT FALSE, " +
-                          "is_locked BOOLEAN DEFAULT FALSE)");
+                          "room_id INT, "); // NULL se l'oggetto è in inventario
 
         // 4. Tabella Inventario: lega il giocatore all'oggetto
         stm.executeUpdate("CREATE TABLE IF NOT EXISTS inventory (" +
@@ -103,13 +100,6 @@ public class DatabaseManager {
             pstm.setInt(1, obj.getId());
             pstm.setString(2, obj.getName());
             pstm.setInt(3, roomId);
-        
-            // Gestiamo lo stato se è un contenitore
-            boolean isOpen = (obj instanceof ContainerObject) ? ((ContainerObject) obj).isOpen() : false;
-            boolean isLocked = (obj instanceof ContainerObject) ? ((ContainerObject) obj).isLocked() : false;
-        
-            pstm.setBoolean(4, isOpen);
-            pstm.setBoolean(5, isLocked);
             pstm.executeUpdate();
         }
     }
@@ -235,30 +225,6 @@ public class DatabaseManager {
         return null;
     }
 
-    // Controlla se un contenitore è aperto
-    public boolean isObjectOpen(int objectId) throws SQLException {
-        String sql = "SELECT is_open FROM game_objects WHERE id = ?";
-        try (PreparedStatement pstm = conn.prepareStatement(sql)) {
-            pstm.setInt(1, objectId);
-            try (ResultSet rs = pstm.executeQuery()) {
-                if (rs.next()) return rs.getBoolean("is_open");
-            }
-        }
-        return false;
-    }
-
-    // Controlla se un contenitore è bloccato a chiave
-    public boolean isObjectLocked(int objectId) throws SQLException {
-        String sql = "SELECT is_locked FROM game_objects WHERE id = ?";
-        try (PreparedStatement pstm = conn.prepareStatement(sql)) {
-            pstm.setInt(1, objectId);
-            try (ResultSet rs = pstm.executeQuery()) {
-                if (rs.next()) return rs.getBoolean("is_locked");
-            }
-        }
-        return false;
-    }
-
     // Rimuove un oggetto dall'inventario distruggendolo definitivamente (es. chiavi usate)
     public void consumeItem(String characterName, int itemId) throws SQLException {
         String sql = "DELETE FROM inventory WHERE character_name = ? AND item_id = ?";
@@ -269,18 +235,6 @@ public class DatabaseManager {
         }
         // Lasciando il room_id a NULL nella tabella game_objects, l'oggetto "sparisce" dal mondo di gioco.
     }
-
-    // Aggiorna lo stato di un contenitore (se è aperto o chiuso, bloccato o sbloccato)
-    public void updateContainerState(int objectId, boolean isOpen, boolean isLocked) throws SQLException {
-        String sql = "UPDATE game_objects SET is_open = ?, is_locked = ? WHERE id = ?";
-        try (PreparedStatement pstm = conn.prepareStatement(sql)) {
-            pstm.setBoolean(1, isOpen);
-            pstm.setBoolean(2, isLocked);
-            pstm.setInt(3, objectId);
-            pstm.executeUpdate();
-        }
-    }
-
 
    // --- Transazioni ---
     // Sincronizzate per garantire la thread-safety
