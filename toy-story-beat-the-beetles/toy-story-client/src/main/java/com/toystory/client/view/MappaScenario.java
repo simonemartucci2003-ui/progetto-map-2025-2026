@@ -214,14 +214,6 @@ public class MappaScenario {
         
         stanze.put("STANZA_SENZA_ACQUA",  StanzaSenzaAcqua);
      
-        
-
-        
-        
-        
-   
-        
-        
     }
 
     public void setStanzaCorrenteId(String stanzaId) {
@@ -230,16 +222,6 @@ public class MappaScenario {
         }
     }
 
-   /* public void setStanzaCorrenteId(String stanzaId) {
-        System.out.println("[DEBUG MAPPA] Richiesto caricamento BoundingBox per: " + stanzaId);
-        
-        if (stanze.containsKey(stanzaId)) {
-            this.stanzaCorrenteId = stanzaId;
-            System.out.println("[DEBUG MAPPA] Successo! Mappa cambiata.");
-        } else {
-            System.out.println("[DEBUG MAPPA] ERRORE CRITICO: La mappa '" + stanzaId + "' non esiste nel file MappaScenario!");
-        }
-    }*/
     public String cercaTarget(int x, int y, int larghezzaPannello, int altezzaPannello) {
         List<BoundingBox> boundingBoxes = stanze.get(stanzaCorrenteId);
         if (boundingBoxes != null) {

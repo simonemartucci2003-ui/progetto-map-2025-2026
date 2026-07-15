@@ -4,9 +4,6 @@
  */
 package com.toystory.client.view;
 
-import com.toystory.client.GameClient;
-import com.toystory.client.SaveManager;
-
 /**
  *
  * @author simon
@@ -14,10 +11,8 @@ import com.toystory.client.SaveManager;
 public class GameWindow extends javax.swing.JFrame {
     
     private static final java.util.logging.Logger logger = java.util.logging.Logger.getLogger(GameWindow.class.getName());
-    private final MappaScenario mappaScenario = new MappaScenario();
-    private GameClient clientRete;
-    private GUIHandler handlerGrafico;
-    private String azioneSelezionata = "GUARDA";
+    private GameWindowController controller;
+    
     
 
     /**
@@ -25,88 +20,31 @@ public class GameWindow extends javax.swing.JFrame {
      */
     public GameWindow() {
         initComponents();
+        // 1. Font e Testi
         txtAreaStoria.setPreferredSize(null);
-        impostaIconaSuBottone(btnSelezionaBuzz, "/icone_buzz.png");
-        impostaIconaSuBottone(btnSelezionaWoody, "/icone_woody.png");
-        impostaIconaSuBottone(btnSelezionaJessie, "/icone_jessie.png");
-         
-        btnSelezionaWoody.setSelected(true); // Seleziona Woody fisicamente
-        aggiornaBordiPersonaggi();
-        
-        // 1. Inizializziamo l'handler passandogli la finestra corrente (this)
-        this.handlerGrafico = new GUIHandler(this); 
-        
-        this.clientRete = new GameClient(messaggioServer -> {
-            javax.swing.SwingUtilities.invokeLater(() -> {
-                handlerGrafico.processaComando(messaggioServer);
-            });
-        });
-        
-        // 1. Recuperiamo le partite salvate
-        java.util.Set<String> partiteSalvate = com.toystory.client.SaveManager.leggiTutteLePartite();
-
-        // 2. Creiamo una lista dinamica (usiamo un ArrayList perché la dimensione cambia)
-        java.util.List<Object> listaOpzioni = new java.util.ArrayList<>();
-        listaOpzioni.add("Nuova Partita");
-        listaOpzioni.add("Unisciti");
-
-        // Se ci sono partite salvate, aggiungiamo l'opzione per riprendere
-        if (!partiteSalvate.isEmpty()) {
-            listaOpzioni.add("Riprendi Partita");
-        }
-
-        Object[] opzioni = listaOpzioni.toArray();
-
-        int scelta = javax.swing.JOptionPane.showOptionDialog(this,
-                "Benvenuto in Toy Story! Scegli come vuoi giocare:",
-                "Menu di Avvio",
-                javax.swing.JOptionPane.YES_NO_CANCEL_OPTION,
-                javax.swing.JOptionPane.QUESTION_MESSAGE,
-                null, 
-                opzioni, 
-                opzioni[0]);
-
-        // 3. Gestione della scelta
-        // Attenzione all'indice: "Nuova Partita" è 0, "Unisciti" è 1, "Riprendi" è 2 (se esiste)
-        if (scelta == 0) { 
-            avviaNuovaPartita();
-        } else if (scelta == 1) { 
-            uniscitiPartita(null);
-        } else if (scelta == 2) {
-            uniscitiPartita(null);  
-        } else {
-            System.exit(0);
-    }
-        
-        // Font bianco e in grassetto per la storia
         txtAreaStoria.setFont(new java.awt.Font("Verdana", java.awt.Font.BOLD, 12));
         txtAreaStoria.setForeground(java.awt.Color.WHITE);
-          
-        // Trasformiamo i bottoni standard in bottoni Pixel Art azzurri con le nuvole
-        applicaStileToyStory(btnGuarda, "GUARDA");
-        applicaStileToyStory(btnPrendi, "PRENDI");
-        applicaStileToyStory(btnUsa, "USA");
-        applicaStileToyStory(btnParla, "PARLA");
-        applicaStileToyStory(btnVai, "VAI");
-        
-        
-        // --- STILE PANNELLO VERBI ---
-        PixelButtonGenerator.applicaSfondoBottoni(pnlVerbi);
-        // --- STILE PANNELLO PERSONAGGI ---
-        PixelButtonGenerator.applicaSfondoPersonaggi(pnlPersonaggio);
-        
-        
-        // Personalizziamo il font del titolo della stanza
         lblNomeStanza.setFont(new java.awt.Font("Arial Black", java.awt.Font.BOLD, 16));
         lblNomeStanza.setForeground(new java.awt.Color(255, 225, 0)); // Giallo Toy Story
+         
+        // 2. Avatar Personaggi (Ora usa il generatore)
+        PixelButtonGenerator.impostaIconaAvatar(btnSelezionaBuzz, "/icone_buzz.png");
+        PixelButtonGenerator.impostaIconaAvatar(btnSelezionaWoody, "/icone_woody.png");
+        PixelButtonGenerator.impostaIconaAvatar(btnSelezionaJessie, "/icone_jessie.png");
         
+        // 3. Stile Bottoni Azioni
+        PixelButtonGenerator.applicaStileToyStory(btnGuarda, "GUARDA");
+        PixelButtonGenerator.applicaStileToyStory(btnPrendi, "PRENDI");
+        PixelButtonGenerator.applicaStileToyStory(btnUsa, "USA");
+        PixelButtonGenerator.applicaStileToyStory(btnParla, "PARLA");
+        PixelButtonGenerator.applicaStileToyStory(btnVai, "VAI");
         
-        
-        // --- STILE INVENTARIO (CASSA DI LEGNO) ---
-        //1. Usiamo il nostro generatore per trasformare l'intero pannello in una cassa
+        // 4. Stile Sfondi Pannelli
+        PixelButtonGenerator.applicaSfondoBottoni(pnlVerbi);
+        PixelButtonGenerator.applicaSfondoPersonaggi(pnlPersonaggio);
         PixelButtonGenerator.applicaSfondoTasche(pnlTasche);
         
-        // 2. Rendiamo i bottoni trasparenti (così le icone degli oggetti poggeranno sul legno)
+        // 5. Stile Inventario
         btnSlotInventario1.setContentAreaFilled(false);
         btnSlotInventario1.setOpaque(false);
         btnSlotInventario1.setBorderPainted(false);
@@ -117,72 +55,33 @@ public class GameWindow extends javax.swing.JFrame {
         
         lblIconaAbilita.setOpaque(false);
         
+        // 6. Selezione di default
+        btnSelezionaWoody.setSelected(true); 
+        aggiornaBordiPersonaggi();
         
+        // 7. INIZIALIZZA IL CONTROLLER E AVVIA IL MENU (AGGIUNGI QUESTE RIGHE)
+        this.controller = new GameWindowController(this);
+        java.awt.EventQueue.invokeLater(() -> controller.avviaFlussoIniziale());
         
-       
+        // 8 ---PROPORZIONI FINESTRA ---
         
+        // 8.1. Diamo al pannello le proporzioni esatte (es. la metà esatta di 1424x748)
+        pnlRappresentazioneStanza.setPreferredSize(new java.awt.Dimension(712, 374));
+        
+        // 8.2. Blocchiamo la finestra in modo che il giocatore non possa sformarla
+        this.setResizable(false); 
+        
+        // 8.3. Diciamo alla finestra di riadattare la sua grandezza generale 
+        // in base alle nuove dimensioni perfette del pannello
+        this.pack();
+        
+        // 8.4. Centriamo la finestra perfettamente al centro dello schermo
+        this.setLocationRelativeTo(null);
+        
+        jScrollPane1.setPreferredSize(new java.awt.Dimension(0, 70));
+          
     }
     
-    
-        
-        
-
-  
-
-        
-
-       
-
-        
-    
-    // Metodo per avviare una nuova partita
-    private void avviaNuovaPartita() {
-        String gameId = this.clientRete.connectAndHandshake(true, "");
-        if (gameId.equals("ERROR")) {
-            javax.swing.JOptionPane.showMessageDialog(this, "Errore server.", "Errore", javax.swing.JOptionPane.ERROR_MESSAGE);
-            System.exit(0);
-        } else {
-            SaveManager.salvaPartita(gameId);
-            javax.swing.JOptionPane.showMessageDialog(this, 
-                    "Partita creata!\n\n" +
-                    "Il tuo ID è: " + gameId + "\n\n" +
-                    "⚠ Annota questo codice: ti servirà per riprendere la partita in futuro.",
-                    "Partita Creata",
-                    javax.swing.JOptionPane.INFORMATION_MESSAGE);
-            this.setTitle("Toy Story - Partita ID: " + gameId);
-        }
-    }
-
-    // Metodo per unire a una partita (nuova o ripresa)
-    private void eseguiJoin(String gameId) {
-        String risultato = this.clientRete.connectAndHandshake(false, gameId.trim().toUpperCase());
-        if (risultato.equals("SUCCESS")) {
-            SaveManager.salvaPartita(gameId.trim().toUpperCase()); // <--- Salvataggio ID
-            this.setTitle("Toy Story - Partita ID: " + gameId.trim().toUpperCase());
-        } else {
-            javax.swing.JOptionPane.showMessageDialog(this, "Partita non trovata.", "Errore", javax.swing.JOptionPane.ERROR_MESSAGE);
-            System.exit(0);
-        }
-    }
-    
-    // Questo metodo gestisce la richiesta di unirti a una partita digitando l'ID
-    private void uniscitiPartita(String idPredefinito) {
-    String gameId = idPredefinito;
-    
-    if (gameId == null) {
-        gameId = javax.swing.JOptionPane.showInputDialog(this, 
-                "Inserisci il Game ID della partita:", 
-                "Unisciti", 
-                javax.swing.JOptionPane.PLAIN_MESSAGE);
-    }
-    
-    if (gameId != null && !gameId.trim().isEmpty()) {
-        eseguiJoin(gameId.trim().toUpperCase());
-    } else {
-        System.exit(0);
-    }
-}
-
     /**
      * This method is called from within the constructor to initialize the form.
      * WARNING: Do NOT modify this code. The content of this method is always
@@ -327,11 +226,8 @@ public class GameWindow extends javax.swing.JFrame {
         pnlTasche.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 50, 1, 50));
         pnlTasche.setMaximumSize(new java.awt.Dimension(32767, 30000));
         pnlTasche.setLayout(new java.awt.GridLayout(2, 2, 0, 10));
-
-        btnSlotInventario1.addActionListener(this::btnSlotInventario1ActionPerformed);
         pnlTasche.add(btnSlotInventario1);
 
-        lblIconaAbilita.setText("abilita");
         lblIconaAbilita.setPreferredSize(new java.awt.Dimension(100, 100));
         pnlTasche.add(lblIconaAbilita);
         pnlTasche.add(btnSlotInventario2);
@@ -393,86 +289,45 @@ public class GameWindow extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnMenuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMenuActionPerformed
-        int conferma = javax.swing.JOptionPane.showConfirmDialog(this,
-            "Vuoi tornare al menu principale? La partita in corso rimarrà comunque salvata.",
-            "Torna al menu",
-            javax.swing.JOptionPane.YES_NO_OPTION,
-            javax.swing.JOptionPane.QUESTION_MESSAGE);
-
-        if (conferma == javax.swing.JOptionPane.YES_OPTION) {
-            this.clientRete.disconnect();   // chiudiamo la connessione di rete in modo pulito
-            this.dispose();
-            java.awt.EventQueue.invokeLater(() -> new GameWindow().setVisible(true));
-        }
+       controller.tornaAlMenu();
     }//GEN-LAST:event_btnMenuActionPerformed
 
     private void pnlRappresentazioneStanzaMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_pnlRappresentazioneStanzaMouseClicked
-                                                   
-         // 1. Recupera le coordinate X e Y di dove ha cliccato il mouse rispetto al pannello
-        int mouseX = evt.getX();
-        int mouseY = evt.getY();
-
-        System.out.println("X: " + mouseX + " Y: " + mouseY);
-
-        // Recuperiamo le dimensioni correnti del pannello grafico
-
-        int larghezzaPannello = pnlRappresentazioneStanza.getWidth();
-        int altezzaPannello = pnlRappresentazioneStanza.getHeight();
-
-        // Chiediamo al gestore delle mappe se c'è qualcosa sotto questi pixel
-        String targetEffettivo = mappaScenario.cercaTarget(mouseX, mouseY, larghezzaPannello, altezzaPannello);
-
-         // Se ha trovato qualcosa, lo manda alla rete, altrimenti non fa nulla!
-        if (targetEffettivo != null) {
-            this.clientRete.sendCommand(this.azioneSelezionata, targetEffettivo);
-        } else {
-            txtAreaStoria.append("[Sistema]: Lì non c'è nulla di interessante.\n");
-        }
+          controller.elaboraClickScenario(evt.getX(), evt.getY(), pnlRappresentazioneStanza.getWidth(), pnlRappresentazioneStanza.getHeight());
+                                             
+     
     }//GEN-LAST:event_pnlRappresentazioneStanzaMouseClicked
 
     private void btnGuardaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnGuardaActionPerformed
-        // TODO add your handling code here:                                   
-        this.azioneSelezionata = "GUARDA";
-        txtAreaStoria.append("[Sistema]: Hai selezionato l'azione GUARDA. Ora clicca su un oggetto nello scenario.\n");
+        controller.cambiaAzione("GUARDA");
     }//GEN-LAST:event_btnGuardaActionPerformed
 
-    private void btnSlotInventario1ActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSlotInventario1ActionPerformed
-        // TODO add your handling code here:
-    }//GEN-LAST:event_btnSlotInventario1ActionPerformed
-
     private void btnSelezionaWoodyActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSelezionaWoodyActionPerformed
-        this.clientRete.sendCommand("CHIAMA", "Woody");
-        aggiornaBordiPersonaggi();
+        controller.selezionaPersonaggio("Woody");
     }//GEN-LAST:event_btnSelezionaWoodyActionPerformed
 
     private void btnSelezionaBuzzActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSelezionaBuzzActionPerformed
-       this.clientRete.sendCommand("CHIAMA", "Buzz");
-       aggiornaBordiPersonaggi();
+      controller.selezionaPersonaggio("Buzz");
     }//GEN-LAST:event_btnSelezionaBuzzActionPerformed
 
     private void btnSelezionaJessieActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSelezionaJessieActionPerformed
-        this.clientRete.sendCommand("CHIAMA", "Jessie");
-        aggiornaBordiPersonaggi();
+        controller.selezionaPersonaggio("Jessie");
     }//GEN-LAST:event_btnSelezionaJessieActionPerformed
 
     private void btnPrendiActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnPrendiActionPerformed
-       this.azioneSelezionata = "PRENDI";
-        txtAreaStoria.append("[Sistema]: Hai selezionato l'azione PRENDI. Ora clicca su un oggetto nello scenario.\n");
+        controller.cambiaAzione("PRENDI");
     }//GEN-LAST:event_btnPrendiActionPerformed
 
     private void btnUsaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnUsaActionPerformed
-       this.azioneSelezionata = "USA";
-       txtAreaStoria.append("[Sistema]: Hai selezionato USA. Clicca sull'oggetto con cui interagire.\n");
+       controller.cambiaAzione("USA");
     }//GEN-LAST:event_btnUsaActionPerformed
 
     private void btnVaiActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnVaiActionPerformed
-       this.azioneSelezionata = "VAI";
-       txtAreaStoria.append("[Sistema]: Hai selezionato VAI. Clicca dove vuoi andare.\n");
+       controller.cambiaAzione("VAI");
     }//GEN-LAST:event_btnVaiActionPerformed
 
     private void btnParlaActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnParlaActionPerformed
-        this.azioneSelezionata = "PARLA";
-        txtAreaStoria.append("[Sistema]: Hai selezionato PARLA. Clicca con chi vuoi parlare.\n");
+        controller.cambiaAzione("PARLA");
     }//GEN-LAST:event_btnParlaActionPerformed
 
     /**
@@ -497,11 +352,11 @@ public class GameWindow extends javax.swing.JFrame {
         //</editor-fold>
 
         /* Create and display the form */
-        java.awt.EventQueue.invokeLater(() -> new GameWindow().setVisible(true));
+        java.awt.EventQueue.invokeLater(() -> new GameWindow());
     }
     
     // =============================================================================
-    // 🔌 METODI PONTE COSTRUITI SUI TUOI COMPONENTI REALI (Richiesti dal GUIHandler)
+    // METODI PONTE (Richiesti dal GUIHandler)
     // =============================================================================
 
     /**
@@ -521,19 +376,6 @@ public class GameWindow extends javax.swing.JFrame {
         lblNomeStanza.setText(nomeStanza.toUpperCase());
     }
 
-    /**
-     * Cambia la foto dell'avatar a destra.
-     * @param idStanza
-     * @param percorsoImmagine
-     */
-    /*public void cambiaIconaAvatar(String percorsoImmagine) {
-        try {
-            lblAvatarPersonaggio.setIcon(new javax.swing.ImageIcon(getClass().getResource(percorsoImmagine)));
-            lblAvatarPersonaggio.setText(""); 
-        } catch (Exception e) {
-            logger.warning("Impossibile caricare l'avatar: " + percorsoImmagine);
-        }
-    }
 
     /**
      * Notifica lo spostamento in una nuova stanza.
@@ -544,40 +386,26 @@ public class GameWindow extends javax.swing.JFrame {
         
         String percorsoImmagine = "";
         
-        // Mappatura dinamica degli ID alle immagini fisiche
-        if (idStanza.equals("CORRIDOIO_PRIMO_PIANO")) {
-            percorsoImmagine = "/CorridoioRoom2.jpg"; 
-        } else if (idStanza.equals("CAMERA_DI_ANDY")) {
-            percorsoImmagine = "/AndyRoom1.jpg";
-        } else if (idStanza.equals("CAMERA_DI_MOLLY")) {
-            percorsoImmagine = "/MollyRoom3.png"; // (Esempio)
-        } else if (idStanza.equals("CORRIDOIO_PIANO_TERRA")) {
-            percorsoImmagine = "/CorridoioRoom4.png"; // (Esempio per le scale)
-        } else if (idStanza.equals("CUCINA")) {
-            percorsoImmagine = "/CucinaRoom6.png"; 
-        } else if (idStanza.equals("GIARDINO")) {
-            percorsoImmagine = "/StradaRoom5.png"; 
-        }else if (idStanza.equals("INGRESSO_FOGNATURE")) {
-            percorsoImmagine = "/IngressoFognaRoom7.png"; 
-        }else if (idStanza.equals("FOGNE_PRIMA_STANZA")) {
-            percorsoImmagine = "/FognaRoom8.png"; 
-        }else if (idStanza.equals("STANZA_BUIA")) {
-            percorsoImmagine = "/FognaRoom11.png"; 
-        }else if (idStanza.equals("CASA_DEL_TOPO")) {
-            percorsoImmagine = "/StanzaTopoRoom9.png"; 
-        }else if (idStanza.equals("STANZA_DELLA_LEVA")) {
-            percorsoImmagine = "/FognaRoom10.png"; 
-        }else if (idStanza.equals("FOGNE_SECONDA_STANZA")) {
-            percorsoImmagine = "/FognaRoom12.png"; 
-        }else if (idStanza.equals("STANZA_CON_ACQUA")) {
-            percorsoImmagine = "/FognaRoom13.1.png"; 
-        }else if (idStanza.equals("STANZA_SENZA_ACQUA")) {
-            percorsoImmagine = "/FognaRoom13.2.png"; 
-        //}else if (idStanza.equals("BOSS_FINALE")) {
-           // percorsoImmagine = "/"; 
+        switch (idStanza) {
+            case "CORRIDOIO_PRIMO_PIANO":  percorsoImmagine = "/CorridoioRoom2.jpg"; break;
+            case "CAMERA_DI_ANDY":         percorsoImmagine = "/AndyRoom1.jpg"; break;
+            case "CAMERA_DI_MOLLY":        percorsoImmagine = "/MollyRoom3.png"; break;
+            case "CORRIDOIO_PIANO_TERRA":  percorsoImmagine = "/CorridoioRoom4.png"; break;
+            case "CUCINA":                 percorsoImmagine = "/CucinaRoom6.png"; break;
+            case "GIARDINO":               percorsoImmagine = "/StradaRoom5.png"; break;
+            case "INGRESSO_FOGNATURE":     percorsoImmagine = "/IngressoFognaRoom7.png"; break;
+            case "FOGNE_PRIMA_STANZA":     percorsoImmagine = "/FognaRoom8.png"; break;
+            case "STANZA_BUIA":            percorsoImmagine = "/FognaRoom11.png"; break;
+            case "CASA_DEL_TOPO":          percorsoImmagine = "/StanzaTopoRoom9.png"; break;
+            case "STANZA_DELLA_LEVA":      percorsoImmagine = "/FognaRoom10.png"; break;
+            case "FOGNE_SECONDA_STANZA":   percorsoImmagine = "/FognaRoom12.png"; break;
+            case "STANZA_CON_ACQUA":       percorsoImmagine = "/FognaRoom13.1.png"; break;
+            case "STANZA_SENZA_ACQUA":     percorsoImmagine = "/FognaRoom13.2.png"; break;
+            // case "BOSS_FINALE":         percorsoImmagine = "/"; break;
+            default:
+                System.err.println("[GUI] Stanza non riconosciuta per lo sfondo: " + idStanza);
+                break;
         }
-        
-        
         
         if (!percorsoImmagine.isEmpty()) {
             ((com.toystory.client.view.PannelloImmagineAdattiva) pnlRappresentazioneStanza).cambiaImmagine(percorsoImmagine);
@@ -597,11 +425,7 @@ public class GameWindow extends javax.swing.JFrame {
             try {
                 java.net.URL imgURL = getClass().getResource(icona);
                 if (imgURL != null) {
-                    javax.swing.ImageIcon iconaOriginale = new javax.swing.ImageIcon(imgURL);
-                    java.awt.Image imgScalata = iconaOriginale.getImage().getScaledInstance(60, 60, java.awt.Image.SCALE_SMOOTH);
-                
-                    lblIconaAbilita.setIcon(new javax.swing.ImageIcon(imgScalata));
-                    lblIconaAbilita.setText(""); // Nasconde il testo per mostrare solo l'immagine
+                    lblIconaAbilita.setIcon(PixelButtonGenerator.ridimensionaIcona(imgURL, 50, 50));
                 } else {
                     System.err.println("[GUI] Immagine abilità non trovata: " + icona);
                     lblIconaAbilita.setIcon(null);
@@ -613,23 +437,10 @@ public class GameWindow extends javax.swing.JFrame {
         } else {
             // Se il personaggio non ha abilità (es. Woody all'inizio del gioco)
             lblIconaAbilita.setIcon(null); // Rimuove eventuali vecchie immagini
-            lblIconaAbilita.setText("[Nessuna Abilità]");
+            lblIconaAbilita.setText("");
         }
     }
-    
-    private void applicaStileToyStory(javax.swing.JButton bottone, String verbo) {
-        // Genera l'immagine standard e quella per quando il mouse ci passa sopra (Rollover/Hover)
-        bottone.setIcon(PixelButtonGenerator.createToyStoryButton(verbo, false));
-        bottone.setRolloverIcon(PixelButtonGenerator.createToyStoryButton(verbo, true));
-        bottone.setPressedIcon(PixelButtonGenerator.createToyStoryButton(verbo, true));
 
-           // Rimuove la vecchia grafica grigia standard delle finestre
-           bottone.setBorderPainted(false);
-           bottone.setContentAreaFilled(false);
-           bottone.setFocusPainted(false);
-           // Rimuove il vecchio testo testuale, visto che ora la parola è disegnata dentro l'immagine
-           bottone.setText(""); 
-    }
     
     // Questo serve al Server per cambiare l'immagine (NON ELIMINARLO)
     public void cambiaIconaAvatar(String imagePath) {
@@ -645,44 +456,8 @@ public class GameWindow extends javax.swing.JFrame {
         }
     }
     
-    /**
-     * Aggiorna l'icona dell'avatar nella GUI.
-     * @param imagePath Il percorso dell'immagine inviato dal Server (es. "/images/avatars/buzz.png")
-     */
-    private void impostaIconaSuBottone(javax.swing.AbstractButton bottone, String nomeFile) {
-        String path = nomeFile.startsWith("/") ? nomeFile : "/" + nomeFile;
-        java.net.URL imgURL = getClass().getResource(path);
-        
-        if (imgURL != null) {
-            // 1. Carichiamo l'icona originale
-            javax.swing.ImageIcon iconaOriginale = new javax.swing.ImageIcon(imgURL);
-            
-            // 2. Definiamo le dimensioni desiderate (es. 50x50 pixel, o quelle del tuo bottone)
-            int larghezza = 75; 
-            int altezza = 75;
-            
-            // 3. Creiamo una versione scalata dell'immagine
-            java.awt.Image imgScalata = iconaOriginale.getImage().getScaledInstance(larghezza, altezza, java.awt.Image.SCALE_SMOOTH);
-            
-            // 4. Applichiamo l'immagine ridimensionata al bottone
-            bottone.setIcon(new javax.swing.ImageIcon(imgScalata));
  
-            //Forza il bottone ad avere esattamente l'ingombro dell'immagine
-            bottone.setPreferredSize(new java.awt.Dimension(larghezza, altezza));
-            
-            // Pulizia grafica
-            bottone.setText(""); 
-            bottone.setContentAreaFilled(false);
-            bottone.setBorderPainted(true);
-            
-        } else {
-            System.err.println("[GUI] ERRORE GRAVE: Immagine " + nomeFile + " introvabile.");
-        }
-    }
-    
-    
-    private void aggiornaBordiPersonaggi() {
-        
+    public void aggiornaBordiPersonaggi() {
         
         // Bordo Verde se selezionato, Rosso se non selezionato (spessore 3 pixel)
         btnSelezionaWoody.setBorder(javax.swing.BorderFactory.createLineBorder(
@@ -695,40 +470,20 @@ public class GameWindow extends javax.swing.JFrame {
             btnSelezionaJessie.isSelected() ? java.awt.Color.GREEN : java.awt.Color.RED, 3));
     }
 
-    public void aggiungiAllInventario(String nomeOggetto) {
-        // Formattiamo il nome per renderlo carino (es. "chiave" -> "CHIAVE")
-        String nomePulito = nomeOggetto.toUpperCase();
-
-        // Controlliamo se il primo slot è libero
-        if (btnSlotInventario1.getText().isEmpty() && btnSlotInventario1.getIcon() == null) {
-            btnSlotInventario1.setText(nomePulito);
-        } 
-        else if (btnSlotInventario2.getText().isEmpty() && btnSlotInventario2.getIcon() == null) {
-            btnSlotInventario2.setText(nomePulito);
-        } 
-        // Se sono entrambi pieni (non dovrebbe succedere se il server fa i controlli, ma per sicurezza)
-        else {
-            scriviNelLog("[Sistema - GUI]: Le tue tasche sono piene!");
-        }
-    }
     public void aggiungiAllInventario(String nomeOggetto, String nomeFile) {
-        // Carichiamo l'immagine dalla cartella resources
+        // 1. Prepariamo l'icona usando la nostra utility centralizzata
         java.net.URL imgURL = getClass().getResource("/" + nomeFile);
-        javax.swing.ImageIcon icona = null;
-    
-        if (imgURL != null) {
-            icona = new javax.swing.ImageIcon(imgURL);
-            // Scaliamo l'immagine per farla stare nel bottone
-            java.awt.Image imgScalata = icona.getImage().getScaledInstance(50, 50, java.awt.Image.SCALE_SMOOTH);
-            icona = new javax.swing.ImageIcon(imgScalata);
-        }
+        javax.swing.ImageIcon icona = PixelButtonGenerator.ridimensionaIcona(imgURL, 40, 40);
 
-        if (btnSlotInventario1.getText().equals("[Vuoto]") || btnSlotInventario1.getIcon() == null) {
+        // 2. Inseriamo negli slot
+        if (btnSlotInventario1.getIcon() == null) {
             btnSlotInventario1.setIcon(icona);
-            btnSlotInventario1.setText(""); // Togliamo il testo
-        } else if (btnSlotInventario2.getText().equals("[Vuoto]") || btnSlotInventario2.getIcon() == null) {
+            btnSlotInventario1.setText(""); 
+        } else if (btnSlotInventario2.getIcon() == null) {
             btnSlotInventario2.setIcon(icona);
             btnSlotInventario2.setText("");
+        } else {
+            scriviNelLog("[Sistema - GUI]: Le tue tasche sono piene!");
         }
     }
     
@@ -780,7 +535,6 @@ public class GameWindow extends javax.swing.JFrame {
         timer.start();
     }
     
-    public MappaScenario getMappaScenario() { return mappaScenario; }
 
     // Variables declaration - do not modify//GEN-BEGIN:variables
     private javax.swing.JPanel Buzz;

@@ -12,9 +12,11 @@ import com.toystory.client.view.GameWindow;
 public class GUIHandler {
     
     private final GameWindow finestra; // Riferimento alla tua GUI di Matisse
+    private final GameWindowController controller;
 
-    public GUIHandler(GameWindow finestra) {
+    public GUIHandler(GameWindow finestra, GameWindowController controller) {
         this.finestra = finestra;
+        this.controller = controller;
     }
 
     /**
@@ -41,7 +43,7 @@ public class GUIHandler {
                 case "CAMBIA_SFONDO":
                     // Cambia lo sfondo della stanza nella finestra
                     finestra.aggiornaSfondoScenario(valore);
-                    finestra.getMappaScenario().setStanzaCorrenteId(valore);
+                    controller.cambiaStanzaMappa(valore);
                     break;
                     
                 case "SWITCH_AVATAR":

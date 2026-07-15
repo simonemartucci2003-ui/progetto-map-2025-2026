@@ -275,4 +275,53 @@ public class PixelButtonGenerator {
             }
         });
     }
+    
+    /**
+     * Trasforma un bottone standard in un bottone Toy Story.
+     */
+    public static void applicaStileToyStory(javax.swing.JButton bottone, String verbo) {
+        bottone.setIcon(createToyStoryButton(verbo, false));
+        bottone.setRolloverIcon(createToyStoryButton(verbo, true));
+        bottone.setPressedIcon(createToyStoryButton(verbo, true));
+
+        bottone.setBorderPainted(false);
+        bottone.setContentAreaFilled(false);
+        bottone.setFocusPainted(false);
+        bottone.setText(""); 
+    }
+
+    /**
+     * Imposta un'icona tonda scalata per i bottoni degli Avatar.
+     */
+    public static void impostaIconaAvatar(javax.swing.AbstractButton bottone, String nomeFile) {
+        String path = nomeFile.startsWith("/") ? nomeFile : "/" + nomeFile;
+        java.net.URL imgURL = PixelButtonGenerator.class.getResource(path);
+        
+        if (imgURL != null) {
+            javax.swing.ImageIcon iconaOriginale = new javax.swing.ImageIcon(imgURL);
+            int larghezza = 55; 
+            int altezza = 55;
+            
+            java.awt.Image imgScalata = iconaOriginale.getImage().getScaledInstance(larghezza, altezza, java.awt.Image.SCALE_SMOOTH);
+            
+            bottone.setIcon(new javax.swing.ImageIcon(imgScalata));
+            bottone.setPreferredSize(new java.awt.Dimension(larghezza, altezza));
+            bottone.setText(""); 
+            bottone.setContentAreaFilled(false);
+            bottone.setBorderPainted(true);
+        } else {
+            System.err.println("[GUI] ERRORE GRAVE: Immagine " + nomeFile + " introvabile.");
+        }
+    }
+    
+    /**
+     * Ridimensiona un'immagine in modo uniforme mantenendo la qualità.
+     */
+    public static javax.swing.ImageIcon ridimensionaIcona(java.net.URL imgURL, int larghezza, int altezza) {
+        if (imgURL == null) return null;
+        
+        javax.swing.ImageIcon iconaOriginale = new javax.swing.ImageIcon(imgURL);
+        java.awt.Image imgScalata = iconaOriginale.getImage().getScaledInstance(larghezza, altezza, java.awt.Image.SCALE_SMOOTH);
+        return new javax.swing.ImageIcon(imgScalata);
+    }
 }
