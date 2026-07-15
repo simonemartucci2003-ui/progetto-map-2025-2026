@@ -36,6 +36,12 @@ public class UseObserver implements GameObserver {
             case "generatore":
                 return gestisciGeneratore(state);
                 
+             case "leva":
+                return gestisciLeva(state, attivo);
+                
+             case "varco":    
+                 return gestisciScarafaggio(state, attivo);
+                
             default:
                 return "TESTO|Non succede nulla. Forse non è il modo giusto di usarlo.";
         }
@@ -116,7 +122,50 @@ public class UseObserver implements GameObserver {
         } 
         
         state.saveFlag("GENERATORE_ACCESO", true);
-        return "TESTO|Hai azionato la leva del generatore! I macchinari si riattivano con un ronzio metallico e la corrente elettrica torna a fluire.";
+        return "TESTO|Hai azionato la leva del generatore! I macchinari si riattivano con un ronzio metallico e la corrente elettrica torna a fluire." +
+            "Buzz: Missione compiuta ragazzi!";
+    }
+    
+    private String gestisciLeva(GameDescription state, PlayableCharacter attivo) {
+        boolean LevaAggiustata = state.getFlags().getOrDefault("LEVA_AGGIUSTATA", false);
+        
+        if (LevaAggiustata) {
+            return "TESTO.La leva è stata riparata e lo scolo dell acqua e nuovamente funzionante";
+        } 
+        
+        boolean haIlRametto = attivo.getPocket().stream()
+                .anyMatch(obj -> obj.getName().equalsIgnoreCase("rametto"));
+
+        if (!haIlRametto) {
+            return "TESTO|Il cancello è bloccato da un pesante lucchetto..ti servirebbe qualcosa per scassinarlo.";
+        } 
+
+        // Consuma l'oggetto e aggiorna stato
+        consumaOggetto("rametto", attivo, state);
+        state.saveFlag("LEVA_AGGIUSTATA", true);
+
+        return aggiornaInventarioDopoUso(Dialoghi.getDialogoLevaAggiustata(), attivo);
+    }
+    
+    private String gestisciScarafaggio(GameDescription state, PlayableCharacter attivo) {
+        boolean melaData = state.getFlags().getOrDefault("MELA_DATA", false);
+        
+        if (melaData) {
+            return "TESTO.Lo scarafaggio è totalemnte intento a mangiare il suo torsolo di mela,";
+        } 
+        
+        boolean haIlTorsolo = attivo.getPocket().stream()
+                .anyMatch(obj -> obj.getName().equalsIgnoreCase("torsolo"));
+
+        if (!haIlTorsolo) {
+            return "TESTO|Purtroppo non hai nulla per distrarre questo bestione.";
+        } 
+
+        // Consuma l'oggetto e aggiorna stato
+        consumaOggetto("torsolo", attivo, state);
+        state.saveFlag("MELA_DATA", true);
+
+        return aggiornaInventarioDopoUso(Dialoghi.getDialogoUsoMela(), attivo);
     }
 
 

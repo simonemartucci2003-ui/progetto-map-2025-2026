@@ -43,6 +43,12 @@ public class MoveObserver implements GameObserver {
                 
             case "porticina": 
                 return gestisciCasaTopo(state, attivo, currentRoom);
+                
+            case "buco_stretto"  :
+                return gestisciBuco(state, attivo, currentRoom);
+                
+            case "varco"  :
+                return gestisciVarco(state, attivo, currentRoom);
 
             
                 
@@ -191,6 +197,40 @@ public class MoveObserver implements GameObserver {
         } else {
             return "TESTO|Errore: Stanza di destinazione non configurata!";
         }
+    }
+    
+    private String gestisciBuco(GameDescription state, PlayableCharacter attivo, Room currentRoom) {
+        
+        // 1. Controllo Personaggio: Solo Jessie può entrare nel tubo buio
+        if (!attivo.getName().equalsIgnoreCase("Jessie")) {
+            return "TESTO|È troppo stretto lì su! I giocattoli non riescono a passare. Serve qualcuno abbastanza agile per infilarsi in quel passaggio.";
+        }
+
+        // 2. Spostamento
+        Room prossimaStanza = currentRoom.getExit("buco_stretto");
+
+        if (prossimaStanza != null) {
+            state.setCurrentRoom(prossimaStanza);
+            String idStanza = prossimaStanza.getName().toUpperCase().replace(" ", "_");
+
+            return "TESTO|Questo sembra un lavoro per Jessie ragazzi! Fate spazio, ora vi farò vedere cosa sa fare un avera cowgirl!|CAMBIA_SFONDO|" + idStanza;
+        } else {
+            return "TESTO|Il passaggio sembra esserci, ma è bloccato da detriti. (Errore: Stanza di destinazione non configurata!)";
+        }
+    }
+    
+    private String gestisciVarco(GameDescription state, PlayableCharacter attivo, Room currentRoom) {
+        // 1. Controlliamo se lo scarafaggio è già stato distratto con la mela
+        boolean melaData = state.getFlags().getOrDefault("MELA_DATA", false);
+
+        // Se non è ancora stato distratto, il passaggio resta bloccato
+        if (!melaData) {
+            return "TESTO|Lo scarafaggio gigante blocca completamente il passaggio. Dovresti trovare un modo per distrarlo.";
+        }
+
+        // 2. Lo scarafaggio è distratto: il passaggio è libero, usiamo il movimento normale
+        return eseguiMovimentoGenerico("varco", state, currentRoom);
+
     }
 
     /**

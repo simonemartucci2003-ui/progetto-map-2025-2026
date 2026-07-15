@@ -454,10 +454,10 @@ public class ToyStoryGame extends GameDescription {
         fognaPrimaStanza.addExit("porticina", casaTopo); // Inizialmente bloccata dalla logica del gioco
         
         // 2. NPC E OGGETTI DELLA STORIA
-        AdvObject topo = new AdvObject(801, "topo", "Un topo con degli spessi occhiali da vista e una giacchetta rossa logora. Se ne sta seduto comodamente su una piattaforma, bloccando l'accesso alla sua porticina. Dobbiamo parlargli per convincerlo a farci passare.");
+        AdvObject topo = new AdvObject(801, "topo", "");
         AdvObject tunnel = new AdvObject(804, "tunnel_ritorno", "");
-        AdvObject tuboBuioObj = new AdvObject(802, "tubo_buio", "Un gigantesco tubo di scarico circolare sulla parete sinistra. Lì dentro è completamente buio, non si vede a un palmo di naso.");
-        AdvObject porticinaObj = new AdvObject(803, "porticina", "Una minuscola porta di legno rinforzata con dei cardini di metallo.");
+        AdvObject tuboBuioObj = new AdvObject(802, "tubo_buio", "");
+        AdvObject porticinaObj = new AdvObject(803, "porticina", "");
 
         // 3. OGGETTI DI SCENARIO EXTRA
         //AdvObject acquaRifiuti = new AdvObject(804, "acqua_sporca", "La pozza d'acqua melmosa è piena di cianfrusaglie cadute dal mondo di sopra. Ci sono delle vecchie scarpe da ginnastica che per noi sembrano enormi navi incagliate e lattine arrugginite.");
@@ -483,10 +483,10 @@ public class ToyStoryGame extends GameDescription {
         stanzaBuia.addExit("tubo_ritorno", fognaPrimaStanza); // Per tornare indietro
 
         // 2. OGGETTI PER GLI ENIGMI DELLA STORIA
-        AdvObject generatore = new AdvObject(901, "generatore", "Un massiccio pannello metallico con la scritta 'GENERATORE AUSILIARIO'. Al centro c'è una grossa leva. Se uniamo le nostre forze di plastica per abbassarla, potremmo riattivare la corrente per quel topo e farci aprire la porta!");
+        AdvObject generatore = new AdvObject(901, "generatore", "");
         
         // 3. OGGETTI DI SCENARIO EXTRA (Basati sull'immagine stanzabuia.jpeg)
-        AdvObject tuboRitorno = new AdvObject(902, "tubo_ritorno", "L'oscuro tunnel da cui siamo venuti. Senza la fonte di luce di Buzz, saremmo rimasti bloccati lì dentro al buio totale. Meglio non allontanarsi troppo.");
+        AdvObject tuboRitorno = new AdvObject(902, "tubo_ritorno", "");
         //AdvObject cavi = new AdvObject(903, "cavi", "Spessi cavi elettrici neri e tubature si intrecciano sul muro di mattoni come viscere di un mostro meccanico. Sembrano scollegati dalla rete principale.");
         //AdvObject ragnatele = new AdvObject(904, "ragnatele", "Grosse ragnatele polverose pendono dai tubi in alto. Spero vivamente che il ragno che le ha tessute non sia nei paraggi, o saremo nei guai.");
         //AdvObject grataPavimento = new AdvObject(905, "grata_pavimento", "Una solida grata di ferro sul pavimento. Sotto si sente scorrere altra acqua fetida.");
@@ -507,16 +507,16 @@ public class ToyStoryGame extends GameDescription {
 
     private void configureCasaTopo() {
         // 1. USCITE (I collegamenti bidirezionali)
-        casaTopo.addExit("porticina", fognaPrimaStanza); // Per tornare indietro
+        casaTopo.addExit("porticina_ritorno", fognaPrimaStanza); // Per tornare indietro
         
         // Il buco stretto porta alla stanza della leva. Il sistema dovrà verificare
         // che il personaggio attivo sia Jessie prima di permettere il passaggio.
         casaTopo.addExit("buco_stretto", stanzaLeva); 
 
         // 2. NPC E OGGETTI DELLA STORIA
-        AdvObject topo = new AdvObject(1001, "topo", "Il topo smanettone! Ora che gli abbiamo ridato la corrente, sta digitando furiosamente sulla tastiera del suo computer.");
-        AdvObject bucoStretto = new AdvObject(1002, "buco_stretto", "In alto a destra, tra i mattoni, c'è uno stretto condotto d'aerazione buio. Serve un giocattolo molto agile, snodato e scattante per infilarcisi.");
-        AdvObject porticina = new AdvObject(1007, "porticina", "Il retro della porta da cui siamo entrati è un groviglio di cavi, schermi di stato e persino dei controller arcade incastrati nel legno.");
+        AdvObject topo = new AdvObject(1001, "topo_casa", "");
+        AdvObject bucoStretto = new AdvObject(1002, "buco_stretto", "");
+        AdvObject porticina = new AdvObject(1007, "porticina_ritorno", "");
 
         // 3. OGGETTI DI SCENARIO EXTRA (Basati sull'immagine casatoo.jpg)
         //AdvObject cartello = new AdvObject(1003, "cartello", "Un'insegna luminosa al neon recita: 'MOUSECRAFT HQ - INTRUDERS WILL BE ZAPPED!'. Questo roditore fa sul serio in fatto di sicurezza.");
@@ -541,13 +541,13 @@ public class ToyStoryGame extends GameDescription {
     private void configureStanzaLeva() {
         // 1. USCITE (I collegamenti bidirezionali)
         // L'unica via d'uscita è ripassare per il cunicolo da cui Jessie è entrata.
-        stanzaLeva.addExit("buco_stretto", casaTopo); 
+        stanzaLeva.addExit("buco_stretto_ritorno", casaTopo); 
 
         // 2. OGGETTI PER GLI ENIGMI DELLA STORIA
-        AdvObject leva = new AdvObject(1101, "leva", "Il meccanismo di controllo principale per il deflusso dell'acqua. Il manico di metallo è completamente spezzato alla base! La fessura è larga, ci vorrebbe qualcosa da incastrare per fare leva e sbloccare le valvole.");
+        AdvObject leva = new AdvObject(1101, "leva", "");
 
         // 3. OGGETTI DI SCENARIO EXTRA (Basati sull'immagine leva.jpg)
-        AdvObject bucoStretto = new AdvObject(1110, "buco_stretto", "L'apertura ad arco da cui sono sbucata. È davvero stretta, Woody o Buzz si sarebbero incastrati al primo metro.");
+        AdvObject bucoStretto = new AdvObject(1110, "buco_stretto_ritorno", "");
         //AdvObject cartello = new AdvObject(1102, "cartello", "Una targa metallica avvitata al muro recita: 'LEVA DI COMANDO - ROTTA'. Molto rassicurante... Se non la aggiusto, i miei amici resteranno bloccati di là!");
         //AdvObject tubature = new AdvObject(1103, "tubature", "Un intrico di vecchi tubi incrostati e valvole arrugginite. Devono essere collegati alla vasca principale della fogna.");
         //AdvObject manometri = new AdvObject(1104, "manometri", "Dei vecchi indicatori di pressione industriali. Le lancette sono immobili sullo zero, il sistema idraulico è chiaramente in stallo.");
@@ -572,17 +572,17 @@ public class ToyStoryGame extends GameDescription {
 
     private void configureFognaSecondaStanza() {
         // L'uscita per tornare indietro verso l'ingresso, passando per il cancello aperto.
-        fognaSecondaStanza.addExit("cancello", ingressoFogna); 
+        fognaSecondaStanza.addExit("cancello_aperto", ingressoFogna); 
         
         // Il varco alle spalle dello scarafaggio. Inizialmente l'NPC bloccherà il passaggio,
         // ma la logica del gioco permetterà di passare dopo avergli dato il torsolo di mela.
         fognaSecondaStanza.addExit("varco", stanzaAcqua); 
 
         // 2. NPC E OGGETTI DELLA STORIA
-        AdvObject scarafaggioCiccione = new AdvObject(1201, "scarafaggio_gigante", "Un enorme scarafaggio incredibilmente grasso. Ha persino dei funghi che gli crescono in testa! Se ne sta seduto a bloccare completamente l'arco del tunnel e si sfrega le zampe sulla pancia. Ha l'aria di chi non si sposterà di un millimetro...");
+        AdvObject scarafaggioCiccione = new AdvObject(1201, "scarafaggio_gigante", "");
         
         // 3. OGGETTI DI SCENARIO EXTRA (Basati sull'immagine image_7b53b1.jpg)
-        AdvObject cancelloAperto = new AdvObject(1202, "cancello_aperto", "Il pesante cancello di ferro a sbarre. Per fortuna siamo riusciti a forzarlo, la via per tornare all'ingresso è libera.");
+        AdvObject cancelloAperto = new AdvObject(1202, "cancello_aperto", "");
        // AdvObject lucchettoRotto = new AdvObject(1203, "lucchetto_rotto", "Un lucchetto dorato giace rotto sui gradini di pietra. La forcina di Molly ha fatto il suo dovere.");
         //AdvObject paperella = new AdvObject(1204, "paperella", "Una piccola paperella di gomma colorata galleggia tristemente nella melma verde. Sembra aver perso ogni speranza. Dobbiamo recuperare la torta in fretta, o faremo la sua stessa fine!");
         //AdvObject cartone = new AdvObject(1205, "cartone", "Dei pezzi di cartone inzuppati galleggiano nell'acqua fetida. Potremmo usarli come piattaforme improvvisate, ma non sembrano in grado di reggere il nostro peso di plastica.");

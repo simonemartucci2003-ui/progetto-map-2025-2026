@@ -201,7 +201,7 @@ public class Dialoghi {
     }
     
     public static String getDescrizioneTunnel() {
-        return "Questo tunnel non sembra per nulla invitanete, ma dobbiamo fare il possibile per salvare il compleanno di Andy.";
+        return "Questo tunnel non sembra molto invitanete, ma dobbiamo fare qualcosa per salvare il compleanno di Andy.";
     }
     
     public static String getDescrizioneCancello() {
@@ -225,15 +225,15 @@ public class Dialoghi {
     }
     
     public static String getDescrizioneTopo() {
-        return "ehi, ma li c'è uno strano topino..chissa se è un alleato di quegli insetti.";
+        return "Un topo con degli spessi occhiali da vista e una giacchetta rossa logora. Se ne sta seduto comodamente su una piattaforma, bloccando l'accesso alla sua porticina. Dobbiamo parlargli per convincerlo a farci passare.";
     }
     
     public static String getDescrizioneporticina() {
-        return "Una piccola porticina, probabilmente sara la tana di quel topolino.";
+        return "Una minuscola porta di legno rinforzata con dei cardini di metallo.";
     }
     
     public static String getDescrizioneTuboBuio() {
-        return "Questo passaggio è cosi buio ..Servirebbe un po di luce per vederci attraverso.";
+        return "Un gigantesco tubo di scarico circolare sulla parete sinistra. Lì dentro è completamente buio, non si vede a un palmo di naso..";
     }
 
    public static String getDialogoTopo(){
@@ -250,4 +250,79 @@ public class Dialoghi {
              "Topo: Prego, entrate pure a casa mia, siete i benvenuti e fate come foste a casa vostra!<PAUSA>" +
              "Woody: Ottimo lavoro di squadra. Andiamo a dare un'occhiata lì dentro.";
    }
+   
+    public static String  getDescrizoneTuboRitorno(){
+        return "L'oscuro tunnel da cui siamo venuti. Senza la fonte di luce di Buzz, saremmo rimasti bloccati lì dentro al buio totale. Meglio non allontanarsi troppo.";
+    }
+    
+    public static String  getDescrizioneGeneratore(){
+        return "Un massiccio pannello metallico con la scritta 'GENERATORE AUSILIARIO'. Al centro c'è una grossa leva. Se USIAMO le nostre forze di plastica per abbassarla, potremmo riattivare la corrente per quel topo e farci aprire la porta!";
+    }
+
+    public static String  getDescrizioneGeneratoreAcceso(){
+        return "Ora il generatore è acceso, il nodtro nuovo amico ne sara felice ";
+    }
+    
+   
+    public static String  getDescrizoneTopoCasa(){
+        return "Il topo smanettone! Ora che gli abbiamo ridato la corrente, sta digitando furiosamente sulla tastiera del suo computer.";
+    }
+    
+    public static String  getDescrizionePorticinaRitorno(){
+        return "Il retro della porta da cui siamo entrati è un groviglio di cavi, schermi di stato e persino dei controller arcade incastrati nel legno.";
+    }
+
+    public static String  getDescrizioneBuco(){
+        return "In alto a destra, tra i mattoni, c'è uno stretto condotto d'aerazione buio. Serve un giocattolo molto agile, snodato e scattante per infilarcisi. ";
+    }
+    
+    public static String  getDescrizioneBucoRitorno(){
+        return "L'apertura da cui sono sbucata. È davvero stretta, Woody o Buzz si sarebbero incastrati al primo metro.";
+    }
+
+    public static String  getDescrizioneLeva(){
+        return "Il meccanismo di controllo principale per il deflusso dell'acqua. Il manico di metallo è completamente spezzato alla base! La fessura è larga, ci vorrebbe qualcosa da incastrare per fare leva e sbloccare le valvole.";
+    }
+    
+    public static String  getDescrizioneLevaAggiustata(){
+        return "La leva finalmente è stata riparata.";
+    }
+    
+     public static String  getDialogoLevaAggiustata(){
+        return "Jessie: Ragazzi ci siamo. Adesso l'acqua non sara un problema per noi. Salveremo il compleanno di Andy.";
+    }
+
+    public static String  getDescrizioneCancelloAperto(){
+        return "Il pesante cancello di ferro a sbarre. Per fortuna siamo riusciti a forzarlo, la via per tornare all'ingresso è libera.";
+    }
+    
+    public static String  getDescrizioneScarafaggio(){
+        return "Un enorme scarafaggio incredibilmente grasso. Se ne sta seduto a bloccare completamente l'arco del tunnel e si sfrega le zampe sulla pancia. Ha l'aria di chi non si sposterà di un millimetro...Proviamo a parlarci";
+    }
+    
+    public static String  getDescrizioneScarafaggioDopo(){
+        return "Lo scrafaggio è intento a mangiare la sua mela. Fortunatamente si è liberato uno spazio per passare";
+    }
+    
+    public static String  getDialogoScarafaggioCorotto(){
+        return "Scarafaggio: (masticando rumorosamente) Oh, questa mela è squisita! Molto meglio degli ordini del capo.<PAUSA> " +
+           "Woody: Allora, siamo amici adesso? Possiamo passare? <PAUSA>" +
+           "Scarafaggio: Certo, certo! Potete andare. Anzi, se ne avete un'altra, vi mostro anche una scorciatoia! <PAUSA>";
+    }
+    
+    public static String  getDialogoScarafaggioRetto(){
+        return "Buzz: Fermatevi! Quello scarafaggio blocca il passaggio per il condotto dell'acqua.<PAUSA>" +
+               "Scarafaggio: Non si passa! Il mio capo, il Grande Coleottero, ha detto che nessuno deve passare di qui!<PAUSA>" +
+               "Woody: Ehi amico, senti, è un'emergenza. Dobbiamo salvare il compleanno di Andy! <PAUSA>" +
+               "Scarafaggio: (con voce ingenua) Il capo ha detto che gli umani sono cattivi. E io ho una fame terribile, il mio pancione brontola da ore... <PAUSA>" +
+               "Jessie: (sussurrando) Ragazzi, avete sentito? Ha una fame da lupi. Se troviamo qualcosa da mangiare, forse ci lascerà passare.<PAUSA>";
+    }
+    
+    public static String  getDialogoUsoMela(){
+        return "Woody: Ehi, ciccione, guarda un po' cosa abbiamo qui. Un torsolo di mela freschissimo, appena arrivato dalla spazzatura! <PAUSA> " +
+           "Scarafaggio: (gli occhi si spalancano) Una... una mela? Per me? <PAUSA> " +
+           "Jessie: Sì, tutta tua! È succosa e croccante. Basta che ti sposti un pochino.<PAUSA>  " +
+           "Scarafaggio: (afferra il torsolo con voracità) Oh, che meraviglia! Sapete, il capo non mi offre mai nulla di così buono.<PAUSA>  " +
+           "Buzz: Ottimo lavoro. Mentre è distratto a mangiare, sgusciamo via da questa parte!<PAUSA> ";
+    }
 }
