@@ -27,7 +27,6 @@ public class GameDialogs {
      * Mostra il menu principale all'avvio dell'applicazione.
      * 
      * @param parent Il componente genitore che ospita il dialogo.
-     * @param haSalvataggi Indica se sono presenti salvataggi disponibili per la ripresa.
      * @return L'indice dell'opzione selezionata dall'utente.
      */
     public static int mostraMenuAvvio(Component parent) {

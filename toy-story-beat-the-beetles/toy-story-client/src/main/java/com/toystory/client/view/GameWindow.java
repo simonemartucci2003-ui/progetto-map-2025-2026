@@ -36,8 +36,8 @@ public class GameWindow extends javax.swing.JFrame {
         txtAreaStoria.setFont(new java.awt.Font("Verdana", java.awt.Font.BOLD, 12));
         txtAreaStoria.setForeground(java.awt.Color.WHITE);
         lblNomeStanza.setFont(new java.awt.Font("Arial Black", java.awt.Font.BOLD, 16));
-        lblNomeStanza.setForeground(new java.awt.Color(255, 225, 0)); // Giallo Toy Story
-         
+        lblNomeStanza.setForeground(java.awt.Color.RED);         
+        
         // --- 2. Inizializzazione Stili Componenti (via PixelButtonGenerator) ---
         PixelButtonGenerator.impostaIconaAvatar(btnSelezionaBuzz, "/icone_buzz.png");
         PixelButtonGenerator.impostaIconaAvatar(btnSelezionaWoody, "/icone_woody.png");
@@ -200,7 +200,6 @@ public class GameWindow extends javax.swing.JFrame {
         txtAreaStoria.setColumns(20);
         txtAreaStoria.setLineWrap(true);
         txtAreaStoria.setRows(5);
-        txtAreaStoria.setText("TESTO\n");
         txtAreaStoria.setWrapStyleWord(true);
         txtAreaStoria.setPreferredSize(new java.awt.Dimension(232, 70));
         jScrollPane1.setViewportView(txtAreaStoria);
