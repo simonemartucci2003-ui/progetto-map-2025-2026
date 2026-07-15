@@ -234,6 +234,20 @@ public class MappaScenario {
         
         stanze.put("STANZA_SENZA_ACQUA",  StanzaSenzaAcqua);
         
+         // --- FOGNA BOSS ---
+        List<BoundingBox> StanzaBoss = new ArrayList<>();
+        
+        // 1. tunnel da cui siamo entrati
+        StanzaBoss.add(new BoundingBox(569, 684 , 305 , 483, "boss", imgW, imgH));
+        
+        // 2. botola che porta al boss
+        StanzaBoss.add(new BoundingBox(713, 1006 , 2, 126 , "botolaRitorno", imgW, imgH));
+        
+        stanze.put("BOSS",  StanzaBoss);
+        
+        
+        
+        
         // --- ASSOCIAZIONE SFONDI ---
         sfondiStanze.put("CORRIDOIO_PRIMO_PIANO", "/CorridoioRoom2.jpg");
         sfondiStanze.put("CAMERA_DI_ANDY", "/AndyRoom1.jpg");
@@ -249,6 +263,7 @@ public class MappaScenario {
         sfondiStanze.put("FOGNE_SECONDA_STANZA", "/FognaRoom12.png");
         sfondiStanze.put("STANZA_CON_ACQUA", "/FognaRoom13.1.png");
         sfondiStanze.put("STANZA_SENZA_ACQUA", "/FognaRoom13.2.png");
+        sfondiStanze.put("BOSS", "/BossRoom14.png");
      
     }
     

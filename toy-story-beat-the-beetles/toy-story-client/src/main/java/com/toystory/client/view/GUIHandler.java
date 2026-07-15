@@ -98,6 +98,11 @@ public class GUIHandler {
                     finestra.svuotaInventario();
                     i += 2; 
                     break;
+                    
+                case "PERSONAGGIO_ATTIVO":
+                    finestra.aggiornaBordiPersonaggi(valore);
+                    i += 2;
+                    break;
                 
                 default:
                     System.err.println("[GUIHandler] Comando sconosciuto o non supportato: " + comando);

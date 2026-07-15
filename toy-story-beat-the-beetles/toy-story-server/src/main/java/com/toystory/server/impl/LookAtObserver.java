@@ -4,11 +4,13 @@ import com.toystory.server.GameDescription;
 import com.toystory.server.GameObserver;
 import com.toystory.server.type.Command;
 import com.toystory.server.type.CommandType;
+import com.toystory.server.ClientState;
+import com.toystory.server.GameSession;
 
 public class LookAtObserver implements GameObserver {
 
     @Override
-    public String update(Command command, GameDescription state) {
+    public String update(Command command, GameDescription state, ClientState client, GameSession session) {
         // 1. Si attiva solo per il comando GUARDA
         if (command.getType() != CommandType.GUARDA) {
             return null;

@@ -138,13 +138,16 @@ public class GameWindowController {
     }
     
     /**
-     * Invia al server il comando di selezione di un personaggio.
-     * 
-     * @param nomePersonaggio Il nome del personaggio da selezionare.
-     */
+    * Invia al server il comando di selezione di un personaggio.
+    * L'aggiornamento della UI (bordi, avatar) avviene solo alla conferma
+    * del server (token PERSONAGGIO_ATTIVO), mai in modo ottimistico:
+    * se il personaggio è già controllato da un altro giocatore, il server
+    * rifiuta e la UI resta invariata.
+    * 
+    * @param nomePersonaggio Il nome del personaggio da selezionare.
+    */
     public void selezionaPersonaggio(String nomePersonaggio) {
         clientRete.sendCommand("CHIAMA", nomePersonaggio);
-        finestra.aggiornaBordiPersonaggi();
     }
     
     /**

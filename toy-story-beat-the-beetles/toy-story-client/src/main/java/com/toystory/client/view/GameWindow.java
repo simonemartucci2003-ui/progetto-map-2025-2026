@@ -68,7 +68,7 @@ public class GameWindow extends javax.swing.JFrame {
         
         // Selezione di default
         btnSelezionaWoody.setSelected(true); 
-        aggiornaBordiPersonaggi();
+        aggiornaBordiPersonaggi(null); 
         
         // --- 4. Avvio Controller ---
         this.controller = new GameWindowController(this);
@@ -445,20 +445,24 @@ public class GameWindow extends javax.swing.JFrame {
     }
     
     /**
-     * Aggiorna visivamente i bordi dei bottoni di selezione personaggio in base allo stato di selezione.
-     * (rosso/verde)
-     */
-    public void aggiornaBordiPersonaggi() {
-        
-        // Bordo Verde se selezionato, Rosso se non selezionato (spessore 3 pixel)
+    * Aggiorna visivamente i bordi dei bottoni di selezione personaggio (rosso/verde),
+    * riflettendo il personaggio attualmente confermato dal server tramite il token
+    * PERSONAGGIO_ATTIVO. Non riflette mai uno stato di selezione locale
+    * 
+    * @param nomeAttivo Il nome del personaggio attualmente controllato da questo client,
+    *                    o null se non ancora noto (es. all'avvio, prima della sincronizzazione).
+    */
+    public void aggiornaBordiPersonaggi(String nomeAttivo) {
         btnSelezionaWoody.setBorder(javax.swing.BorderFactory.createLineBorder(
-            btnSelezionaWoody.isSelected() ? java.awt.Color.GREEN : java.awt.Color.RED, 3));
-            
+            "Woody".equalsIgnoreCase(nomeAttivo) ? java.awt.Color.GREEN : java.awt.Color.RED, 3));
+
+        boolean buzzAttivo = nomeAttivo != null &&
+            (nomeAttivo.equalsIgnoreCase("Buzz") || nomeAttivo.equalsIgnoreCase("Buzz Lightyear"));
         btnSelezionaBuzz.setBorder(javax.swing.BorderFactory.createLineBorder(
-            btnSelezionaBuzz.isSelected() ? java.awt.Color.GREEN : java.awt.Color.RED, 3));
-            
+            buzzAttivo ? java.awt.Color.GREEN : java.awt.Color.RED, 3));
+
         btnSelezionaJessie.setBorder(javax.swing.BorderFactory.createLineBorder(
-            btnSelezionaJessie.isSelected() ? java.awt.Color.GREEN : java.awt.Color.RED, 3));
+            "Jessie".equalsIgnoreCase(nomeAttivo) ? java.awt.Color.GREEN : java.awt.Color.RED, 3));
     }
     
     /**
@@ -536,6 +540,7 @@ public class GameWindow extends javax.swing.JFrame {
         timer.setInitialDelay(1500);
         timer.start();
     }
+    
     
 
     // Variables declaration - do not modify//GEN-BEGIN:variables

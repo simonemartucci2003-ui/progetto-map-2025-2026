@@ -3,11 +3,13 @@ package com.toystory.server.impl;
 import com.toystory.server.GameDescription;
 import com.toystory.server.GameObserver;
 import com.toystory.server.type.*;
+import com.toystory.server.ClientState;
+import com.toystory.server.GameSession;
 
 public class PickUpObserver implements GameObserver {
 
     @Override
-    public String update(Command command, GameDescription state) {
+    public String update(Command command, GameDescription state, ClientState client, GameSession session) {
         // 1. Controllo: si attiva solo per il comando PRENDI
         if (command.getType() != CommandType.PRENDI) {
             return null;
@@ -18,8 +20,8 @@ public class PickUpObserver implements GameObserver {
             return "TESTO|Cosa vorresti raccogliere?";
         }
 
-        PlayableCharacter attivo = state.getCurrentPlayer();
-        Room currentRoom = state.getCurrentRoom();
+        PlayableCharacter attivo = client.getCurrentCharacter();  
+        Room currentRoom = client.getCurrentRoom();               
 
         // 2. SWITCH CASE: Smista l'azione in base a cosa abbiamo cliccato
         switch (target.toLowerCase()) {

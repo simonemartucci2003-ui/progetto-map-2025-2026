@@ -1,82 +1,76 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.toystory.server.impl;
 
+import com.toystory.server.ClientState;
 import com.toystory.server.GameDescription;
 import com.toystory.server.GameObserver;
+import com.toystory.server.GameSession;
 import com.toystory.server.type.Command;
 import com.toystory.server.type.CommandType;
 import com.toystory.server.type.PlayableCharacter;
-import com.toystory.server.type.Ability;
 
-/**
- * Gestore del cambio di personaggio attivo (Verbo CHIAMA).
- * Permette lo switch in tempo reale tra Woody e Buzz Lightyear, notificandone 
- * i cambiamenti di stato e le icone alla GUI del Client.
- */
 public class CallObserver implements GameObserver {
 
     @Override
-    public String update(Command command, GameDescription state) {
-        // 1. Controllo di competenza: si attiva SOLO per il comando CHIAMA
+    public String update(Command command, GameDescription state, ClientState client, GameSession session) {
         if (command.getType() != CommandType.CHIAMA) {
             return null;
         }
 
         String targetName = command.getTargetName();
-
         if (targetName == null || targetName.isEmpty()) {
             return "TESTO|Chi vorresti chiamare in azione?";
         }
 
-        // Recuperiamo il nome del personaggio attualmente attivo
-        String currentHeroName = state.getCurrentPlayer().getName();
+        PlayableCharacter attuale = client.getCurrentCharacter();
+        String nomeAttuale = attuale != null ? attuale.getName() : null;
 
-        // Se il giocatore prova a chiamare il personaggio che sta già controllando
-        if (currentHeroName.equalsIgnoreCase(targetName)) {
+        if (nomeAttuale != null && nomeAttuale.equalsIgnoreCase(targetName)) {
             return "TESTO|" + targetName.toUpperCase() + " è già sul posto e pronto a ricevere ordini!";
         }
 
-        // 2. LOGICA DI SWITCH LOGICO (Cerchiamo il personaggio nella memoria del gioco)
         PlayableCharacter nuovoEroe = null;
-        
-        // Scorriamo tutti i personaggi registrati in ToyStoryGame.java all'avvio
         for (PlayableCharacter p : state.getPlayers()) {
-            // Usiamo equalsIgnoreCase per match esatti
-            // Aggiungiamo un'eccezione morbida nel caso arrivi solo "Buzz" dal client
-            if (p.getName().equalsIgnoreCase(targetName) || 
+            if (p.getName().equalsIgnoreCase(targetName) ||
                (targetName.equalsIgnoreCase("Buzz") && p.getName().equalsIgnoreCase("Buzz Lightyear"))) {
                 nuovoEroe = p;
-                break; // Trovato! Usciamo dal ciclo
+                break;
             }
         }
-        
-        // Se il personaggio è stato trovato tra quelli disponibili
-        if (nuovoEroe != null){
-            
-            // Facciamo lo switch "fisico" impostandolo come giocatore corrente
-            state.setCurrentPlayer(nuovoEroe);
 
-            // Costruiamo la risposta per la grafica (TESTO + PROTOCOLLI GUI)
-            String risposta = "TESTO|" + currentHeroName + " fa un passo indietro. Ora controlli " + nuovoEroe.getName() + "!";
-
-            if (nuovoEroe.getName().equalsIgnoreCase("Buzz Lightyear")) {
-                risposta += " 'Verso l'infinito e oltre!'";
-            } else if (nuovoEroe.getName().equalsIgnoreCase("Woody")) {
-                risposta += " 'C'è un serpente nel mio stivale!'";
-            } else if (nuovoEroe.getName().equalsIgnoreCase("Jessie")) {
-                risposta += " 'Yee-haw!'";
-            }
-
-            // Riusiamo la stessa logica di stato condivisa con la sincronizzazione al resume
-            risposta += "|" + state.buildCharacterStatusFragment();
-
-            return risposta;
+        if (nuovoEroe == null) {
+            return "TESTO|Quel personaggio non fa parte della squadra o non è raggiungibile al momento.";
         }
 
-        // Se il nome cercato non è nella lista dei giocatori validi
-        return "TESTO|Quel personaggio non fa parte della squadra o non è raggiungibile al momento.";
+        if (session == null) {
+            // Modalità test locale offline: nessun altro giocatore, switch sempre libero
+            client.setCurrentCharacter(nuovoEroe);
+        } else {
+            boolean ok = session.switchCharacter(nuovoEroe, client);
+            if (!ok) {
+                return "TESTO|" + nuovoEroe.getName() + " è già controllato da un altro giocatore in questa partita! Scegline un altro.";
+            }
+        }
+
+        String risposta = "TESTO|" + (nomeAttuale != null ? nomeAttuale : "Il gruppo")
+                + " fa un passo indietro. Ora controlli " + nuovoEroe.getName() + "!";
+
+        if (nuovoEroe.getName().equalsIgnoreCase("Buzz Lightyear")) {
+            risposta += " 'Verso l'infinito e oltre!'";
+        } else if (nuovoEroe.getName().equalsIgnoreCase("Woody")) {
+            risposta += " 'C'è un serpente nel mio stivale!'";
+        } else if (nuovoEroe.getName().equalsIgnoreCase("Jessie")) {
+            risposta += " 'Yee-haw!'";
+        }
+
+        // Il personaggio richiamato potrebbe trovarsi in una stanza diversa da dove eri tu:
+        // aggiorniamo lo sfondo per riflettere la SUA posizione salvata.
+        if (client.getCurrentRoom() != null) {
+            String idStanza = client.getCurrentRoom().getName().toUpperCase().replace(" ", "_");
+            risposta += "|CAMBIA_SFONDO|" + idStanza;
+        }
+
+        risposta += "|" + state.buildCharacterStatusFragment(nuovoEroe);
+
+        return risposta;
     }
 }
