@@ -65,12 +65,12 @@ public class ToyStoryGame extends GameDescription {
 
         // 2. BUZZ LIGHTYEAR
         PlayableCharacter buzz = new PlayableCharacter(2, "Buzz Lightyear", "Lo space ranger Buzz Lightyear. Verso l'infinito e oltre.");
-        Ability laser = new Ability("Laser", "/images/skills/laser.png");
+        Ability laser = new Ability("Laser", "/Laser.png");
         buzz.setAbility(laser);
 
         // 3. JESSIE
         PlayableCharacter jessie = new PlayableCharacter(3, "Jessie", "La scattante cowgirl Jessie. Yodel-le-hi-hoo!");
-        Ability agilita = new Ability("Destrezza", "/images/skills/destrezza.png");
+        Ability agilita = new Ability("Destrezza", "/Destrezza.png");
         jessie.setAbility(agilita);
 
         // 4. SALVATAGGIO NELLA LISTA GLOBALE
@@ -254,7 +254,6 @@ public class ToyStoryGame extends GameDescription {
         corridoioPianoTerra.getObjects().add(portaCucinaObj);
         corridoioPianoTerra.getObjects().add(scaleObj);
         corridoioPianoTerra.getObjects().add(porticina);
-        corridoioPianoTerra.getObjects().add(portaCucinaObj);
         
         /*corridoioPianoTerra.getObjects().add(portaIngresso);
         corridoioPianoTerra.getObjects().add(giacche);
@@ -276,11 +275,11 @@ public class ToyStoryGame extends GameDescription {
         
         // Oggetto baule (solo scenario)
         AdvObject bauleMolly = new AdvObject(404, "baule_molly", "Il baule dei giocattoli. Sembra socchiuso.");
-        AdvObject letto = new AdvObject(405, "letto_molly", "") {};
+        AdvObject letto = new AdvObject(408, "letto_molly", "") {};
         AdvObject porta = new AdvObject(406, "porta_molly", "") {};
         AdvObject BoPeep = new AdvObject(407, "bo_peep", "") {};
-        cameraAndy.getObjects().add(bauleMolly);
-        cameraAndy.getObjects().add(letto);
+        cameraMolly.getObjects().add(bauleMolly);
+        cameraMolly.getObjects().add(letto);
         cameraMolly.getObjects().add(porta);
         cameraMolly.getObjects().add(pallina);
         cameraMolly.getObjects().add(forcina);
@@ -333,8 +332,8 @@ public class ToyStoryGame extends GameDescription {
         // 1. USCITE (I collegamenti bidirezionali)
         cucina.addExit("porta_interna_cucina", corridoioPianoTerra);
         
-        AdvObject scarafaggi = new AdvObject(603, "scarafaggi", "") {};
-        AdvObject porta = new AdvObject(604, "porta_interna_cucina", "") {};
+        AdvObject scarafaggi = new AdvObject(501, "scarafaggi", "") {};
+        AdvObject porta = new AdvObject(504, "porta_interna_cucina", "") {};
         
         cucina.getObjects().add(scarafaggi);
         cucina.getObjects().add(porta);

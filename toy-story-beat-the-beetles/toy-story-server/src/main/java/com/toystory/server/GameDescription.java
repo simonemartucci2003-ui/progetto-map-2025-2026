@@ -123,6 +123,17 @@ public abstract class GameDescription {
                 }
             }
         }
+        
+        // 2.5. Costruiamo un catalogo di TUTTI gli oggetti creati da init(),
+        // PRIMA di svuotare qualunque stanza. Senza questo passaggio, un 
+        // oggetto rimosso da una lista (con .clear() qui sotto) diventerebbe 
+        // irrintracciabile: quella lista era l'unico posto che lo referenziava.
+        Map<Integer, AdvObject> catalogoOggetti = new HashMap<>();
+        for (Room room : this.rooms) {
+            for (AdvObject obj : room.getObjects()) {
+                catalogoOggetti.put(obj.getId(), obj);
+            }
+        }
 
         // 3. Ripristino delle posizioni degli oggetti
         for (Room room : this.rooms) {
@@ -130,7 +141,7 @@ public abstract class GameDescription {
             List<Integer> objectIds = db.getObjectIdsInRoom(room.getId());
 
             for (Integer id : objectIds) {
-                AdvObject obj = findObjectById(id);
+                AdvObject obj = catalogoOggetti.get(id);;
                 if (obj != null) {
                     room.addObject(obj);
                     // Ripristino stato contenitori 
@@ -147,7 +158,7 @@ public abstract class GameDescription {
             List<Integer> inventoryIds = db.getInventory(player.getName());
             player.getPocket().clear();
             for (Integer id : inventoryIds) {
-                AdvObject obj = findObjectById(id);
+                AdvObject obj = catalogoOggetti.get(id);
                 if (obj != null && obj instanceof PickupableObject) {
                     player.getPocket().add((PickupableObject) obj);
                 }
@@ -160,7 +171,9 @@ public abstract class GameDescription {
 }
 
     /**
+     * @param id
      * Cerca un oggetto in memoria basandosi sul suo ID.
+     * @return 
      */
     protected AdvObject findObjectById(int id) {
         for (Room room : this.rooms) {
@@ -232,20 +245,20 @@ public abstract class GameDescription {
 
        if (nome.equalsIgnoreCase("Buzz Lightyear") || nome.equalsIgnoreCase("Buzz")) {
            sb.append("SWITCH_AVATAR|/images/avatars/buzz.png|");
-           sb.append("ABILITA|Laser|/images/skills/laser.png|");
+           sb.append("ABILITA|Laser|/Laser.png|");
 
        } else if (nome.equalsIgnoreCase("Woody")) {
            sb.append("SWITCH_AVATAR|/images/avatars/woody.png|");
            boolean lazoSbloccato = this.flags.getOrDefault("LAZO_UNLOCKED", false);
            if (lazoSbloccato) {
-               sb.append("ABILITA|Lazo|/images/skills/lazo.png|");
+               sb.append("ABILITA|Lazo|/Lazo.png|");
            } else {
                sb.append("ABILITA|Nessuna|vuoto|");
            }
 
        } else if (nome.equalsIgnoreCase("Jessie")) {
            sb.append("SWITCH_AVATAR|/images/avatars/jessie.png|");
-           sb.append("ABILITA|Destrezza|/images/skills/destrezza.png|");
+           sb.append("ABILITA|Destrezza|/Destrezza.png|");
        }
 
        sb.append("CLEAR_INVENTORY|OK");

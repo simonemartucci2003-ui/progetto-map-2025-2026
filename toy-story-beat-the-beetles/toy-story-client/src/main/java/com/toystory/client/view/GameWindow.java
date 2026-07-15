@@ -139,16 +139,16 @@ public class GameWindow extends javax.swing.JFrame {
     private void avviaNuovaPartita() {
         String gameId = this.clientRete.connectAndHandshake(true, "");
         if (gameId.equals("ERROR")) {
-            javax.swing.JOptionPane.showMessageDialog(this, 
-            "Partita creata!\n\n" +
-            "Il tuo ID è: " + gameId + "\n\n" +
-            "⚠ Annota questo codice: ti servirà per riprendere la partita in futuro.",
-            "Partita Creata",
-            javax.swing.JOptionPane.INFORMATION_MESSAGE);
+            javax.swing.JOptionPane.showMessageDialog(this, "Errore server.", "Errore", javax.swing.JOptionPane.ERROR_MESSAGE);
             System.exit(0);
         } else {
-            SaveManager.salvaPartita(gameId); // <--- Salvataggio ID
-            javax.swing.JOptionPane.showMessageDialog(this, "Partita creata! ID: " + gameId);
+            SaveManager.salvaPartita(gameId);
+            javax.swing.JOptionPane.showMessageDialog(this, 
+                    "Partita creata!\n\n" +
+                    "Il tuo ID è: " + gameId + "\n\n" +
+                    "⚠ Annota questo codice: ti servirà per riprendere la partita in futuro.",
+                    "Partita Creata",
+                    javax.swing.JOptionPane.INFORMATION_MESSAGE);
             this.setTitle("Toy Story - Partita ID: " + gameId);
         }
     }
@@ -270,7 +270,7 @@ public class GameWindow extends javax.swing.JFrame {
         pnlRappresentazioneStanza.setLayout(pnlRappresentazioneStanzaLayout);
         pnlRappresentazioneStanzaLayout.setHorizontalGroup(
             pnlRappresentazioneStanzaLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-            .addGap(0, 1116, Short.MAX_VALUE)
+            .addGap(0, 1152, Short.MAX_VALUE)
         );
         pnlRappresentazioneStanzaLayout.setVerticalGroup(
             pnlRappresentazioneStanzaLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
@@ -326,12 +326,13 @@ public class GameWindow extends javax.swing.JFrame {
 
         pnlTasche.setBorder(javax.swing.BorderFactory.createEmptyBorder(1, 50, 1, 50));
         pnlTasche.setMaximumSize(new java.awt.Dimension(32767, 30000));
-        pnlTasche.setLayout(new java.awt.GridLayout(2, 1, 0, 10));
+        pnlTasche.setLayout(new java.awt.GridLayout(2, 2, 0, 10));
 
         btnSlotInventario1.addActionListener(this::btnSlotInventario1ActionPerformed);
         pnlTasche.add(btnSlotInventario1);
 
         lblIconaAbilita.setText("abilita");
+        lblIconaAbilita.setPreferredSize(new java.awt.Dimension(100, 100));
         pnlTasche.add(lblIconaAbilita);
         pnlTasche.add(btnSlotInventario2);
 
@@ -392,7 +393,17 @@ public class GameWindow extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnMenuActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnMenuActionPerformed
-        // TODO add your handling code here:
+        int conferma = javax.swing.JOptionPane.showConfirmDialog(this,
+            "Vuoi tornare al menu principale? La partita in corso rimarrà comunque salvata.",
+            "Torna al menu",
+            javax.swing.JOptionPane.YES_NO_OPTION,
+            javax.swing.JOptionPane.QUESTION_MESSAGE);
+
+        if (conferma == javax.swing.JOptionPane.YES_OPTION) {
+            this.clientRete.disconnect();   // chiudiamo la connessione di rete in modo pulito
+            this.dispose();
+            java.awt.EventQueue.invokeLater(() -> new GameWindow().setVisible(true));
+        }
     }//GEN-LAST:event_btnMenuActionPerformed
 
     private void pnlRappresentazioneStanzaMouseClicked(java.awt.event.MouseEvent evt) {//GEN-FIRST:event_pnlRappresentazioneStanzaMouseClicked
@@ -586,7 +597,10 @@ public class GameWindow extends javax.swing.JFrame {
             try {
                 java.net.URL imgURL = getClass().getResource(icona);
                 if (imgURL != null) {
-                    lblIconaAbilita.setIcon(new javax.swing.ImageIcon(imgURL));
+                    javax.swing.ImageIcon iconaOriginale = new javax.swing.ImageIcon(imgURL);
+                    java.awt.Image imgScalata = iconaOriginale.getImage().getScaledInstance(60, 60, java.awt.Image.SCALE_SMOOTH);
+                
+                    lblIconaAbilita.setIcon(new javax.swing.ImageIcon(imgScalata));
                     lblIconaAbilita.setText(""); // Nasconde il testo per mostrare solo l'immagine
                 } else {
                     System.err.println("[GUI] Immagine abilità non trovata: " + icona);
@@ -686,11 +700,10 @@ public class GameWindow extends javax.swing.JFrame {
         String nomePulito = nomeOggetto.toUpperCase();
 
         // Controlliamo se il primo slot è libero
-        if (btnSlotInventario1.getText().equals("[Vuoto]")) {
+        if (btnSlotInventario1.getText().isEmpty() && btnSlotInventario1.getIcon() == null) {
             btnSlotInventario1.setText(nomePulito);
         } 
-        // Se il primo è pieno, proviamo col secondo
-        else if (btnSlotInventario2.getText().equals("[Vuoto]")) {
+        else if (btnSlotInventario2.getText().isEmpty() && btnSlotInventario2.getIcon() == null) {
             btnSlotInventario2.setText(nomePulito);
         } 
         // Se sono entrambi pieni (non dovrebbe succedere se il server fa i controlli, ma per sicurezza)
@@ -722,10 +735,10 @@ public class GameWindow extends javax.swing.JFrame {
     public void svuotaInventario() {
         // Togliamo le icone e rimettiamo la scritta [Vuoto]
         btnSlotInventario1.setIcon(null);
-        btnSlotInventario1.setText("[Vuoto]");
+        btnSlotInventario1.setText("");
         
         btnSlotInventario2.setIcon(null);
-        btnSlotInventario2.setText("[Vuoto]");
+        btnSlotInventario2.setText("");
     }
     
     // Aggiungi questo metodo in GameWindow.java
