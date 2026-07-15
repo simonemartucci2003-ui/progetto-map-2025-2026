@@ -32,6 +32,9 @@ public class TalkObserver implements GameObserver {
             
             case "topo":
                 return gestisciDialogoTopo(state);
+                
+            case "varco":
+                return gestisciDialogoScarafaggio(state);
             
             default:
                 return "TESTO|Non c'è nessuna risposta da " + target + ".";
@@ -51,6 +54,21 @@ public class TalkObserver implements GameObserver {
         } else {
             // DIALOGO PRE-GENERATORE (Iniziale)
             return "TESTO|" + Dialoghi.getDialogoTopo();
+        }
+    }
+    
+    /**
+     * Metodo privato per gestire il dialogo dinamico con il Topo.
+     */
+    private String gestisciDialogoScarafaggio(GameDescription state) {
+        boolean melaData = state.getFlags().getOrDefault("MELA_DATA", false);
+
+        if (melaData) {
+            // DIALOGO POST-MELA (Successo)
+            return "TESTO|" + Dialoghi.getDialogoScarafaggioCorotto();
+        } else {
+            // DIALOGO PRE-MELA (Iniziale)
+            return "TESTO|" + Dialoghi.getDialogoScarafaggioRetto();
         }
     }
     

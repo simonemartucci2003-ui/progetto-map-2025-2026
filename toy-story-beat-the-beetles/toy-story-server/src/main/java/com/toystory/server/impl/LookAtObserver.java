@@ -188,10 +188,7 @@ public class LookAtObserver implements GameObserver {
                 descrizione = Dialoghi.getDescrizioneTunnel();
                 return "TESTO|" + descrizione;
                 
-                default:
-                descrizione = "Lì non c'è nulla di interessante. ";
-                break;  
-                
+         
             //STANZA 1
             case "tunnel_ritorno":
                 descrizione = Dialoghi.getDescrizonetunnelRitorno();
@@ -207,7 +204,85 @@ public class LookAtObserver implements GameObserver {
                 
             case "tubo_buio":
                 descrizione = Dialoghi.getDescrizioneTuboBuio();
-                return "TESTO|" + descrizione;     
+                return "TESTO|" + descrizione;  
+                
+            
+            //STANZA BUIA 
+            case "tubo_ritorno":
+                descrizione = Dialoghi.getDescrizoneTuboRitorno();
+                return "TESTO|" + descrizione;
+                
+            case "generatore":
+                boolean generatoreAcceso = state.getFlags().getOrDefault("GENERATORE_ACCESO", false);
+                
+                if (!generatoreAcceso) {
+                        // cancello NON ancora aperta
+                         descrizione = Dialoghi.getDescrizioneGeneratore();
+                        return "TESTO|" + descrizione;
+                    } else {
+                        // porta aperta
+                        String testoDialogo = Dialoghi.getDescrizioneGeneratoreAcceso(); 
+                        return "TESTO|" + testoDialogo;
+                    }
+                
+            //CASA TOPO
+            case "topo_casa":
+                descrizione = Dialoghi.getDescrizoneTopoCasa();
+                return "TESTO|" + descrizione;
+                
+            case "porticina_ritorno":
+                descrizione = Dialoghi.getDescrizionePorticinaRitorno();
+                return "TESTO|" + descrizione;
+                
+            case "buco_stretto":
+                descrizione = Dialoghi.getDescrizioneBuco();
+                return "TESTO|" + descrizione;
+
+                
+            //STANZA LEVA
+            case "buco_stretto_ritorno":
+                 descrizione = Dialoghi.getDescrizioneBucoRitorno();
+                return "TESTO|" + descrizione;
+                
+            case "leva":
+                boolean LevaAggiustata = state.getFlags().getOrDefault("LEVA_AGGIUSTATA", false);
+                
+                if (!LevaAggiustata) {
+                        // leva NON ancora aggiustata
+                         descrizione = Dialoghi.getDescrizioneLeva();
+                        return "TESTO|" + descrizione;
+                    } else {
+                        // leva aggiustata
+                        String testoDialogo = Dialoghi.getDescrizioneLevaAggiustata(); 
+                        return "TESTO|" + testoDialogo;
+                    }
+            
+                
+            //FOGNA STANZA 2                
+            case "cancello_aperto":
+                descrizione = Dialoghi.getDescrizioneCancelloAperto();
+                return "TESTO|" + descrizione;
+                
+            case "scarafaggio_gigante":
+                boolean melaData = state.getFlags().getOrDefault("MELA_DATA", false);
+                
+                if (!melaData) {
+                        // mela NON ancora data
+                        descrizione = Dialoghi.getDescrizioneScarafaggio();
+                        return "TESTO|" + descrizione;
+                    } else {
+                        // mel data
+                        String testoDialogo = Dialoghi.getDescrizioneScarafaggioDopo(); 
+                        return "TESTO|" + testoDialogo;
+                    }
+
+
+                
+                
+                
+            default:
+                descrizione = "Lì non c'è nulla di interessante. ";
+                break;  
         }
         
        

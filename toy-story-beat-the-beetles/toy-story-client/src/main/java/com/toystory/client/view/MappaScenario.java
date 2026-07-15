@@ -144,7 +144,7 @@ public class MappaScenario {
         fognaStanza1.add(new BoundingBox(161, 357 , 206 , 505 , "tubo_buio", imgW, imgH));
         
         // 4.
-        fognaStanza1.add(new BoundingBox(1066, 1377 , 223 , 511 , "tunnel", imgW, imgH));
+        fognaStanza1.add(new BoundingBox(1066, 1377 , 223 , 511 , "tunnel_ritorno", imgW, imgH));
         
         stanze.put("FOGNE_PRIMA_STANZA",  fognaStanza1);
         
@@ -161,20 +161,20 @@ public class MappaScenario {
         // --- CASA TOPO ---
         List<BoundingBox> casaTopo = new ArrayList<>();
         // 1. 
-        casaTopo.add(new BoundingBox(289, 479 , 240 , 659 , "porticina", imgW, imgH));
+        casaTopo.add(new BoundingBox(289, 479 , 240 , 659 , "porticina_ritorno", imgW, imgH));
         
         // 2. 
         casaTopo.add(new BoundingBox(1216, 1341 , 88 , 256 , "buco_stretto", imgW, imgH));
         
         // 3. 
-        casaTopo.add(new BoundingBox(798, 938 , 394 , 597 , "topo", imgW, imgH));
+        casaTopo.add(new BoundingBox(798, 938 , 394 , 597 , "topo_casa", imgW, imgH));
         
         stanze.put("CASA_DEL_TOPO", casaTopo);
         
         // --- STANZA LEVA---
         List<BoundingBox> stanzaLeva = new ArrayList<>();
         // 1. 
-        stanzaLeva.add(new BoundingBox(311, 435 , 156 , 345 , "buco_stretto", imgW, imgH));
+        stanzaLeva.add(new BoundingBox(311, 435 , 156 , 345 , "buco_stretto_ritorno", imgW, imgH));
         
         // 2. 
         stanzaLeva.add(new BoundingBox(668, 806 , 300 ,469 , "leva", imgW, imgH));
@@ -189,7 +189,7 @@ public class MappaScenario {
         fognaStanza2.add(new BoundingBox(578, 860 , 215 , 521 , "varco", imgW, imgH));
         
         // 2. cancello per tornare indietro
-        fognaStanza2.add(new BoundingBox(166, 355 , 213 , 568 , "cancello", imgW, imgH));
+        fognaStanza2.add(new BoundingBox(166, 355 , 213 , 568 , "cancello_aperto", imgW, imgH));
         
         stanze.put("FOGNE_SECONDA_STANZA",  fognaStanza2);
         
