@@ -101,7 +101,6 @@ public class ToyStoryGame extends GameDescription {
      * <li>Richiamare i metodi {@code configure...()} per popolare ogni stanza di uscite e oggetti.</li>
      * <li>Sincronizzare il mondo appena creato con il database per la persistenza.</li>
      * </ol>
-     * </p>
      * 
      * @throws Exception Se si verifica un errore durante l'inizializzazione o la sincronizzazione col DB.
      */

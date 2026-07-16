@@ -13,7 +13,6 @@ import com.toystory.client.GameClient;
  *   <li>Aggiorna lo stato della vista e della logica interna ({@link MappaScenario}) 
  *       in risposta ai messaggi del server.</li>
  * </ul>
- * </p>
  * 
  */
 public class GameWindowController {

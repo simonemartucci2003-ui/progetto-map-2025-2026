@@ -60,7 +60,6 @@ public class ServerThread extends Thread {
      *   <li><b>Gameplay:</b> Ascolto continuo dei comandi (es. PRENDI, USA, GUARDA), 
      *       esecuzione tramite l'Engine e restituzione dell'esito.</li>
      * </ol>
-     * </p>
      */
     @Override
     public void run() {

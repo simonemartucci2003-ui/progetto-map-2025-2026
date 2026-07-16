@@ -55,7 +55,6 @@ public class ServerMain {
      *   <li>Apre un {@link ServerSocket} sulla porta predefinita.</li>
      *   <li>Entra in un loop infinito in cui accetta le connessioni dei client e delega la gestione a nuovi {@link ServerThread}.</li>
      * </ol>
-     * </p>
      * 
      * @param args Argomenti passati da riga di comando (attualmente non utilizzati).
      */

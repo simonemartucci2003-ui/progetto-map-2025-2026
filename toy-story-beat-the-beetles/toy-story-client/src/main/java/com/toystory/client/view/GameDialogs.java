@@ -14,13 +14,9 @@ import java.awt.Component;
  * si garantisce:
  * <ul>
  *   <li><b>Coerenza visiva</b>: un aspetto uniforme per tutti gli avvisi e le richieste.</li>
- *   <li><b>Manutenibilità</b>: se in futuro si volesse sostituire lo stile dei messaggi </li>
- *   <li><b>Semplicità</b>: il codice del controller rimane pulito, delegando la gestione 
- *       dei componenti UI a un'interfaccia dedicata.</li>
+ *   <li><b>Manutenibilità</b>: se in futuro si volesse sostituire lo stile dei messaggi.</li>
+ *   <li><b>Semplicità</b>: il codice del controller rimane pulito, delegando la gestione dei componenti UI a un'interfaccia dedicata.</li>
  * </ul>
- * </p>
- * 
- * @author simon
  */
 public class GameDialogs {
     /**

@@ -34,3 +34,4 @@ replay_pid*
 # Ignora file di configurazione locale o di log creati dal client
 last_game.txt
 recent_games.txt
+/toy-story-beat-the-beetles/target/
