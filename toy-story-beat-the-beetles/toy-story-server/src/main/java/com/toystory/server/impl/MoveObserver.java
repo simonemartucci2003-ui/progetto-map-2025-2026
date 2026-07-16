@@ -9,7 +9,7 @@ import com.toystory.server.type.CommandType;
 import com.toystory.server.type.Room;
 import com.toystory.server.type.PlayableCharacter;
 
-public class MoveObserver implements GameObserver {
+public class MoveObserver implements GameObserver<String> {
 
     @Override
     public String update(Command command, GameDescription state, ClientState client, GameSession session) {

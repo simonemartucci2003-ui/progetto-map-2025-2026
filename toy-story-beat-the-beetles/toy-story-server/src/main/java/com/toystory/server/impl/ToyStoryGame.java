@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.toystory.server.impl;
 
 import com.toystory.server.GameDescription;
@@ -119,7 +115,7 @@ public class ToyStoryGame extends GameDescription {
                 "La vasca ora è vuota; ecco cosa nascondeva il livello dell'acqua!"));
         bossFinale = registerRoom(new Room(15, "Boss", 
                 "L'antro del boss. Il pericolo è imminente, bisogna fare attenzione!"));
-        scenaFinale = registerRoom(new Room(16, "scenaFinale", ""));
+        scenaFinale = registerRoom(new Room(16, "Scena Finale", ""));
     
         // ---------------------------------------------------------------------
         // INIZIALIZZAZIONE PERSONAGGI GIOCABILI GLOBALI
@@ -155,6 +151,7 @@ public class ToyStoryGame extends GameDescription {
         configureStanzaAcqua();
         configureStanzaSenzaAcqua();
         configureBossFinale();
+        configureScenaFinale();
         
         //DATABASE
         // 2. Chiediamo alla classe base di occuparsi del database
@@ -471,13 +468,17 @@ public class ToyStoryGame extends GameDescription {
 
     private void configureBossFinale() {
       
-        bossFinale.addExit("botolaRitorno",scenaFinale);
+        bossFinale.addExit("TUTTO",scenaFinale);
         
-        AdvObject boss = new AdvObject(1501, "boss", "");
-        AdvObject botolaRitorno = new AdvObject(1410, "botolaRitorno", "");
+        AdvObject TUTTO = new AdvObject(1501, "TUTTO", "");
+    
+        bossFinale.getObjects().add(TUTTO);
         
-        bossFinale.getObjects().add(boss);
-        bossFinale.getObjects().add(botolaRitorno);
+    }
+    
+    private void configureScenaFinale() {
+      
+       
         
     }
 }

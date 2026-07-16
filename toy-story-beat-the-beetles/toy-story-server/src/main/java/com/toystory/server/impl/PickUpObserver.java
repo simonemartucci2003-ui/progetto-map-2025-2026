@@ -6,7 +6,7 @@ import com.toystory.server.type.*;
 import com.toystory.server.ClientState;
 import com.toystory.server.GameSession;
 
-public class PickUpObserver implements GameObserver {
+public class PickUpObserver implements GameObserver<String> {
 
     @Override
     public String update(Command command, GameDescription state, ClientState client, GameSession session) {
@@ -154,63 +154,56 @@ public class PickUpObserver implements GameObserver {
 
     
     
-    /**
-     * Metodo privato di supporto che contiene tutta la logica di raccolta standard.
-     * Evita di dover riscrivere i controlli di Database e Inventario per ogni singolo oggetto!
-     */
+   // In PickUpObserver.java, sostituisci il corpo di eseguiRaccolta con una versione
+    // che calcola prima un ActionResult<PickupableObject>, poi lo traduce in stringa.
+
     private String eseguiRaccolta(String nomeDaCercare, String targetOriginale, GameDescription state, PlayableCharacter attivo, Room currentRoom) {
-        
-        // 3. Cerchiamo l'oggetto nella stanza
+        ActionResult<PickupableObject> risultato = tentaRaccolta(nomeDaCercare, targetOriginale, state, attivo, currentRoom);
+
+        if (!risultato.isSuccess()) {
+            return "TESTO|" + risultato.getMessage();
+        }
+
+        PickupableObject obj = risultato.getPayload();
+        return "TESTO|" + risultato.getMessage() + "|INVENTARIO|" + obj.getName() + "|" + obj.getIcona();
+    }
+
+    private ActionResult<PickupableObject> tentaRaccolta(String nomeDaCercare, String targetOriginale, GameDescription state, PlayableCharacter attivo, Room currentRoom) {
         AdvObject targetObj = currentRoom.getObjects().stream()
                 .filter(obj -> obj.getName().equalsIgnoreCase(nomeDaCercare))
                 .findFirst()
                 .orElse(null);
 
-        // 4. Feedback se l'oggetto non esiste
         if (targetObj == null) {
-            if (targetOriginale.equalsIgnoreCase("libreria")) {
-                return "TESTO|Hai già rovistato qui e hai preso tutto quello che c'era.";
-            } else {
-                return "TESTO|Non vedi niente di interessante da prendere.";
-            }
+            String msg = targetOriginale.equalsIgnoreCase("libreria")
+                    ? "Hai già rovistato qui e hai preso tutto quello che c'era."
+                    : "Non vedi niente di interessante da prendere.";
+            return ActionResult.fail(msg);
         }
 
-        // 5. Controllo se l'oggetto è raccoglibile
         if (!(targetObj instanceof PickupableObject)) {
-            return "TESTO|Non puoi raccogliere " + targetObj.getName() + ", è un elemento fisso dello scenario.";
+            return ActionResult.fail("Non puoi raccogliere " + targetObj.getName() + ", è un elemento fisso dello scenario.");
         }
 
         PickupableObject oggettoRaccoglibile = (PickupableObject) targetObj;
 
-        // BLOCCO ANTI-DUPLICAZIONE (Controlla le tasche)
         boolean giaInTasca = attivo.getPocket().stream()
                 .anyMatch(obj -> obj.getName().equalsIgnoreCase(oggettoRaccoglibile.getName()));
-
         if (giaInTasca) {
-            return "TESTO|Hai già questo oggetto nello zaino!";
+            return ActionResult.fail("Hai già questo oggetto nello zaino!");
         }
 
-        // 6. Tenta di aggiungere all'inventario
-        if (attivo.addToInventory(oggettoRaccoglibile)) { 
-            
-            // Rimuoviamo dalla stanza
-            currentRoom.removeObject(oggettoRaccoglibile);
-
-            // Aggiornamento Database
-            try {
-                state.getDb().addToInventory(attivo.getName(), oggettoRaccoglibile.getId());
-            } catch (Exception e) {
-                System.err.println("[PickUpObserver] Errore DB: " + e.getMessage());
-            }
-            
-            String nomeFileIcona = oggettoRaccoglibile.getIcona();
-            
-            // Risposta dinamica: il nome dell'oggetto e la sua icona
-            return "TESTO|Hai dato " + oggettoRaccoglibile.getName() + " a " + attivo.getName() + 
-                   "!|INVENTARIO|" + oggettoRaccoglibile.getName() + "|" + nomeFileIcona;
-                   
-        } else {
-            return "TESTO|Le tasche di " + attivo.getName() + " sono piene!";
+        if (!attivo.addToInventory(oggettoRaccoglibile)) {
+            return ActionResult.fail("Le tasche di " + attivo.getName() + " sono piene!");
         }
+
+        currentRoom.removeObject(oggettoRaccoglibile);
+        try {
+            state.getDb().addToInventory(attivo.getName(), oggettoRaccoglibile.getId());
+        } catch (Exception e) {
+            System.err.println("[PickUpObserver] Errore DB: " + e.getMessage());
+        }
+
+        return ActionResult.ok("Hai dato " + oggettoRaccoglibile.getName() + " a " + attivo.getName() + "!", oggettoRaccoglibile);
     }
 }

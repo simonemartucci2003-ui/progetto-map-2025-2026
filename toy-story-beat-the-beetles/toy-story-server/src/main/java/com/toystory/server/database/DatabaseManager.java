@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.toystory.server.database;
 
 import java.sql.*;
@@ -95,7 +91,7 @@ public class DatabaseManager {
 
     // Inserisce un oggetto nel database
     public void insertObject(AdvObject obj, int roomId) throws SQLException {
-        String sql = "INSERT INTO game_objects (id, name, room_id, is_open, is_locked) VALUES (?, ?, ?)";
+        String sql = "INSERT INTO game_objects (id, name, room_id) VALUES (?, ?, ?)";
         try (PreparedStatement pstm = conn.prepareStatement(sql)) {
             pstm.setInt(1, obj.getId());
             pstm.setString(2, obj.getName());
@@ -154,20 +150,28 @@ public class DatabaseManager {
         }
     }
    
-    // Interroga il database per recuperare il valore attuale 
-    // di un flag tramite una SELECT
-    public boolean getFlag(String key) throws SQLException { //Recupera uno stato dal database
-        String sql = "SELECT value FROM game_flags WHERE key = ?"; //cercare il valore associato a una specifica chiave
-        try (PreparedStatement pstm = conn.prepareStatement(sql)) {
-            pstm.setString(1, key);
-            try (ResultSet rs = pstm.executeQuery()) { //Il risultato viene memorizzato in un ResultSet
-                if (rs.next()) {
-                   // CORREZIONE: Convertiamo la stringa "true"/"false" del DB in un vero boolean Java
-                    return Boolean.parseBoolean(rs.getString("value"));
-                }
-            }
+
+    /**
+     * Metodo generico: recupera un flag dal database e lo converte 
+     * automaticamente nel tipo richiesto (Integer, Boolean, String...).
+     * Il parametro Class<T> serve a "portare" l'informazione di tipo 
+     * a runtime, altrimenti persa per via della cancellazione dei generics.
+     */
+    public <T> T getFlagAs(String key, Class<T> type) throws SQLException {
+        String value = getFlagAsString(key);
+        if (value == null) {
+            return null;
         }
-        return false;
+
+        if (type == Boolean.class) {
+            return type.cast(Boolean.parseBoolean(value));
+        } else if (type == Integer.class) {
+            return type.cast(Integer.parseInt(value));
+        } else if (type == String.class) {
+            return type.cast(value);
+        }
+
+        throw new IllegalArgumentException("Tipo non supportato per getFlagAs: " + type.getSimpleName());
     }
 
     // Recupera gli oggetti in una stanza (per ricostruire la stanza all'avvio)

@@ -7,7 +7,7 @@ import com.toystory.server.type.CommandType;
 import com.toystory.server.ClientState;
 import com.toystory.server.GameSession;
 
-public class TalkObserver implements GameObserver {
+public class TalkObserver implements GameObserver<String> {
 
     @Override
     public String update(Command command, GameDescription state, ClientState client, GameSession session) {

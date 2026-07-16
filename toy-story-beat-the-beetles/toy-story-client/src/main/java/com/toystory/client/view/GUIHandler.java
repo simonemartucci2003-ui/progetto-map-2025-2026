@@ -66,8 +66,6 @@ public class GUIHandler {
                     break;
                     
                 case "SWITCH_AVATAR":
-                    // Cambia il personaggio utilizzabile
-                    finestra.cambiaIconaAvatar(valore);
                     i += 2;
                     break;
                     

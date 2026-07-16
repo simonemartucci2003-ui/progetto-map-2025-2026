@@ -7,7 +7,7 @@ import com.toystory.server.type.CommandType;
 import com.toystory.server.ClientState;
 import com.toystory.server.GameSession;
 
-public class LookAtObserver implements GameObserver {
+public class LookAtObserver implements GameObserver<String> {
 
     @Override
     public String update(Command command, GameDescription state, ClientState client, GameSession session) {

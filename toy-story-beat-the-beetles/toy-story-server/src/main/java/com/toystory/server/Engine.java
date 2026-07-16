@@ -4,7 +4,7 @@ import com.toystory.server.impl.ToyStoryGame;
 import com.toystory.server.type.Command;
 import com.toystory.server.type.CommandType;
 
-public class Engine extends GameObservable {
+public class Engine extends GameObservable<String>  {
 
     private final ToyStoryGame game;
 
@@ -23,7 +23,7 @@ public class Engine extends GameObservable {
             return "TESTO|Azione non valida.";
         }
         Command comando = new Command(type, targetName);
-        return this.notifyObservers(comando, game, client, session);
+        return this.notifyObservers(comando, game, client, session, "TESTO|Non succede nulla. Non è un'azione valida in questo momento.");
     }
 
     public String buildResumeSyncMessage(ClientState client) {

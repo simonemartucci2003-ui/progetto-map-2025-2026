@@ -426,24 +426,7 @@ public class GameWindow extends javax.swing.JFrame {
         }
     }
 
-    
-    /**
-     * Mostra l'immagine del personaggio giocabile nell'interfaccia.
-     * @param imagePath Percorso del file immagine dell'avatar.
-     */
-    public void cambiaIconaAvatar(String imagePath) {
-        try {
-            java.net.URL imgURL = getClass().getResource(imagePath);
-            if (imgURL != null) {
-                labelAvatar.setIcon(new javax.swing.ImageIcon(imgURL)); 
-            } else {
-                System.err.println("[GUI] Immagine avatar non trovata: " + imagePath);
-            }
-        } catch (Exception e) {
-            System.err.println("[GUI] Errore caricamento avatar: " + e.getMessage());
-        }
-    }
-    
+
     /**
     * Aggiorna visivamente i bordi dei bottoni di selezione personaggio (rosso/verde),
     * riflettendo il personaggio attualmente confermato dal server tramite il token

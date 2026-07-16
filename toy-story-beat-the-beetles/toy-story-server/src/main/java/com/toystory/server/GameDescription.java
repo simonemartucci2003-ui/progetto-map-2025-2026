@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.toystory.server;
 
 import com.toystory.server.type.AdvObject;
@@ -239,10 +235,10 @@ public abstract class GameDescription {
         sb.append("PERSONAGGIO_ATTIVO|").append(nome);
 
         if (nome.equalsIgnoreCase("Buzz Lightyear") || nome.equalsIgnoreCase("Buzz")) {
-            sb.append("|SWITCH_AVATAR|/images/avatars/buzz.png|");
+            sb.append("|SWITCH_AVATAR|/avatars/buzz.png|");
             sb.append("ABILITA|Laser|/Laser.png|");
         } else if (nome.equalsIgnoreCase("Woody")) {
-            sb.append("|SWITCH_AVATAR|/images/avatars/woody.png|");
+            sb.append("|SWITCH_AVATAR|/avatars/woody.png|");
             boolean lazoSbloccato = this.flags.getOrDefault("LAZO_UNLOCKED", false);
             if (lazoSbloccato) {
                 sb.append("ABILITA|Lazo|/Lazo.png|");
@@ -250,7 +246,7 @@ public abstract class GameDescription {
                 sb.append("ABILITA|Nessuna|vuoto|");
             }
         } else if (nome.equalsIgnoreCase("Jessie")) {
-            sb.append("|SWITCH_AVATAR|/images/avatars/jessie.png|");
+            sb.append("|SWITCH_AVATAR|/avatars/jessie.png|");
             sb.append("ABILITA|Destrezza|/Destrezza.png|");
         }
 
@@ -282,9 +278,8 @@ public abstract class GameDescription {
     public Room loadCharacterRoom(PlayableCharacter character) {
         if (this.db == null || character == null) return null;
         try {
-            String roomIdStr = this.db.getFlagAsString("ROOM_OF_" + character.getId());
-            if (roomIdStr != null) {
-                int savedRoomId = Integer.parseInt(roomIdStr);
+            Integer savedRoomId = this.db.getFlagAs("ROOM_OF_" + character.getId(), Integer.class);
+            if (savedRoomId != null) {
                 for (Room r : this.rooms) {
                     if (r.getId() == savedRoomId) return r;
                 }
