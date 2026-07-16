@@ -20,7 +20,6 @@ import java.util.function.Consumer;
  * la gestione dei messaggi ricevuti a qualsiasi classe esterna (es. il Controller).
  * </p>
  * 
- * @author simon
  */
 public class GameClient {
 

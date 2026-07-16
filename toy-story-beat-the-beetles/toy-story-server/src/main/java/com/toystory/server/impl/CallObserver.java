@@ -8,8 +8,37 @@ import com.toystory.server.type.Command;
 import com.toystory.server.type.CommandType;
 import com.toystory.server.type.PlayableCharacter;
 
+/**
+ * Osservatore dedicato alla gestione del comando per richiamare o cambiare il personaggio giocante.
+ * <p>
+ * Questa classe implementa l'interfaccia {@link GameObserver} e intercetta i comandi di tipo 
+ * {@link CommandType#CHIAMA}. Gestisce la transizione di un client da un personaggio all'altro,
+ * verificando la disponibilità del personaggio richiesto (sia in modalità singola che multiplayer)
+ * e formulando la corretta risposta testuale e visiva da inviare al client.
+ * </p>
+ */
 public class CallObserver implements GameObserver<String> {
-
+    
+    /**
+     * Elabora il comando inviato dal client per prendere il controllo di un nuovo personaggio.
+     * 
+     * <p>Il metodo esegue i seguenti controlli:</p>
+     * <ul>
+     * <li>Verifica che il comando sia di tipo CHIAMA, altrimenti viene ignorato.</li>
+     * <li>Verifica se il bersaglio è valido, se fa parte della squadra e se non è già il personaggio attuale.</li>
+     * <li>Gestisce il passaggio di controllo all'interno della {@link GameSession}, bloccandolo se 
+     * il personaggio è già controllato da un altro utente.</li>
+     * <li>Genera una stringa di risposta che aggiorna il testo della chat, lo sfondo della stanza 
+     * e le statistiche del nuovo personaggio.</li>
+     * </ul>
+     *
+     * @param command Il comando inviato dal giocatore.
+     * @param state   L'oggetto che descrive lo stato generale del gioco (es. lista di tutti i personaggi disponibili).
+     * @param client  Lo stato specifico del client che ha effettuato la richiesta.
+     * @param session La sessione di gioco multiplayer attuale.
+     * @return Una stringa formattata contenente i dati di risposta da inviare al client, 
+     *         oppure {@code null} se il comando non è di competenza di questo observer.
+     */
     @Override
     public String update(Command command, GameDescription state, ClientState client, GameSession session) {
         if (command.getType() != CommandType.CHIAMA) {

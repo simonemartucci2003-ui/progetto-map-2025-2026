@@ -7,11 +7,39 @@ import com.toystory.server.type.CommandType;
 import com.toystory.server.ClientState;
 import com.toystory.server.GameSession;
 
+/**
+ * Osservatore dedicato alla gestione del comando GUARDA.
+ * <p>
+ * Questa classe intercetta i comandi di tipo {@link CommandType#GUARDA} e restituisce 
+ * al client la descrizione dell'oggetto o dell'elemento ambientale richiesto. 
+ * Molte descrizioni sono dinamiche e variano in base allo stato di avanzamento 
+ * del gioco (verificando specifici flag all'interno di {@link GameDescription}).
+ * </p>
+ */
 public class LookAtObserver implements GameObserver<String> {
 
+    /**
+     * Elabora il comando "GUARDA" inviato dal giocatore per esaminare un elemento dell'ambiente.
+     * 
+     * <p>Il metodo esegue le seguenti operazioni:</p>
+     * <ul>
+     * <li>Verifica che il comando sia effettivamente di tipo GUARDA.</li>
+     * <li>Controlla se è stato specificato un bersaglio (target). Se assente, chiede cosa si vuole guardare.</li>
+     * <li>Tramite uno switch sul nome dell'oggetto, recupera la stringa di testo corretta dalla classe {@link Dialoghi}.</li>
+     * <li>Per oggetti interattivi, valuta i flag di stato 
+     * correnti per fornire una descrizione coerente con gli eventi già risolti dal giocatore.</li>
+     * </ul>
+     *
+     * @param command Il comando inviato dal giocatore.
+     * @param state   Lo stato globale della partita, utilizzato per leggere i flag degli eventi (es. BAULE_APERTO).
+     * @param client  Lo stato specifico del client che ha richiesto l'ispezione.
+     * @param session La sessione di gioco.
+     * @return Una stringa formattata (inizia con "TESTO|") contenente la descrizione dell'oggetto, 
+     *         oppure {@code null} se il comando non è di competenza di questo observer.
+     */
     @Override
     public String update(Command command, GameDescription state, ClientState client, GameSession session) {
-        // 1. Si attiva solo per il comando GUARDA
+        // Si attiva solo per il comando GUARDA
         if (command.getType() != CommandType.GUARDA) {
             return null;
         }
@@ -44,7 +72,7 @@ public class LookAtObserver implements GameObserver<String> {
                     }
         
             case "letto":
-                // 1. Controlliamo la memoria del gioco: il baule è aperto o chiuso?
+                // Controlliamo la memoria del gioco: il baule è aperto o chiuso?
                 // Se il flag non esiste ancora, getOrDefault restituisce 'false' (baule chiuso).
                 bauleAperto = state.getFlags().getOrDefault("BAULE_APERTO", false);
                 boolean lazoSbloccatoLetto = state.getFlags().getOrDefault("LAZO_UNLOCKED", false);
