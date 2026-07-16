@@ -1,12 +1,9 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.toystory.server;
 
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -14,36 +11,57 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Classe Main del Server per l'applicazione Toy Story.
- * Si occupa di inizializzare lo stato univoco del gioco, configurare il motore 
- * logico (Engine) e gestire l'accettazione dei client tramite una ServerSocket.
- * Mantiene inoltre il registro globale dei thread per la funzionalità multiplayer.
- * * @author Il Tuo Nome / Gruppo
+ * Classe entry-point principale per l'esecuzione del Server di gioco.
+ * <p>
+ * Ha la responsabilità di avviare l'infrastruttura di rete mettendosi in ascolto 
+ * delle richieste in ingresso dai client. Gestisce inoltre il registro globale 
+ * delle sessioni di gioco attive e dei thread dei singoli giocatori, garantendo 
+ * che le risorse (come le connessioni al database) vengano rilasciate correttamente 
+ * alla chiusura dell'applicazione.
+ * </p>
  */
 public class ServerMain {
 
-    /** Porta standard sulla quale il server rimarrà in ascolto */
+    /** 
+     * Porta TCP standard sulla quale il server rimarrà in ascolto per le connessioni in ingresso. 
+     */
     public static final int PORT = 6666; // Messa public così anche il Client può leggerla se serve
     
-    /** * Lista thread-safe globale che contiene tutti i ServerThread attivi.
-     * Utilizzata per inviare i messaggi in broadcast (multiplayer cooperativo) 
-     * in modo che ogni modifica al mondo di gioco sia istantaneamente visibile a tutti.
+    /** 
+     * Lista thread-safe globale che contiene tutti i {@link ServerThread} attualmente attivi.
+     * <p>
+     * Utilizzata per monitorare i giocatori connessi e per permettere, in caso di necessità, 
+     * l'invio di messaggi broadcast a livello globale (attraverso tutte le sessioni).
+     * </p>
      */
     public static final List<ServerThread> clientThreads = Collections.synchronizedList(new ArrayList<>());
 
     /** 
-     * NUOVO: Il registro globale di tutte le stanze (GameSession) attive.
-     * Mappa l'ID della partita (es. "AB1234") alla rispettiva sessione in memoria.
+     * Registro globale di tutte le stanze (o partite) attive nel server.
+     * <p>
+     * Mappa l'ID alfanumerico univoco della partita (es. "AB1234") all'istanza 
+     * della relativa {@link GameSession}, permettendo ai nuovi client di unirsi 
+     * in tempo reale a una partita esistente in modo thread-safe.
+     * </p>
      */
     public static final Map<String, GameSession> activeSessions = new ConcurrentHashMap<>();
     
     /**
-     * Punto di ingresso principale del Server.
-     * * @param args Argomenti della riga di comando (non utilizzati).
-     * @param args
+     * Punto di avvio dell'applicazione Server.
+     * <p>
+     * Esegue le seguenti operazioni sequenziali:
+     * <ol>
+     *   <li>Registra un <i>Shutdown Hook</i> per chiudere in sicurezza tutti i database all'arresto.</li>
+     *   <li>Apre un {@link ServerSocket} sulla porta predefinita.</li>
+     *   <li>Entra in un loop infinito in cui accetta le connessioni dei client e delega la gestione a nuovi {@link ServerThread}.</li>
+     * </ol>
+     * </p>
+     * 
+     * @param args Argomenti passati da riga di comando (attualmente non utilizzati).
      */
     public static void main(String[] args) {
-        // AGGIORNAMENTO:Shutdown Hook per chiudere TUTTI i database delle sessioni in sicurezza
+        // Registrazione dello Shutdown Hook per garantire la chiusura sicura dei database
+        // quando il processo del server viene interrotto (es. CTRL+C o chiusura forzata).
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             System.out.println("[Server] Spegnimento in corso, salvataggio dei database...");
             for (GameSession session : activeSessions.values()) {
@@ -52,13 +70,12 @@ public class ServerMain {
                         session.getDb().closeConnection();
                         System.out.println("[Server] Salvato DB per la partita: " + session.getGameId());
                     }
-                } catch (Exception e) {
+                } catch (SQLException e) {
                     System.err.println("[Server] Errore chiusura DB per la partita " + session.getGameId() + ": " + e.getMessage());
                 }
             }
         }));
-
-
+        
         System.out.println("==========================================");
         System.out.println("   TOY STORY MULTIPLAYER SERVER STARTED   ");
         System.out.println("==========================================");
@@ -66,24 +83,23 @@ public class ServerMain {
         try {
             
 
-            // 3. Apertura della ServerSocket protetta da un blocco try-with-resources
+            // Apertura del socket del server protetto dal costrutto try-with-resources
             try (ServerSocket serverSocket = new ServerSocket(PORT)) {
                 System.out.println("[Server] In ascolto dei client sulla porta " + PORT + "...");
 
-                // Ciclo infinito di ascolto: il server non muore mai e accetta continuamente connessioni
+                // Ciclo infinito di ascolto: il server accetta continuamente nuove connessioni
                 while (true) {
-                    // Il server si blocca qui finché un modulo client non effettua il "connect"
+                    // Il thread principale si blocca (listen) finché un client non si connette
                     Socket clientSocket = serverSocket.accept();
                     System.out.println("[Server] Nuovo giocatore connesso dal Client: " + clientSocket.getRemoteSocketAddress());
 
-                    // 4. Istanziamo un Thread dedicato a gestire la comunicazione con questo specifico client
-                    // Passiamo l'engine UNICO per mantenere lo stato condiviso tra tutti i giocatori
+                    // Istanziamo un Thread dedicato a gestire la comunicazione bidirezionale con questo specifico client
                     ServerThread thread = new ServerThread(clientSocket);
                     
                     // Registriamo il thread appena creato nella lista globale prima di avviarlo
                     clientThreads.add(thread);
                     
-                    // Avviamo il thread (invocando internamente il metodo run())
+                    // Avviamo il thread, che eseguirà il proprio metodo run() in parallelo
                     thread.start();
                 }
                 
@@ -93,7 +109,6 @@ public class ServerMain {
 
         } catch (Exception e) {
             System.err.println("[Server] Errore fatale durante l'inizializzazione del gioco: " + e.getMessage());
-            e.printStackTrace();
         }
     }
 }
