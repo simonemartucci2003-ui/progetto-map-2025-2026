@@ -8,8 +8,35 @@ import com.toystory.server.type.PlayableCharacter;
 import com.toystory.server.ClientState;
 import com.toystory.server.GameSession;
 
+/**
+ * Osservatore dedicato alla gestione del comando USA.
+ * <p>
+ * Questa classe intercetta i comandi di tipo {@link CommandType#USA} e gestisce
+ * l'interazione tra gli oggetti presenti nell'inventario del personaggio e gli elementi 
+ * dell'ambiente circostante. Risolve gli enigmi verificando che il giocatore possieda 
+ * l'oggetto corretto, aggiorna i flag di stato della partita e consuma l'oggetto 
+ * rimuovendolo dall'inventario e dal database.
+ * </p>
+ */
 public class UseObserver implements GameObserver<String> {
 
+    /**
+     * Elabora il comando "USA" inviato dal giocatore per interagire con un elemento dell'ambiente.
+     * 
+     * <p>Il metodo esegue i seguenti passaggi:</p>
+     * <ul>
+     * <li>Verifica che il comando sia di tipo USA.</li>
+     * <li>Controlla che sia stato specificato un bersaglio valido.</li>
+     * <li>Smista la richiesta al metodo specifico per l'oggetto ambientale indicato tramite un blocco switch.</li>
+     * </ul>
+     *
+     * @param command Il comando inviato dal giocatore, contenente il bersaglio (target) dell'azione.
+     * @param state   Lo stato globale della partita (per controllare e salvare i flag degli enigmi risolti).
+     * @param client  Lo stato del client, utile per recuperare il personaggio attivo e il suo inventario.
+     * @param session La sessione di gioco multiplayer attuale.
+     * @return Una stringa formattata contenente il testo narrativo ed eventuali comandi di aggiornamento 
+     *         dell'interfaccia (es. aggiornamento dell'inventario grafico), oppure {@code null} se ignorato.
+     */
     @Override
     public String update(Command command, GameDescription state, ClientState client, GameSession session) {
         // 1. Controllo: si attiva solo per il comando USA
@@ -53,6 +80,10 @@ public class UseObserver implements GameObserver<String> {
     // METODI PRIVATI PER LA LOGICA DEI SINGOLI OGGETTI
     // ===================================================================================
 
+    /**
+     * Gestisce l'interazione con il baule nella stanza di Andy.
+     * Richiede la "chiave" nell'inventario per essere aperto.
+     */
     private String gestisciBaule(GameDescription state, PlayableCharacter attivo) {
         boolean bauleAperto = state.getFlags().getOrDefault("BAULE_APERTO", false);
         if (bauleAperto) {
@@ -73,7 +104,10 @@ public class UseObserver implements GameObserver<String> {
         return aggiornaInventarioDopoUso(Dialoghi.getDialogoBauleAperto(), attivo);
     }
 
-
+    /**
+     * Gestisce l'interazione con la porta della cucina.
+     * Richiede la "pallina" nell'inventario per distrarre Buster.
+     */
     private String gestisciPortaCucina(GameDescription state, PlayableCharacter attivo) {
         boolean portaSbloccata = state.getFlags().getOrDefault("PORTA_SBLOCCATA", false);
         if (portaSbloccata) {
@@ -94,7 +128,10 @@ public class UseObserver implements GameObserver<String> {
         return aggiornaInventarioDopoUso(Dialoghi.getDialogoPortaCucinaAperta(), attivo);
     }
 
-
+    /**
+     * Gestisce l'apertura del cancello per le fogne.
+     * Richiede la "forcina" nell'inventario per scassinare il lucchetto.
+     */
     private String gestisciCancello(GameDescription state, PlayableCharacter attivo) {
         boolean cancelloSbloccato = state.getFlags().getOrDefault("CANCELLO_SBLOCCATO", false);
         if (cancelloSbloccato) {
@@ -115,7 +152,10 @@ public class UseObserver implements GameObserver<String> {
         return aggiornaInventarioDopoUso(Dialoghi.getDialogoCancelloAperto(), attivo);
     }
 
-
+    /**
+     * Gestisce l'accensione del generatore.
+     * Non richiede oggetti specifici nell'inventario, basta interagire con l'elemento.
+     */
     private String gestisciGeneratore(GameDescription state) {
         boolean generatoreAcceso = state.getFlags().getOrDefault("GENERATORE_ACCESO", false);
         
@@ -128,6 +168,10 @@ public class UseObserver implements GameObserver<String> {
             "Buzz: Missione compiuta ragazzi!";
     }
     
+    /**
+     * Gestisce l'interazione con la leva difettosa.
+     * Richiede il "rametto" nell'inventario per effettuare la riparazione.
+     */
     private String gestisciLeva(GameDescription state, PlayableCharacter attivo) {
         boolean LevaAggiustata = state.getFlags().getOrDefault("LEVA_AGGIUSTATA", false);
         
@@ -149,6 +193,10 @@ public class UseObserver implements GameObserver<String> {
         return aggiornaInventarioDopoUso(Dialoghi.getDialogoLevaAggiustata(), attivo);
     }
     
+    /**
+     * Gestisce l'interazione con lo scarafaggio gigante che blocca il varco.
+     * Richiede il "torsolo" di mela nell'inventario per essere distratto.
+     */
     private String gestisciScarafaggio(GameDescription state, PlayableCharacter attivo) {
         boolean melaData = state.getFlags().getOrDefault("MELA_DATA", false);
         
@@ -176,7 +224,12 @@ public class UseObserver implements GameObserver<String> {
     // ===================================================================================
 
     /**
-     * Rimuove l'oggetto dalla memoria dell'inventario e dal Database.
+     * Rimuove un oggetto consumabile dalla memoria dell'inventario del personaggio 
+     * e aggiorna la situazione nel Database.
+     *
+     * @param nomeOggetto Il nome dell'oggetto da consumare.
+     * @param attivo      Il personaggio che sta utilizzando l'oggetto.
+     * @param state       Lo stato globale che fornisce l'accesso al database.
      */
     private void consumaOggetto(String nomeOggetto, PlayableCharacter attivo, GameDescription state) {
         com.toystory.server.type.PickupableObject oggettoDaUsare = (com.toystory.server.type.PickupableObject) attivo.getPocket().stream()
@@ -195,8 +248,13 @@ public class UseObserver implements GameObserver<String> {
     }
 
     /**
-     * Costruisce la stringa di risposta finale, formattando il testo e accodando 
-     * i comandi necessari per rinfrescare l'interfaccia grafica dell'inventario.
+     * Costruisce la stringa di risposta finale da inviare al client, accodando 
+     * i comandi necessari per svuotare l'interfaccia grafica dell'inventario 
+     * in modo che rifletta l'avvenuta rimozione dell'oggetto usato.
+     *
+     * @param testoNarrativo Il dialogo o testo di descrizione generato dall'azione.
+     * @param attivo         Il personaggio per cui ricalcolare gli elementi dell'inventario.
+     * @return Una stringa formattata pronta per il network (es. "TESTO|...|CLEAR_INVENTORY|OK|INVENTARIO|...").
      */
     private String aggiornaInventarioDopoUso(String testoNarrativo, PlayableCharacter attivo) {
         String risposta = "TESTO|" + testoNarrativo + "|CLEAR_INVENTORY|OK";

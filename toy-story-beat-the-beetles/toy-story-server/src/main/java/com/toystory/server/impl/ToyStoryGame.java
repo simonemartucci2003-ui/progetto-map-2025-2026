@@ -10,7 +10,11 @@ import com.toystory.server.type.Ability;
 /**
  * Istanzia concretamente l'universo di gioco: modella la planimetria della casa di Andy 
  * e delle fogne, colloca i passaggi segreti, definisce gli scarafaggi nemici 
- * e setta le condizioni di vittoria della storia.
+ * e imposta le condizioni iniziali e di vittoria della storia.
+ * <p>
+ * Questa classe estende {@link GameDescription} e rappresenta la mappa  
+ * iniziale del gioco, che verrà poi sincronizzata con il database.
+ * </p>
  */
 public class ToyStoryGame extends GameDescription {
     // Definiamo i riferimenti alle stanze come campi della classe
@@ -37,20 +41,30 @@ public class ToyStoryGame extends GameDescription {
     private Room scenaFinale;
 
     /**
-     * Costruttore di ToyStoryGame. Richiama il costruttore della classe madre.
+     * Costruttore di ToyStoryGame. Richiama il costruttore della classe madre 
+     * per inizializzare le liste vuote di stanze, giocatori e inventario.
      */
     public ToyStoryGame() {
         super();
     }
 
+    /**
+     * Metodo di supporto per registrare una stanza nella lista globale del gioco e restituirla.
+     * 
+     * @param room La stanza da aggiungere alla mappa.
+     * @return La stessa stanza passata come parametro, utile per assegnazioni inline.
+     */
     private Room registerRoom(Room room) {
         this.getRooms().add(room);
         return room;
     }
     
     /**
-     * Inizializza tutti i personaggi giocabili e le loro abilità speciali.
-     * Poiché sono disponibili fin dall'inizio, vengono caricati globalmente.
+     * Inizializza tutti i personaggi giocabili (Woody, Buzz, Jessie) e le loro abilità speciali.
+     * <p>
+     * Poiché sono disponibili fin dall'inizio per lo switch, vengono caricati 
+     * globalmente nella lista dei giocatori ereditata da {@code GameDescription}.
+     * </p>
      */
     private void initPlayableCharacters() {
         // 1. WOODY
@@ -68,7 +82,6 @@ public class ToyStoryGame extends GameDescription {
         Ability agilita = new Ability("Destrezza", "/Destrezza.png");
         jessie.setAbility(agilita);
 
-        // 4. SALVATAGGIO NELLA LISTA GLOBALE
         // Salva i personaggi nella classe madre GameDescription
         this.getPlayers().add(woody);
         this.getPlayers().add(buzz);
@@ -78,8 +91,19 @@ public class ToyStoryGame extends GameDescription {
     }
     
     /**
-     * Implementazione del metodo astratto init(). Viene invocato dall'Engine 
-     * all'avvio del server per generare il mondo di gioco.
+     * Implementazione del metodo astratto {@code init()}. Viene invocato dall'Engine 
+     * all'avvio del server per generare fisicamente il mondo di gioco.
+     * <p>
+     * Questo metodo si occupa di:
+     * <ol>
+     * <li>Creare le istanze base di tutte le stanze ({@link Room}).</li>
+     * <li>Inizializzare i personaggi giocabili.</li>
+     * <li>Richiamare i metodi {@code configure...()} per popolare ogni stanza di uscite e oggetti.</li>
+     * <li>Sincronizzare il mondo appena creato con il database per la persistenza.</li>
+     * </ol>
+     * </p>
+     * 
+     * @throws Exception Se si verifica un errore durante l'inizializzazione o la sincronizzazione col DB.
      */
     @Override
     public void init() throws Exception {
@@ -116,26 +140,11 @@ public class ToyStoryGame extends GameDescription {
         bossFinale = registerRoom(new Room(15, "Boss", 
                 "L'antro del boss. Il pericolo è imminente, bisogna fare attenzione!"));
         scenaFinale = registerRoom(new Room(16, "Scena Finale", ""));
-    
-        // ---------------------------------------------------------------------
-        // INIZIALIZZAZIONE PERSONAGGI GIOCABILI GLOBALI
-        // ---------------------------------------------------------------------
-        initPlayableCharacters();
-    
-        // ---------------------------------------------------------------------
-        // INIZIALIZZAZIONE DEI FLAG DI PROGRESSIONE (TRAMA)
-        // ---------------------------------------------------------------------
-        // Questi flag ereditati dalla classe madre verranno letti e modificati 
-        // dagli Observer (es. UseObserver, OpenObserver) per far avanzare la storia.
-        this.getFlags().put("TUTORIAL_START", true); // Il gioco è appena iniziato
-        this.getFlags().put("CHEST_OPENED", false);   // Il baule parte chiuso
-        this.getFlags().put("LASER_USED", false);     // Buzz non ha ancora illuminato il letto
-        this.getFlags().put("LAZO_UNLOCKED", false);  // Woody non ha ancora ottenuto il lazo
 
-        // ---------------------------------------------------------------------
+        // INIZIALIZZAZIONE PERSONAGGI GIOCABILI GLOBALI
+        initPlayableCharacters();
+
         // AVVIO CONFIGURAZIONE DELLE STANZE
-        // ---------------------------------------------------------------------
-        // Configura
         configureCameraAndy();
         configureCorridoioPrimoPiano();
         configureCorridoioPianoTerra();
@@ -151,17 +160,17 @@ public class ToyStoryGame extends GameDescription {
         configureStanzaAcqua();
         configureStanzaSenzaAcqua();
         configureBossFinale();
-        configureScenaFinale();
         
         //DATABASE
-        // 2. Chiediamo alla classe base di occuparsi del database
+        // Chiediamo alla classe base di occuparsi del database
         // ToyStoryGame non sa NIENTE del DB, sa solo che il mondo deve essere sincronizzato.
         this.syncWorldWithDatabase();
         
     }
 
     /**
-     * Genera la mappa, gli oggetti interattivi, le hitbox logiche e i personaggi
+     * Configura la Camera di Andy aggiungendo le uscite, gli oggetti da raccogliere (es. la chiave)
+     * e gli elementi di scenario interattivi (libreria, baule, letto, porta).
      */
     private void configureCameraAndy() {
         // 1. Uscite (Collegamenti logici)
@@ -170,9 +179,8 @@ public class ToyStoryGame extends GameDescription {
         // 2. CREAZIONE OGGETTI
         // Chiave: l'oggetto che vogliamo raccogliere
         PickupableObject chiave = new PickupableObject(101, "chiave", "Una piccola chiave dorata.", "chiave.png");
-        
-        // Oggetti di scenario: lasciamo la descrizione vuota o minima, 
-        // così la gestione narrativa rimane centralizzata nel LookAtObserver.
+
+        // la gestione narrativa rimane centralizzata nel LookAtObserver.
         AdvObject libreria = new AdvObject(201, "libreria", "") {};
         
         AdvObject baule = new AdvObject(202, "baule", "") {};
@@ -188,6 +196,10 @@ public class ToyStoryGame extends GameDescription {
         cameraAndy.getObjects().add(porta);
     }
     
+    /**
+     * Configura il Corridoio al Primo Piano, impostando i collegamenti verso le stanze da letto 
+     * e il piano terra, aggiungendo inoltre elementi decorativi per l'immersione.
+     */
     private void configureCorridoioPrimoPiano() {
         // TODO: Inserisci qui addExit e aggiunta oggetti
         corridoioPrimoPiano.addExit("porta_camera_andy", cameraAndy);
@@ -195,31 +207,20 @@ public class ToyStoryGame extends GameDescription {
         corridoioPrimoPiano.addExit("scale_giu",corridoioPianoTerra);
         
         // OGGETTI DI SCENARIO (Fissi, non si possono raccogliere)
-        // Usiamo ID univoci a partire da 205 per non sovrapporci agli oggetti della Camera di Andy (che arrivavano a 204).
         AdvObject portaAndyObj = new AdvObject(205, "porta_camera_andy", "");
         AdvObject portaMollyObj = new AdvObject(206, "porta_camera_molly", "");
         AdvObject scaleObj = new AdvObject(207, "scale_giu", "");
-
-        // 3. OGGETTI DI SCENARIO EXTRA (Non raccoglibili, solo per immersione) DA AGGIUNGERE ALLA FINE SE ABBIAMO TEMPO
-        AdvObject finestra = new AdvObject(208, "finestra", "Dalla finestra si vede il tranquillo vicinato. È una bella giornata, ma noi abbiamo una missione da compiere!");
-        AdvObject quadro = new AdvObject(209, "quadro", "Un piccolo quadro che raffigura delle verdi colline. Molto rilassante.");
-        AdvObject interruttore = new AdvObject(211, "interruttore", "L'interruttore della luce del corridoio. Decisamente troppo in alto per le braccia di un giocattolo.");
-        AdvObject soldatino = new AdvObject(212, "soldatino", "Un soldatino verde di plastica. Sembra stia coraggiosamente facendo la guardia al pavimento, ma non risponde.");
-        AdvObject cesto = new AdvObject(214, "cesto", "Un cesto di vimini in un angolo, sembra pieno di roba da buttare o vecchi ombrelli.");
-        AdvObject foglietto = new AdvObject(215, "foglietto", "Un foglietto di carta attaccato al muro giù per le scale. Chissà chi ce lo ha messo...");
 
         // 4. AGGIUNTA DI TUTTI GLI OGGETTI ALLA STANZA
         corridoioPrimoPiano.getObjects().add(portaAndyObj);
         corridoioPrimoPiano.getObjects().add(portaMollyObj);
         corridoioPrimoPiano.getObjects().add(scaleObj);
-        corridoioPrimoPiano.getObjects().add(finestra);
-        corridoioPrimoPiano.getObjects().add(quadro);
-        corridoioPrimoPiano.getObjects().add(interruttore);
-        corridoioPrimoPiano.getObjects().add(soldatino);
-        corridoioPrimoPiano.getObjects().add(cesto);
-        corridoioPrimoPiano.getObjects().add(foglietto);
     }
 
+    /**
+     * Configura il Corridoio al Piano Terra, con uscite verso il piano superiore,
+     * la cucina e la porticina del cane per accedere al giardino.
+     */
     private void configureCorridoioPianoTerra() {
         corridoioPianoTerra.addExit("scale_su",corridoioPrimoPiano);
         corridoioPianoTerra.addExit("porta_cucina",cucina);
@@ -228,27 +229,25 @@ public class ToyStoryGame extends GameDescription {
         AdvObject portaCucinaObj = new AdvObject(302, "porta_cucina", "");
         AdvObject porticina = new AdvObject(310, "porticina_cane", "");
         AdvObject scaleObj = new AdvObject(304, "scale_su", "");
-         
-       
 
         // 4. AGGIUNTA DI TUTTI GLI OGGETTI ALLA STANZA
         corridoioPianoTerra.getObjects().add(portaCucinaObj);
         corridoioPianoTerra.getObjects().add(scaleObj);
         corridoioPianoTerra.getObjects().add(porticina);
-        
-       
-
     }
 
+    /**
+     * Configura la Camera di Molly inserendo gli oggetti legati agli enigmi (pallina, forcina)
+     * e interazioni con Bo-Peep.
+     */
     private void configureCameraMolly() {
-        // 1. USCITE (I collegamenti bidirezionali)
+        // USCITE 
         cameraMolly.addExit("porta_molly", corridoioPrimoPiano);
         
-        // 2. Oggetti: la pallina inizia "nascosta" (non nella stanza)
+        // la pallina inizia "nascosta" 
         PickupableObject pallina = new PickupableObject(403, "pallina", "La pallina di Buster!", "pallina.png");
         PickupableObject forcina = new PickupableObject(405, "forcina", "Un ferretto per capelli di Molly. ", "forcina.png");
         
-        // Oggetto baule (solo scenario)
         AdvObject bauleMolly = new AdvObject(404, "baule_molly", "Il baule dei giocattoli. Sembra socchiuso.");
         AdvObject letto = new AdvObject(408, "letto_molly", "") {};
         AdvObject porta = new AdvObject(406, "porta_molly", "") {};
@@ -259,10 +258,11 @@ public class ToyStoryGame extends GameDescription {
         cameraMolly.getObjects().add(pallina);
         cameraMolly.getObjects().add(forcina);
         cameraMolly.getObjects().add(BoPeep);
-        
-      
     }
 
+    /**
+     * Configura la Cucina inserendo lo sciame di scarafaggi e l'uscita verso il corridoio.
+     */
     private void configureCucina() {
         // 1. USCITE (I collegamenti bidirezionali)
         cucina.addExit("porta_interna_cucina", corridoioPianoTerra);
@@ -272,10 +272,12 @@ public class ToyStoryGame extends GameDescription {
         
         cucina.getObjects().add(scarafaggi);
         cucina.getObjects().add(porta);
-        
-      
     }
 
+    /**
+     * Configura il Giardino esterno. Include il tombino per le fogne e oggetti 
+     * essenziali per gli enigmi successivi (torsolo di mela, rametto).
+     */
     private void configureGiardino() {
         giardino.addExit("porta_cane",corridoioPianoTerra);
         giardino.addExit("tombino",ingressoFogna);
@@ -287,26 +289,24 @@ public class ToyStoryGame extends GameDescription {
         AdvObject sacchiSpazzatura = new AdvObject(601, "sacchi_neri", "");
         AdvObject albero = new AdvObject(603, "albero", "");
         
-
-        // 4. OGGETTI DI SCENARIO EXTRA (Basati sull'immagine giardino.jpg)
         AdvObject portaObj = new AdvObject(605, "porta_ingresso", "La massiccia porta d'ingresso della casa di Andy. Passare per la porticina del cane è l'unico modo per tornare dentro di nascosto.");
         AdvObject tombinoObj = new AdvObject(607, "tombino", "Una pesante grata metallica buia e puzzolente. Gli scarafaggi si sono calati lì sotto con il nostro prezioso carico. Dobbiamo scendere anche noi, l'emergenza torta lo richiede!");
        
-        // 5. AGGIUNTA DI TUTTI GLI OGGETTI ALLA STANZA
-        // Nota: torsolo e rametto verranno trovati aprendo/cercando in sacchi e albero tramite observer
+        // AGGIUNTA DI TUTTI GLI OGGETTI ALLA STANZA
         giardino.getObjects().add(sacchiSpazzatura);
         giardino.getObjects().add(torsolo);
         giardino.getObjects().add(albero);
         giardino.getObjects().add(rametto);
         
-        // Aggiungiamo lo scenario
         giardino.getObjects().add(portaObj);
-        giardino.getObjects().add(tombinoObj);
-        
+        giardino.getObjects().add(tombinoObj); 
     }
 
+    /**
+     * Configura l'Ingresso alle Fognature. 
+     * L'accesso alla seconda stanza è bloccato da un cancello chiuso a chiave.
+     */
     private void configureIngressoFogna() {
-        // 1. USCITE (I collegamenti bidirezionali)
         ingressoFogna.addExit("grata_sopra", giardino);
         ingressoFogna.addExit("tunnel", fognaPrimaStanza); // Accessibile liberamente
         
@@ -314,158 +314,151 @@ public class ToyStoryGame extends GameDescription {
         // del gioco (Observer) dovrà bloccare il passaggio se il lucchetto non è stato forzato.
         ingressoFogna.addExit("cancello", fognaSecondaStanza); 
 
-        // 2. OGGETTI PER GLI ENIGMI DELLA STORIA
-        //AdvObject lucchetto = new AdvObject(701, "lucchetto", "Un pesante lucchetto di metallo arrugginito blocca la grata. La fessura della serratura è larga abbastanza da infilarci qualcosa di sottile e rigido.");
-        
-        // 3. OGGETTI DI SCENARIO EXTRA
         AdvObject cancello = new AdvObject(702, "cancello", "Un solido cancello di ferro chiuso a chiave. Gli scarafaggi sono passati attraverso le sbarre senza problemi, ma noi siamo troppo grandi. Dobbiamo trovare il modo di aprirlo.");
         AdvObject tunnelObj = new AdvObject(703, "tunnel", "Un'oscura galleria di mattoni che si addentra nelle fogne. Da laggiù arriva una forte puzza di rifiuti e... briciole di torta! Dobbiamo muoverci.");
         AdvObject grataSopra = new AdvObject(710, "grata_sopra", "La luce del sole filtra dal tombino sopra le nostre teste. Se falliamo la missione, Andy non ci perdonerà mai. Non guardiamo in alto, andiamo avanti!");
-        
 
         // 4. AGGIUNTA DI TUTTI GLI OGGETTI ALLA STANZA
-        
         ingressoFogna.getObjects().add(cancello);
         ingressoFogna.getObjects().add(tunnelObj);
-        ingressoFogna.getObjects().add(grataSopra);
-        
+        ingressoFogna.getObjects().add(grataSopra); 
     }
 
+    /**
+     * Configura la Prima Stanza delle Fogne, introducendo il Topo 
+     * e diramazioni verso enigmi.
+     */
     private void configureFogniaPrimaStanza() {
-        // 1. USCITE (I collegamenti bidirezionali)
         fognaPrimaStanza.addExit("tunnel_ritorno", ingressoFogna); // Per tornare indietro
         fognaPrimaStanza.addExit("tubo_buio", stanzaBuia); // La stanza buia da esplorare con Buzz
         fognaPrimaStanza.addExit("porticina", casaTopo); // Inizialmente bloccata dalla logica del gioco
         
-        // 2. NPC E OGGETTI DELLA STORIA
+        // OGGETTI DELLA STORIA
         AdvObject topo = new AdvObject(801, "topo", "");
         AdvObject tunnel = new AdvObject(804, "tunnel_ritorno", "");
         AdvObject tuboBuioObj = new AdvObject(802, "tubo_buio", "");
         AdvObject porticinaObj = new AdvObject(803, "porticina", "");
 
-       
         // 4. AGGIUNTA DI TUTTI GLI OGGETTI ALLA STANZA
         fognaPrimaStanza.getObjects().add(topo);
         fognaPrimaStanza.getObjects().add(tuboBuioObj);
         fognaPrimaStanza.getObjects().add(porticinaObj);
         fognaPrimaStanza.getObjects().add(tunnel);
-       
     }
 
+    /**
+     * Configura la Stanza Buia dove si trova il generatore necessario 
+     * per sbloccare la casa del Topo.
+     */
     private void configureStanzaBuia() {
-        // 1. USCITE (I collegamenti bidirezionali)
-        stanzaBuia.addExit("tubo_ritorno", fognaPrimaStanza); // Per tornare indietro
+        stanzaBuia.addExit("tubo_ritorno", fognaPrimaStanza);
 
-        // 2. OGGETTI PER GLI ENIGMI DELLA STORIA
         AdvObject generatore = new AdvObject(901, "generatore", "");
         
-        // 3. OGGETTI DI SCENARIO EXTRA (Basati sull'immagine stanzabuia.jpeg)
         AdvObject tuboRitorno = new AdvObject(902, "tubo_ritorno", "");
        
         // 4. AGGIUNTA DI TUTTI GLI OGGETTI ALLA STANZA
         stanzaBuia.getObjects().add(generatore);
         stanzaBuia.getObjects().add(tuboRitorno);
-       
     }
 
+    /**
+     * Configura la Casa del Topo. Nasconde l'ingresso ("buco_stretto") 
+     * verso la stanza del meccanismo di drenaggio.
+     */
     private void configureCasaTopo() {
-        // 1. USCITE (I collegamenti bidirezionali)
-        casaTopo.addExit("porticina_ritorno", fognaPrimaStanza); // Per tornare indietro
+        casaTopo.addExit("porticina_ritorno", fognaPrimaStanza); 
         
         // Il buco stretto porta alla stanza della leva. Il sistema dovrà verificare
         // che il personaggio attivo sia Jessie prima di permettere il passaggio.
         casaTopo.addExit("buco_stretto", stanzaLeva); 
 
-        // 2. NPC E OGGETTI DELLA STORIA
+        // OGGETTI DELLA STORIA
         AdvObject topo = new AdvObject(1001, "topo_casa", "");
         AdvObject bucoStretto = new AdvObject(1002, "buco_stretto", "");
         AdvObject porticina = new AdvObject(1007, "porticina_ritorno", "");
 
-       
         // 4. AGGIUNTA DI TUTTI GLI OGGETTI ALLA STANZA
         casaTopo.getObjects().add(topo);
         casaTopo.getObjects().add(bucoStretto);
-        casaTopo.getObjects().add(porticina);
-       
+        casaTopo.getObjects().add(porticina); 
     }
 
+    /**
+     * Configura la Stanza della Leva in cui si risolve l'enigma per drenare l'acqua.
+     */
     private void configureStanzaLeva() {
-        // 1. USCITE (I collegamenti bidirezionali)
-        // L'unica via d'uscita è ripassare per il cunicolo da cui Jessie è entrata.
         stanzaLeva.addExit("buco_stretto_ritorno", casaTopo); 
 
-        // 2. OGGETTI PER GLI ENIGMI DELLA STORIA
+        // OGGETTI PER GLI ENIGMI DELLA STORIA
         AdvObject leva = new AdvObject(1101, "leva", "");
 
-        // 3. OGGETTI DI SCENARIO EXTRA (Basati sull'immagine leva.jpg)
         AdvObject bucoStretto = new AdvObject(1110, "buco_stretto_ritorno", "");
-        
 
         // 4. AGGIUNTA DI TUTTI GLI OGGETTI ALLA STANZA
         stanzaLeva.getObjects().add(leva);
-        stanzaLeva.getObjects().add(bucoStretto);
-       
-        
+        stanzaLeva.getObjects().add(bucoStretto); 
     }
 
+    /**
+     * Configura la Seconda Stanza delle Fogne, dove uno Scarafaggio gigante blocca il varco.
+     */
     private void configureFognaSecondaStanza() {
-        // L'uscita per tornare indietro verso l'ingresso, passando per il cancello aperto.
         fognaSecondaStanza.addExit("cancello_aperto", ingressoFogna); 
         
-        // Il varco alle spalle dello scarafaggio. Inizialmente l'NPC bloccherà il passaggio,
+        // Il varco alle spalle dello scarafaggio. Inizialmente bloccherà il passaggio,
         // ma la logica del gioco permetterà di passare dopo avergli dato il torsolo di mela.
         fognaSecondaStanza.addExit("varco", stanzaAcqua); 
 
-        // 2. NPC E OGGETTI DELLA STORIA
+        // E OGGETTI DELLA STORIA
         AdvObject scarafaggioCiccione = new AdvObject(1201, "scarafaggio_gigante", "");
-        
-        // 3. OGGETTI DI SCENARIO EXTRA (Basati sull'immagine image_7b53b1.jpg)
         AdvObject cancelloAperto = new AdvObject(1202, "cancello_aperto", "");
        
         // 4. AGGIUNTA DI TUTTI GLI OGGETTI ALLA STANZA
         fognaSecondaStanza.getObjects().add(scarafaggioCiccione);
         fognaSecondaStanza.getObjects().add(cancelloAperto);
-       
     }
 
+    /**
+     * Configura la Stanza con Acqua, inaccessibile in profondità fino 
+     * all'azionamento della leva da parte di Jessie.
+     */
     private void configureStanzaAcqua() {
-       // 1. USCITE (I collegamenti bidirezionali)
-        stanzaAcqua.addExit("tunnel", fognaSecondaStanza); // Per tornare indietro dallo scarafaggio gigante
-        
-        // L'uscita verso il Boss. Il sistema bloccherà il passaggio con un messaggio 
-        // finché il flag "ACQUA_SVUOTATA" non diventerà true (attivato da Jessie).
-        
+        stanzaAcqua.addExit("tunnel", fognaSecondaStanza); 
 
-        // 2. OGGETTI PER GLI ENIGMI DELLA STORIA
+        //OGGETTI PER GLI ENIGMI DELLA STORIA
         AdvObject botola = new AdvObject(1301, "botola", "");
         AdvObject tunnel = new AdvObject(1310, "tunnel", "");
         
-        // 3. OGGETTI DI SCENARIO EXTRA (Basati sull'immagine image_85b95d.jpg)
-       
         // 4. AGGIUNTA DI TUTTI GLI OGGETTI ALLA STANZA
         stanzaAcqua.getObjects().add(botola);
         stanzaAcqua.getObjects().add(tunnel);
-      
     }
 
+    /**
+     * Configura la variante della Stanza Senza Acqua. 
+     * Sostituisce la precedente a livello logico dopo l'enigma della leva, 
+     * consentendo l'accesso al Boss Finale.
+     */
     private void configureStanzaSenzaAcqua() {
-        // 1. USCITE (I collegamenti bidirezionali)
-        stanzaSenzaAcqua.addExit("tunnel", fognaSecondaStanza); // Per tornare indietro
+        stanzaSenzaAcqua.addExit("tunnel", fognaSecondaStanza); 
         
-        // La botola ora è accessibile! Nessun blocco di sistema qui.
+        // La botola ora è accessibile nessun blocco di sistema.
         stanzaSenzaAcqua.addExit("botola_sbloccata", bossFinale); 
 
-        // 2. OGGETTI PRINCIPALI DELLA STORIA
+        // OGGETTI  DELLA STORIA
         AdvObject botola = new AdvObject(1401, "botola_sbloccata", "");
         AdvObject tunnel = new AdvObject(1410, "tunnel", "");
-        
-       
-        // 3. AGGIUNTA DI TUTTI GLI OGGETTI ALLA STANZA
+
+        // AGGIUNTA DI TUTTI GLI OGGETTI ALLA STANZA
         stanzaSenzaAcqua.getObjects().add(botola);
         stanzaSenzaAcqua.getObjects().add(tunnel);
-     
     }
 
+    /**
+     * Configura la stanza del Boss Finale. Interagire con l'ambiente scatenerà 
+     * l'evento di vittoria del gioco.
+     */
     private void configureBossFinale() {
       
         bossFinale.addExit("TUTTO",scenaFinale);
@@ -473,12 +466,6 @@ public class ToyStoryGame extends GameDescription {
         AdvObject TUTTO = new AdvObject(1501, "TUTTO", "");
     
         bossFinale.getObjects().add(TUTTO);
-        
-    }
-    
-    private void configureScenaFinale() {
-      
-       
         
     }
 }

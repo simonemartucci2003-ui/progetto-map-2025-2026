@@ -9,17 +9,23 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * Raccoglie tutti i testi e i dialoghi narrativi del gioco.
- * I testi non sono più hardcoded in questa classe: vengono caricati 
- * all'avvio da un file esterno di testo (config/dialoghi.txt), 
- * leggendolo riga per riga con BufferedReader/FileReader 
- * (character stream, line-oriented I/O), esattamente come 
- * mostrato a lezione.
+ * Gestore centralizzato di tutti i testi e i dialoghi narrativi del gioco.
+ * <p>
+ * I testi non sono scritti all'interno del codice sorgente, ma vengono caricati
+ * all'avvio da un file di testo esterno ({@code config/dialoghi.txt}). Questo approccio
+ * facilita la traduzione e la modifica dei testi senza dover ricompilare il progetto.
+ * </p>
+ * <p>
+ * La lettura avviene tramite {@link BufferedReader} e {@link FileReader} 
+ * (character stream, line-oriented I/O).
+ * </p>
  */
 public class Dialoghi {
 
+    /** Percorso relativo del file di configurazione contenente i testi del gioco. */
     private static final String PATH_DIALOGHI = "config/dialoghi.txt";
 
+    /** Mappa in cui vengono memorizzate le coppie Chiave-Valore lette dal file. */
     private static final Map<String, String> TESTI = new HashMap<>();
 
     // Blocco statico: eseguito una sola volta, al primo utilizzo della classe
@@ -28,9 +34,12 @@ public class Dialoghi {
     }
 
     /**
-     * Carica il file esterno riga per riga. Ogni riga ha il formato 
-     * CHIAVE=testo. Le righe vuote o che iniziano con '#' (commenti) 
-     * vengono ignorate.
+     * Carica e analizza il file esterno riga per riga, popolando la mappa dei testi.
+     * <p>
+     * Ogni riga valida deve rispettare il formato {@code CHIAVE=testo}. 
+     * Eventuali errori di sintassi nella riga vengono segnalati 
+     * ma non bloccano il caricamento dei restanti testi.
+     * </p>
      */
     private static void caricaDialoghi() {
         File file = new File(PATH_DIALOGHI);
@@ -89,9 +98,15 @@ public class Dialoghi {
     }
 
     /**
-     * Metodo di supporto centrale: recupera un testo dalla mappa caricata 
-     * dal file esterno. Se la chiave non esiste, restituisce un placeholder 
-     * invece di far crashare la partita.
+     * Recupera un testo dalla mappa utilizzando la chiave.
+     * <p>
+     * Se la chiave richiesta non è presente nel file (es. errore di battitura o file mancante), 
+     * restituisce un placeholder testuale invece di generare una NullPointerException, 
+     * garantendo così che la partita non crashi.
+     * </p>
+     *
+     * @param chiave L'identificativo univoco del testo da recuperare.
+     * @return Il testo associato alla chiave, oppure un messaggio di "TESTO MANCANTE".
      */
     private static String get(String chiave) {
         String valore = TESTI.get(chiave);
@@ -102,9 +117,6 @@ public class Dialoghi {
         return valore;
     }
 
-    // ================================================================
-    // Metodi pubblici (firme invariate: nessun'altra classe deve cambiare)
-    // ================================================================
 
     public static String getDialogoBauleAperto() { return get("DialogoBauleAperto"); }
     public static String getDescrizoneBauleChiuso() { return get("DescrizoneBauleChiuso"); }

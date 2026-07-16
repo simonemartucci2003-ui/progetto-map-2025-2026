@@ -6,11 +6,41 @@ import com.toystory.server.type.*;
 import com.toystory.server.ClientState;
 import com.toystory.server.GameSession;
 
+/**
+ * Osservatore dedicato alla gestione del comando di raccolta degli oggetti (PRENDI).
+ * <p>
+ * Questa classe intercetta i comandi di tipo {@link CommandType#PRENDI} e gestisce
+ * l'aggiunta di oggetti collezionabili ({@link PickupableObject}) all'inventario del
+ * personaggio attivo. Inoltre, implementa le logiche degli enigmi, verificando
+ * che vengano rispettate condizioni specifiche (es. l'oggetto è raggiungibile solo da
+ * un determinato personaggio, come Buzz per i posti bui o Jessie per i posti alti).
+ * </p>
+ */
 public class PickUpObserver implements GameObserver<String> {
 
+    /**
+     * Elabora il comando "PRENDI" inviato dal giocatore per raccogliere un oggetto.
+     * 
+     * <p>Il metodo esegue le seguenti operazioni:</p>
+     * <ul>
+     * <li>Verifica che il comando sia di tipo PRENDI.</li>
+     * <li>Analizza il bersaglio (target) dell'azione. Se il giocatore indica un elemento
+     * dell'ambiente, la logica valuta se il personaggio attivo ha
+     * i requisiti per estrarre l'oggetto nascosto in quel luogo.</li>
+     * <li>Aggiorna i flag globali del gioco quando un oggetto importante viene scoperto.</li>
+     * <li>Delega l'effettiva raccolta ai metodi helper per aggiornare la stanza e il database.</li>
+     * </ul>
+     *
+     * @param command Il comando inviato dal giocatore, contenente l'oggetto o il luogo da cui raccogliere.
+     * @param state   Lo stato globale della partita (utilizzato per i flag degli eventi).
+     * @param client  Lo stato del client, per recuperare il personaggio attivo e la stanza corrente.
+     * @param session La sessione di gioco multiplayer attuale.
+     * @return Una stringa formattata contenente l'esito testuale dell'azione e, in caso di successo,
+     *         i comandi di aggiornamento dell'interfaccia dell'inventario.
+     */
     @Override
     public String update(Command command, GameDescription state, ClientState client, GameSession session) {
-        // 1. Controllo: si attiva solo per il comando PRENDI
+        // si attiva solo per il comando PRENDI
         if (command.getType() != CommandType.PRENDI) {
             return null;
         }
@@ -23,7 +53,7 @@ public class PickUpObserver implements GameObserver<String> {
         PlayableCharacter attivo = client.getCurrentCharacter();  
         Room currentRoom = client.getCurrentRoom();               
 
-        // 2. SWITCH CASE: Smista l'azione in base a cosa abbiamo cliccato
+        // Smista l'azione in base a cosa abbiamo cliccato
         switch (target.toLowerCase()) {
             
             //-- STANZA ANDY --
@@ -39,7 +69,7 @@ public class PickUpObserver implements GameObserver<String> {
 
                 // Se il baule è chiuso, nessuno può passare
                 if (!bauleAperto) {
-                    return "TESTO| Sotto al letto non si riesce a vedere niente, e' tropppo buio...";
+                    return "TESTO| Sotto al letto non si riesce a vedere niente, e' troppo buio...";
                 }
 
                 // Se abbiamo già preso il lazo
@@ -105,7 +135,6 @@ public class PickUpObserver implements GameObserver<String> {
                     // SOLO BUZZ HA SUCCESSO
                    
                     state.saveFlag("FORCINA_UNLOCKED", true); // raccogliamo la forcina
-                    String testoDialogo = Dialoghi.getBuzzSottoAlLettoMolly();
                     
                     return eseguiRaccolta("forcina", target, state, attivo, currentRoom);
                 }
@@ -113,11 +142,11 @@ public class PickUpObserver implements GameObserver<String> {
                 
              //GIARDINO
             case "sacchi_neri":
-                // Se clicchiamo l albero, deviamo la logica cercando "torsolo"
+                // Se clicchiamo i sacchi, deviamo la logica cercando "torsolo"
                 return eseguiRaccolta("torsolo", target, state, attivo, currentRoom);
                 
             case "albero":
-                // 1. Controlliamo lo stato del gioco tramite i Flags               
+                // Controlliamo lo stato del gioco tramite i Flags               
                 boolean RamettoSbloccato = state.getFlags().getOrDefault("RAMETTO_UNLOCKED", false);
 
                 if (RamettoSbloccato) {
@@ -141,11 +170,7 @@ public class PickUpObserver implements GameObserver<String> {
                     String testoDialogo = Dialoghi.getBuzzAlbero();
                     return "TESTO|" + testoDialogo;
                 }
-                
-            //INGRESSO FOGNA
-            
-                
-                
+  
             default:
                 // Per tutti gli altri oggetti generici sparsi nella stanza
                 return eseguiRaccolta(target, target, state, attivo, currentRoom);
@@ -154,9 +179,20 @@ public class PickUpObserver implements GameObserver<String> {
 
     
     
-   // In PickUpObserver.java, sostituisci il corpo di eseguiRaccolta con una versione
-    // che calcola prima un ActionResult<PickupableObject>, poi lo traduce in stringa.
-
+   /**
+     * Converte l'esito logico della raccolta in una stringa compatibile con il protocollo di comunicazione.
+     * <p>
+     * Se la raccolta ha successo, appende i comandi necessari ad aggiornare l'interfaccia 
+     * dell'inventario del giocatore (es. mostrare l'icona del nuovo oggetto).
+     * </p>
+     *
+     * @param nomeDaCercare   Il nome reale dell'oggetto da cercare tra gli elementi della stanza.
+     * @param targetOriginale La stringa cliccata in origine dal giocatore.
+     * @param state           Lo stato globale del gioco.
+     * @param attivo          Il personaggio che sta tentando la raccolta.
+     * @param currentRoom     La stanza attuale in cui effettuare la ricerca.
+     * @return Una stringa di rete formattata (es. "TESTO|...|INVENTARIO|nome|icona").
+     */
     private String eseguiRaccolta(String nomeDaCercare, String targetOriginale, GameDescription state, PlayableCharacter attivo, Room currentRoom) {
         ActionResult<PickupableObject> risultato = tentaRaccolta(nomeDaCercare, targetOriginale, state, attivo, currentRoom);
 
@@ -168,6 +204,28 @@ public class PickUpObserver implements GameObserver<String> {
         return "TESTO|" + risultato.getMessage() + "|INVENTARIO|" + obj.getName() + "|" + obj.getIcona();
     }
 
+    
+    /**
+     * Tenta fisicamente di raccogliere l'oggetto, eseguendo tutti i controlli di validazione e salvataggio.
+     * <p>
+     * Effettua i seguenti controlli:
+     * <ul>
+     * <li>L'oggetto esiste nella stanza attuale?</li>
+     * <li>L'oggetto è di tipo {@link PickupableObject}</li>
+     * <li>L'oggetto è già presente nell'inventario del personaggio?</li>
+     * <li>C'è spazio a sufficienza nell'inventario del personaggio?</li>
+     * </ul>
+     * Se tutti i controlli vengono superati, l'oggetto viene rimosso dalla stanza, aggiunto 
+     * all'inventario del personaggio e la transazione viene salvata sul database.
+     * </p>
+     *
+     * @param nomeDaCercare   Il nome dell'oggetto da cercare e raccogliere.
+     * @param targetOriginale La stringa originariamente richiesta dall'utente (usata per differenziare i messaggi d'errore).
+     * @param state           Lo stato globale del gioco e del database.
+     * @param attivo          Il personaggio che esegue la raccolta.
+     * @param currentRoom     La stanza dove risiede l'oggetto.
+     * @return Un oggetto {@link ActionResult} contenente l'esito dell'operazione e, in caso di successo, l'oggetto raccolto.
+     */
     private ActionResult<PickupableObject> tentaRaccolta(String nomeDaCercare, String targetOriginale, GameDescription state, PlayableCharacter attivo, Room currentRoom) {
         AdvObject targetObj = currentRoom.getObjects().stream()
                 .filter(obj -> obj.getName().equalsIgnoreCase(nomeDaCercare))
