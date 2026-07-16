@@ -326,6 +326,22 @@ public class Dialoghi {
            "Buzz: Ottimo lavoro. Mentre è distratto a mangiare, sgusciamo via da questa parte!<PAUSA> ";
     }
     
+    public static String  getDescrizioneBotola(){
+            return "Una massiccia botola circolare sul pavimento, posizionata proprio al centro della stanza. Sicuramente porta al covo del ladro di torte! Purtroppo è completamente sommersa. Se proviamo ad aprirla e a scendere ora, i nostri meccanismi interni faranno cortocircuito. Dobbiamo assolutamente trovare il modo di prosciugare questa vasca.";
+    }
+    
+    public static String  getDescrizioneBotolaSbloccata(){
+            return "La massiccia botola circolare è finalmente all'asciutto! La spessa ruggine la rende un po' dura da sollevare, ma unendo le forze possiamo aprirla e scendere nel covo del ladro di torte. Prepariamoci al peggio.";
+    }
+    
+    public static String  getDescrizioneBotolaRitorno(){
+            return "La botola da cui siamo arrivati";
+    }
+    
+    public static String  getDescrizioneBoss(){
+            return "";
+    }
+    
     public static String getDialogoBossFinale() {
         return "Woody: Fermi tutti! Abbiamo trovato la torta... e anche il ladro!<PAUSA>" +
                "Buzz: Per tutti i crateri marziani... sei tu il capo degli scarafaggi? Un pupazzo da ventriloquo?<PAUSA>" +

@@ -437,10 +437,10 @@ public class ToyStoryGame extends GameDescription {
         
         // L'uscita verso il Boss. Il sistema bloccherà il passaggio con un messaggio 
         // finché il flag "ACQUA_SVUOTATA" non diventerà true (attivato da Jessie).
-        stanzaAcqua.addExit("botola", bossFinale); 
+        
 
         // 2. OGGETTI PER GLI ENIGMI DELLA STORIA
-        AdvObject botola = new AdvObject(1301, "botola", "Una massiccia botola circolare sul pavimento, posizionata proprio al centro della stanza. Sicuramente porta al covo del ladro di torte! Purtroppo è completamente sommersa. Se proviamo ad aprirla e a scendere ora, i nostri meccanismi interni faranno cortocircuito. Dobbiamo assolutamente trovare il modo di prosciugare questa vasca.");
+        AdvObject botola = new AdvObject(1301, "botola", "");
         AdvObject tunnel = new AdvObject(1310, "tunnel", "");
         
         // 3. OGGETTI DI SCENARIO EXTRA (Basati sull'immagine image_85b95d.jpg)
@@ -456,10 +456,10 @@ public class ToyStoryGame extends GameDescription {
         stanzaSenzaAcqua.addExit("tunnel", fognaSecondaStanza); // Per tornare indietro
         
         // La botola ora è accessibile! Nessun blocco di sistema qui.
-        stanzaSenzaAcqua.addExit("botola", bossFinale); 
+        stanzaSenzaAcqua.addExit("botola_sbloccata", bossFinale); 
 
         // 2. OGGETTI PRINCIPALI DELLA STORIA
-        AdvObject botola = new AdvObject(1401, "botola", "La massiccia botola circolare è finalmente all'asciutto! La spessa ruggine la rende un po' dura da sollevare, ma unendo le forze possiamo aprirla e scendere nel covo del ladro di torte. Prepariamoci al peggio.");
+        AdvObject botola = new AdvObject(1401, "botola_sbloccata", "");
         AdvObject tunnel = new AdvObject(1410, "tunnel", "");
         
        
