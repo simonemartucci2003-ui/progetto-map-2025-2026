@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package com.toystory.server;
 
 import com.toystory.server.type.CommandType;
@@ -12,48 +8,59 @@ import java.io.PrintWriter;
 import java.net.Socket;
 import com.toystory.server.database.DatabaseManager;
 import com.toystory.server.type.PlayableCharacter;
+import java.sql.SQLException;
 
 /**
- * Thread dedicato alla gestione del flusso di comunicazione con un singolo client connesso.
- * Implementa il protocollo ad eventi via stringhe separate dal carattere pipe ('|'),
- * riceve gli input inviati dai bottoni della GUI del Client e rimanda le risposte
- * a tutti i giocatori attivi sfruttando la logica di Broadcast.
- * * @author Il Tuo Nome / Gruppo
+ * Thread dedicato alla gestione della comunicazione di rete con un singolo client connesso.
+ * <p>
+ * Implementa un ciclo di ascolto continuo che riceve gli input (comandi) inviati 
+ * dalla GUI del client, li mappa nel protocollo di gioco (separato da pipe '|') 
+ * e li inoltra all'{@link Engine} della rispettiva {@link GameSession}. 
+ * Si occupa inoltre di recapitare al client le risposte testuali generate dal server.
+ * </p>
  */
 public class ServerThread extends Thread {
 
-    /** Il canale socket per parlare con il client specifico */
+    /** Il canale socket per comunicare direttamente con lo specifico client. */
     private final Socket socket;
     
-    
-    /** Canale di output per inviare stringhe di testo verso il rispettivo Client */
+    /** Canale di output (stream) per inviare stringhe di testo verso il client. */
     private PrintWriter out;
 
-    /** NUOVO: La sessione (stanza) a cui questo giocatore appartiene */
+    /** La sessione (stanza) isolata a cui questo giocatore appartiene. */
     private GameSession session;
     
+    /** Lo stato locale del client (personaggio controllato, stanza attuale). */
     private final ClientState clientState = new ClientState();
 
     /**
-     * Costruttore del thread di gestione client.
-     * * @param socket Il socket generato dal metodo accept() del ServerMain.
-     * @param socket
+     * Inizializza il thread di gestione per una nuova connessione client.
+     * 
+     * @param socket Il socket generato dal metodo accept() di {@link ServerMain}.
      */
     public ServerThread(Socket socket) {
         this.socket = socket;
-        
     }
 
     /**
-     * NUOVO METODO: Assegna questo thread a una specifica stanza di gioco.
+     * Associa questo thread (e quindi il giocatore) a una specifica stanza di gioco.
+     * 
+     * @param session L'istanza della partita a cui il giocatore si è unito o che ha creato.
      */
     public void setSession(GameSession session) {
         this.session = session;
     }
     
     /**
-     * Ciclo di esecuzione del Thread. Gestisce l'apertura dei flussi I/O, 
-     * la lettura dei comandi in arrivo dai bottoni e l'invio in broadcast.
+     * Ciclo di vita principale del Thread.
+     * <p>
+     * Gestisce le due fasi fondamentali della connessione:
+     * <ol>
+     *   <li><b>Handshake:</b> Ricezione del comando iniziale per creare o unirsi a una partita.</li>
+     *   <li><b>Gameplay:</b> Ascolto continuo dei comandi (es. PRENDI, USA, GUARDA), 
+     *       esecuzione tramite l'Engine e restituzione dell'esito.</li>
+     * </ol>
+     * </p>
      */
     @Override
     public void run() {
@@ -99,9 +106,9 @@ public class ServerThread extends Thread {
                         out.println("ERRORE|Impossibile creare la stanza sul server.");
                         System.err.println("[Server] Errore creazione sessione: " + e.getMessage());
                         if (e.getCause() != null) {
-                            System.err.println("[Server] Causa reale: " + e.getCause());
+                            System.err.println("[Server] Causa reale: " + e.getCause().getMessage());
                         }
-                        e.printStackTrace();
+  
                     }
 
                 } else if (initialCommand.startsWith("UNISCITI_PARTITA|")) {
@@ -149,7 +156,7 @@ public class ServerThread extends Thread {
                             return;
                         }
 
-                    } catch (Exception e) {
+                    } catch (IOException e) {
                         System.err.println("[Server] Errore nel ripristino della sessione " + gameId + ": " + e.getMessage());
                         out.println("ERRORE|Impossibile caricare la partita.");
                         socket.close();
@@ -186,10 +193,8 @@ public class ServerThread extends Thread {
                     DatabaseManager db = this.session.getDb();
                     Engine sessionEngine = this.session.getEngine(); // Usiamo l'engine della sessione!
 
-                    // Il blocco synchronized ora protegge SOLO i giocatori della stessa partita.
-                    // Questo serializza perfettamente le operazioni CRUD sul database, 
-                    // prevenendo qualsiasi problema di concorrenza su H2!
-
+                    // Il blocco synchronized protegge SOLO i giocatori della stessa partita.
+                    // Questo serializza perfettamente le operazioni CRUD sul database.
                     synchronized (sessionEngine) {
                         try {
                             db.startTransaction();
@@ -200,7 +205,7 @@ public class ServerThread extends Thread {
                             } else {
                                 db.rollbackTransaction();
                             }
-                        } catch (Exception e) {
+                        } catch (SQLException e) {
                             System.err.println("[Server] Errore critico durante la transazione: " + e.getMessage());
                             try {
                                 if (db != null) db.rollbackTransaction();
@@ -218,7 +223,7 @@ public class ServerThread extends Thread {
         } catch (IOException e) {
             System.out.println("[Server] Connessione chiusa bruscamente o persa con un giocatore.");
         } finally {
-            // Rimuoviamo il thread dal registro multiplayer
+            // Rimuoviamo il thread dal registro multiplayer alla disconnessione
             ServerMain.clientThreads.remove(this);
              if (this.session != null) {
                 this.session.removePlayer(this);
@@ -233,27 +238,13 @@ public class ServerThread extends Thread {
     }
 
     /**
-     * Metodo di servizio per spedire un messaggio testuale privato a questo specifico client.
-     * * @param msg Il messaggio stringa da trasmettere sulla rete.
+     * Metodo di servizio per spedire un messaggio testuale (risposta di gioco) a questo specifico client.
+     * 
+     * @param msg La stringa formattata secondo il protocollo da trasmettere sulla rete.
      */
     public void sendMessage(String msg) {
         if (out != null) {
             out.println(msg);
-        }
-    }
-
-    /**
-     * Invia un messaggio in Broadcast a TUTTI i client attualmente connessi al server.
-     * Utilizza un blocco di sincronizzazione sulla lista condivisa per evitare 
-     * problemi di concorrenza (es. se un client si disconnette mentre stiamo inviando dati).
-     * * @param msg Il messaggio risultante dall'azione di gioco da notificare a tutti.
-     */
-    private void sendToAllPlayers(String msg) {
-        synchronized (ServerMain.clientThreads) {
-            // Cicliamo su tutti i thread dei giocatori registrati nel ServerMain
-            for (ServerThread thread : ServerMain.clientThreads) {
-                thread.sendMessage(msg); // Spediamo l'aggiornamento
-            }
         }
     }
 }
