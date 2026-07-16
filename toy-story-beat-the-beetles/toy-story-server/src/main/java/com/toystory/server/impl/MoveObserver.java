@@ -40,7 +40,7 @@ public class MoveObserver implements GameObserver {
                 return gestisciBuco(state, client, attivo, currentRoom);
             case "varco":
                 return gestisciVarco(state, client, currentRoom);
-            case "botola":
+            case "botola_sbloccata":
                 return gestisciBotola(state, client, currentRoom);
             default:
                 return eseguiMovimentoGenerico(target, state, client, currentRoom);
@@ -192,11 +192,11 @@ public class MoveObserver implements GameObserver {
             // L'acqua c'è ancora, vietato scendere!
             return "TESTO|La botola è completamente sommersa dall'acqua putrida!";
         }
-        Room prossimaStanza = currentRoom.getExit("botola");
+        Room prossimaStanza = currentRoom.getExit("botola_sbloccata");
         spostaGiocatore(state, client, prossimaStanza);
         String idStanza = prossimaStanza.getName().toUpperCase().replace(" ", "_");
         // Se la leva è aggiustata, li lasciamo passare e sfidare il boss!
-        return Dialoghi.getDialogoBossFinale() + idStanza;
+        return "TESTO|" + Dialoghi.getDialogoBossFinale() + "|CAMBIA_SFONDO|"+ idStanza;
     }
 
     private String eseguiMovimentoGenerico(String target, GameDescription state, ClientState client, Room currentRoom) {

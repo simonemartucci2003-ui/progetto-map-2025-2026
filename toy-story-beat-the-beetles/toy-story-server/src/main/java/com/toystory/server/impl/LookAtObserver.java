@@ -265,7 +265,7 @@ public class LookAtObserver implements GameObserver {
                 descrizione = Dialoghi.getDescrizioneCancelloAperto();
                 return "TESTO|" + descrizione;
                 
-            case "scarafaggio_gigante":
+            case "varco":
                 boolean melaData = state.getFlags().getOrDefault("MELA_DATA", false);
                 
                 if (!melaData) {
@@ -277,8 +277,26 @@ public class LookAtObserver implements GameObserver {
                         String testoDialogo = Dialoghi.getDescrizioneScarafaggioDopo(); 
                         return "TESTO|" + testoDialogo;
                     }
-
-
+            
+                
+            //STANZA CON ACQUA/SENZA ACQUA
+            case "botola":
+                descrizione = Dialoghi.getDescrizioneBotola();
+                return "TESTO|" + descrizione;
+            
+            case "botola_sbloccata":
+                descrizione = Dialoghi.getDescrizioneBotolaSbloccata();
+                return "TESTO|" + descrizione;
+                
+                
+            //BOSS FINALE
+            case "botolaRitorno":
+                descrizione = Dialoghi.getDescrizioneBotolaRitorno();
+                return "TESTO|" + descrizione;
+            
+            case "boss":
+                descrizione = Dialoghi.getDescrizioneBoss();
+                return "TESTO|" + descrizione;
                 
                 
                 

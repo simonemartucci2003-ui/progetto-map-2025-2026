@@ -223,14 +223,14 @@ public class MappaScenario {
         
         stanze.put("STANZA_CON_ACQUA",  StanzaAcqua);
         
-        // --- FOGNA STANZA CON ACQUA ---
+        // --- FOGNA STANZA ACQUA ---
         List<BoundingBox> StanzaSenzaAcqua = new ArrayList<>();
         
         // 1. tunnel da cui siamo entrati
         StanzaSenzaAcqua.add(new BoundingBox(167, 358 , 232 , 574 , "tunnel", imgW, imgH));
         
         // 2. botola che porta al boss
-        StanzaSenzaAcqua.add(new BoundingBox(764, 1003 , 444, 565 , "botola", imgW, imgH));
+        StanzaSenzaAcqua.add(new BoundingBox(764, 1003 , 444, 565 , "botola_sbloccata", imgW, imgH));
         
         stanze.put("STANZA_SENZA_ACQUA",  StanzaSenzaAcqua);
         
